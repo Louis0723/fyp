@@ -43,7 +43,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 body, html { height:100%; background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:white; }
 #particles-js { position: fixed; width:100%; height:100%; z-index:-1; }
 
-/* HEADER */
 header {
     display:flex;
     justify-content:space-between;
