@@ -31,4 +31,9 @@ nav a {
     text-decoration: none;
 }
 nav a:hover { color: #00c3ff; }
+
+.logo img {
+    height: 50px;
+    cursor: pointer;
+}
 </style>
