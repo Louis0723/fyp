@@ -116,7 +116,11 @@ header nav a:hover {
     color:#00f0ff;
     margin:12px 0;
 }
-.spec { font-size:14px; margin-bottom:4px; }
+.spec { 
+    font-size:14px; 
+    margin-bottom:4px; 
+}
+
 .price {
     font-weight:700;
     font-size:18px;

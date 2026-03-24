@@ -55,7 +55,13 @@ header {
     z-index:100;
     border-bottom:1px solid rgba(255,255,255,0.1);
 }
-header h2 { color:#00f0ff; font-size:28px; text-shadow:0 0 10px #00f0ff; cursor:pointer; }
+header h2 { 
+    color:#00f0ff; 
+    font-size:28px; 
+    text-shadow:0 0 10px #00f0ff; 
+    cursor:pointer; 
+}
+
 header nav a {
     margin-left:30px;
     color:white;
@@ -63,7 +69,11 @@ header nav a {
     font-weight:600;
     transition:0.3s;
 }
-header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
+
+header nav a:hover { 
+    color:#ff00ff; 
+    text-shadow:0 0 10px #ff00ff; 
+}
 
 .container {
     width:400px;
@@ -75,7 +85,13 @@ header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
     box-shadow: 0 10px 30px rgba(0,255,255,0.2);
     text-align:center;
 }
-.container h2 { color:#00f0ff; font-size:28px; margin-bottom:30px; text-shadow:0 0 10px #00f0ff; }
+
+.container h2 { 
+    color:#00f0ff; 
+    font-size:28px; 
+    margin-bottom:30px; 
+    text-shadow:0 0 10px #00f0ff; 
+}
 
 input {
     width:100%;
@@ -88,7 +104,9 @@ input {
     font-size:16px;
 }
 
-input::placeholder { color: rgba(255,255,255,0.7); }
+input::placeholder { 
+    color: rgba(255,255,255,0.7); 
+}
 
 .logo-center {
     display: flex;
@@ -122,14 +140,34 @@ button {
     box-shadow: 0 5px 15px rgba(0,255,255,0.3);
     transition:0.3s;
 }
-button:hover { transform: scale(1.05); box-shadow:0 10px 25px rgba(255,0,255,0.5); }
+button:hover { 
+    transform: scale(1.05); 
+    box-shadow:0 10px 25px rgba(255,0,255,0.5); 
+}
 
-.msg { color:#ff5555; margin-bottom:15px; font-weight:600; }
+.msg { 
+    color:#ff5555; 
+    margin-bottom:15px; 
+    font-weight:600; 
+}
 
-.link-text { margin-top:15px; color:white; }
-.link-text a { color:#ff00ff; text-decoration:none; font-weight:600; }
-.link-text a:hover { text-decoration:underline; }
+.link-text { 
+    margin-top:15px; 
+    color:white; 
+}
+
+.link-text a { 
+    color:#ff00ff; 
+    text-decoration:none; 
+    font-weight:600; 
+}
+
+.link-text a:hover { 
+    text-decoration:underline; 
+    }
+    
 </style>
+
 </head>
 <body>
 
