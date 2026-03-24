@@ -13,8 +13,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
     class="<?= $current_page=='admin_profile.php'?'active':'' ?>">
     👤 Profile</a>
 
-    <a href="products.php"
-    class="<?= $current_page=='products.php'?'active':'' ?>">
+    <a href="admin_product.php"
+    class="<?= $current_page=='admin_product.php'?'active':'' ?>">
     📦 View Products</a>
 
     <a href="add_product.php"

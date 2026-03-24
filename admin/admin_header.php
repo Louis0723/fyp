@@ -8,7 +8,7 @@ if(session_status() === PHP_SESSION_NONE) session_start();
     <div class="user-box">
         <?= $_SESSION['admin'] ?? 'Admin' ?> ▼
         <div class="dropdown">
-            <img src="storelogo.jpeg" alt="LOZ PC STORE">Logout</a>
+           <img src="storelogo.jpeg"  class="logo-img" alt="LOZ PC STORE"><a href="admin_logout.php">Logout</a>
         </div>
     </div>
 </header>
