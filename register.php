@@ -65,7 +65,6 @@ header nav a {
 }
 header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
 
-/* CONTAINER */
 .container {
     width:400px;
     margin:100px auto;
@@ -88,7 +87,27 @@ input {
     color:white;
     font-size:16px;
 }
+
 input::placeholder { color: rgba(255,255,255,0.7); }
+
+.logo-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.logo-center img {
+    height: 60px;
+}
+
+.logo-center h2 {
+    font-size: 28px;
+    color: white;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px #00f0ff;
+}
 
 button {
     width:100%;
@@ -116,9 +135,11 @@ button:hover { transform: scale(1.05); box-shadow:0 10px 25px rgba(255,0,255,0.5
 
 <div id="particles-js"></div>
 
-<!-- HEADER NAVIGATION -->
 <header>
-    <h2 onclick="window.location.href='products.php'">💻 PC STORE</h2>
+    <div class="logo-center">
+        <img src="storelogo.jpeg" alt="LOZ PC STORE" onclick="window.location.href='products.php'">
+        <h2>LOZ PC STORE</h2>
+    </div>
     <nav>
         <a href="about.php">About Us</a>
         <a href="login.php">Login</a>

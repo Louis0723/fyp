@@ -1,6 +1,8 @@
 <?php session_start(); ?>
 <header>
-    <h2>💻 PC STORE</h2>
+    <div class="logo">
+        <img src="storelogo.jpeg" alt="LOZ PC STORE">
+    </div>
     <nav>
         <a href="products.php">Products</a>
 
