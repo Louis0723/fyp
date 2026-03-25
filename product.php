@@ -8,6 +8,13 @@ if (!isset($_SESSION['user'])) {
 }
 
 $result = mysqli_query($conn, "SELECT * FROM products");
+
+$user_id = $_SESSION['user']['user_id'];
+
+$res_cart = mysqli_query($conn, "SELECT SUM(quantity) as total FROM cart WHERE user_id=$user_id");
+$data = mysqli_fetch_assoc($res_cart);
+
+$cart_count = $data['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -30,11 +37,13 @@ body, html {
     overflow-x:hidden;
 }
 
+/* ✅ FIX: allow clicks */
 #particles-js {
     position: fixed;
     width:100%;
     height:100%;
     z-index:-1;
+    pointer-events: none;
 }
 
 header {
@@ -72,11 +81,21 @@ header nav a:hover {
     text-shadow:0 0 10px #ff00ff;
 }
 
+/* ✅ cart badge */
+.cart-badge {
+    background:red;
+    border-radius:50%;
+    padding:3px 8px;
+    font-size:12px;
+    margin-left:5px;
+}
+
 .container {
     max-width:1300px;
     margin:100px auto;
     padding:0 20px;
 }
+
 .title {
     text-align:center;
     font-size:42px;
@@ -98,6 +117,9 @@ header nav a:hover {
     backdrop-filter: blur(15px);
     box-shadow: 0 10px 25px rgba(0,255,255,0.2);
     transition:0.4s;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
 }
 .card:hover {
     transform: translateY(-8px) scale(1.02);
@@ -116,6 +138,7 @@ header nav a:hover {
     color:#00f0ff;
     margin:12px 0;
 }
+
 .spec { 
     font-size:14px; 
     margin-bottom:4px; 
@@ -127,6 +150,7 @@ header nav a:hover {
     margin-top:10px;
     color:#ff00ff;
 }
+
 .stock {
     font-size:12px;
     color:#aaa;
@@ -143,9 +167,11 @@ button {
     font-weight:600;
     cursor:pointer;
     transition:0.3s;
+    position: relative;
+    z-index: 2;
 }
 button:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
     box-shadow:0 10px 25px rgba(255,0,255,0.5);
 }
 </style>
@@ -156,13 +182,21 @@ button:hover {
 <div id="particles-js"></div>
 
 <header>
-    <div class="logo" onclick="window.location.href='products.php'">
+    <div class="logo" onclick="window.location.href='product.php'">
         <img src="storelogo.jpeg" alt="LOZ PC STORE">
     </div>
 
     <nav>
         <a href="about.php">About Us</a>
-        <span>Hello, <?= $_SESSION['user'] ['name'] ?></span>
+
+        <!-- ✅ CART WITH BADGE -->
+        <a href="cart.php">
+            Cart 🛒 <span class="cart-badge"><?= $cart_count ?></span>
+        </a>
+
+        <a href="history.php">Orders</a>
+
+        <span>Hello, <?= $_SESSION['user']['name'] ?></span>
         <a href="logout.php">Logout</a>
     </nav>
 </header>
@@ -172,8 +206,9 @@ button:hover {
 
     <div class="grid">
         <?php while($row = mysqli_fetch_assoc($result)): ?>
-        <div class="card">
-            <img src="<?= $row['image'] ?: 'https://via.placeholder.com/300x200' ?>">
+        <div class="card" onclick="goDetail(<?= $row['product_id'] ?>)">
+
+            <img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/300x200' ?>">
 
             <h3><?= $row['product_name'] ?></h3>
 
@@ -186,7 +221,14 @@ button:hover {
             <div class="price">RM <?= $row['price'] ?></div>
             <div class="stock">Stock: <?= $row['stock'] ?></div>
 
-            <button onclick="buyNow('<?= $row['product_id'] ?>')">Buy Now</button>
+<?php if($row['stock'] > 0): ?>
+    <button onclick="event.stopPropagation(); buyNow(<?= $row['product_id'] ?>)">
+        Add to Cart
+    </button>
+<?php else: ?>
+    <button disabled style="background:#555; cursor:not-allowed;">Out of Stock</button>
+<?php endif; ?>
+
         </div>
         <?php endwhile; ?>
     </div>
@@ -205,8 +247,18 @@ particlesJS("particles-js", {
   }
 });
 
+/* ✅ ADD TO CART */
 function buyNow(id){
-    alert("Product ID " + id + " added to cart! (Coming Soon)");
+    fetch("add_to_cart.php?id=" + id)
+    .then(() => {
+        alert("✅ Added to cart!");
+        location.reload(); // update badge
+    });
+}
+
+/* ✅ GO TO DETAIL PAGE */
+function goDetail(id){
+    window.location.href = "product_detail.php?id=" + id;
 }
 </script>
 
