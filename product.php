@@ -162,7 +162,7 @@ button:hover {
 
     <nav>
         <a href="about.php">About Us</a>
-        <span>Hello, <?= $_SESSION['user'] ?></span>
+        <span>Hello, <?= $_SESSION['user'] ['name'] ?></span>
         <a href="logout.php">Logout</a>
     </nav>
 </header>
