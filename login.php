@@ -32,8 +32,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
-body, html { height:100%; background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:white; }
-#particles-js { position: fixed; width:100%; height:100%; z-index:-1; }
+
+body, html { 
+    height:100%; 
+    background: 
+    linear-gradient(135deg,#0f0c29,#302b63,#24243e); 
+    color:white; 
+}
+
+#particles-js { 
+    position: fixed; 
+    width:100%; 
+    height:100%; 
+    z-index:-1; 
+}
 
 header {
     display:flex;
@@ -47,7 +59,14 @@ header {
     z-index:100;
     border-bottom:1px solid rgba(255,255,255,0.1);
 }
-header h2 { color:#00f0ff; font-size:28px; text-shadow:0 0 10px #00f0ff; cursor:pointer; }
+
+header h2 { 
+    color:#00f0ff; 
+    font-size:28px; 
+    text-shadow:0 0 10px #00f0ff; 
+    cursor:pointer; 
+}
+
 header nav a {
     margin-left:30px;
     color:white;
@@ -55,9 +74,12 @@ header nav a {
     font-weight:600;
     transition:0.3s;
 }
-header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
 
-/* CONTAINER */
+header nav a:hover { 
+    color:#ff00ff; 
+    text-shadow:0 0 10px #ff00ff; 
+}
+
 .container {
     width:400px;
     margin:120px auto;
@@ -68,7 +90,12 @@ header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
     box-shadow: 0 10px 30px rgba(0,255,255,0.2);
     text-align:center;
 }
-.container h2 { color:#00f0ff; font-size:28px; margin-bottom:30px; text-shadow:0 0 10px #00f0ff; }
+.container h2 { 
+    color:#00f0ff; 
+    font-size:28px; 
+    margin-bottom:30px; 
+    text-shadow:0 0 10px #00f0ff; 
+}
 
 input {
     width:100%;
@@ -80,7 +107,10 @@ input {
     color:white;
     font-size:16px;
 }
-input::placeholder { color: rgba(255,255,255,0.7); }
+
+input::placeholder { 
+    color: rgba(255,255,255,0.7); 
+}
 
 button {
     width:100%;
@@ -95,22 +125,64 @@ button {
     box-shadow: 0 5px 15px rgba(0,255,255,0.3);
     transition:0.3s;
 }
-button:hover { transform: scale(1.05); box-shadow:0 10px 25px rgba(255,0,255,0.5); }
 
-.msg { color:#ff5555; margin-bottom:15px; font-weight:600; }
+button:hover { 
+    transform: scale(1.05); 
+    box-shadow:0 10px 25px rgba(255,0,255,0.5); 
+}
 
-.link-text { margin-top:15px; color:white; }
-.link-text a { color:#ff00ff; text-decoration:none; font-weight:600; }
-.link-text a:hover { text-decoration:underline; }
+.logo-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.logo-center img {
+    height: 60px;
+}
+
+.logo-center h2 {
+    font-size: 28px;
+    color: white;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px #00f0ff;
+}
+
+.msg { 
+    color:#ff5555; 
+    margin-bottom:15px; 
+    font-weight:600; 
+}
+
+.link-text { 
+    margin-top:15px; 
+    color:white; 
+
+}
+.link-text a { 
+    color:#ff00ff; 
+    text-decoration:none; 
+    font-weight:600; 
+}
+
+.link-text a:hover { 
+    text-decoration:underline; 
+    }
+
 </style>
+
 </head>
 <body>
 
 <div id="particles-js"></div>
 
-<!-- HEADER NAVIGATION -->
 <header>
-    <h2 onclick="window.location.href='products.php'">💻 PC STORE</h2>
+    <div class="logo-center">
+        <img src="storelogo.jpeg" alt="LOZ PC STORE" onclick="window.location.href='products.php'">
+        <h2>LOZ PC STORE</h2>
+    </div>
     <nav>
         <a href="about.php">About Us</a>
         <a href="login.php">Login</a>

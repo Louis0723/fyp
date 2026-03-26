@@ -1,6 +1,8 @@
 <?php session_start(); ?>
 <header>
-    <h2>💻 PC STORE</h2>
+    <div class="logo">
+        <img src="storelogo.jpeg" alt="LOZ PC STORE">
+    </div>
     <nav>
         <a href="products.php">Products</a>
 
@@ -29,4 +31,9 @@ nav a {
     text-decoration: none;
 }
 nav a:hover { color: #00c3ff; }
+
+.logo img {
+    height: 50px;
+    cursor: pointer;
+}
 </style>

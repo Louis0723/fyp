@@ -2,13 +2,13 @@
 session_start();
 include "db.php";
 
-// Redirect to login if not logged in
+// Redirect to login if not logged in 
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
 }
 
-// Fetch all products
+// Fetch all product
 $result = mysqli_query($conn, "SELECT * FROM products");
 ?>
 
@@ -24,7 +24,7 @@ $result = mysqli_query($conn, "SELECT * FROM products");
 body, html { height:100%; background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:white; overflow-x:hidden; }
 #particles-js { position: fixed; width:100%; height:100%; z-index:-1; }
 
-/* HEADER */
+/* HEADER *///
 header {
     display:flex;
     justify-content:space-between;
