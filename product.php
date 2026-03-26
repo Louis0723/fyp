@@ -200,7 +200,7 @@ button:hover {
         <a href="logout.php">Logout</a>
     </nav>
 </header>
-
+<!-- ✅ MAIN CONTENT -->
 <div class="container">
     <h1 class="title">Explore Our PC Collection</h1>
 
