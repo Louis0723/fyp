@@ -10,6 +10,13 @@ if (!isset($_SESSION['user'])) {
 
 // Fetch all product
 $result = mysqli_query($conn, "SELECT * FROM products");
+
+$user_id = $_SESSION['user']['user_id'];
+
+$res_cart = mysqli_query($conn, "SELECT SUM(quantity) as total FROM cart WHERE user_id=$user_id");
+$data = mysqli_fetch_assoc($res_cart);
+
+$cart_count = $data['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -24,7 +31,26 @@ $result = mysqli_query($conn, "SELECT * FROM products");
 body, html { height:100%; background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:white; overflow-x:hidden; }
 #particles-js { position: fixed; width:100%; height:100%; z-index:-1; }
 
+<<<<<<< HEAD
 /* HEADER *///
+=======
+body, html {
+    height:100%;
+    background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    color:white;
+    overflow-x:hidden;
+}
+
+/* ✅ FIX: allow clicks */
+#particles-js {
+    position: fixed;
+    width:100%;
+    height:100%;
+    z-index:-1;
+    pointer-events: none;
+}
+
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
 header {
     display:flex;
     justify-content:space-between;
@@ -47,9 +73,34 @@ header nav a, header nav span {
 }
 header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
 
+<<<<<<< HEAD
 /* TITLE */
 .container { max-width:1300px; margin:100px auto; padding:0 20px; }
 .title { text-align:center; font-size:42px; margin-bottom:50px; color:#00f0ff; text-shadow:0 0 20px #00f0ff; }
+=======
+/* ✅ cart badge */
+.cart-badge {
+    background:red;
+    border-radius:50%;
+    padding:3px 8px;
+    font-size:12px;
+    margin-left:5px;
+}
+
+.container {
+    max-width:1300px;
+    margin:100px auto;
+    padding:0 20px;
+}
+
+.title {
+    text-align:center;
+    font-size:42px;
+    margin-bottom:50px;
+    color:#00f0ff;
+    text-shadow:0 0 20px #00f0ff;
+}
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
 
 /* GRID */
 .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:40px; }
@@ -61,8 +112,15 @@ header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
     padding:20px;
     backdrop-filter: blur(15px);
     box-shadow: 0 10px 25px rgba(0,255,255,0.2);
+<<<<<<< HEAD
     transition: transform 0.5s, box-shadow 0.5s;
     overflow:hidden;
+=======
+    transition:0.4s;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
 }
 .card img {
     width:100%;
@@ -74,10 +132,36 @@ header nav a:hover { color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
 .card:hover img { transform: scale(1.05) rotate(2deg); }
 .card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 15px 30px rgba(0,255,255,0.4); }
 
+<<<<<<< HEAD
 .card h3 { font-size:22px; color:#00f0ff; margin:12px 0; text-shadow:0 0 5px #00f0ff; }
 .spec { font-size:14px; margin-bottom:4px; }
 .price { font-weight:700; font-size:18px; margin-top:10px; color:#ff00ff; text-shadow:0 0 5px #ff00ff; }
 .stock { font-size:12px; color:#aaa; margin-bottom:10px; }
+=======
+.card h3 {
+    font-size:22px;
+    color:#00f0ff;
+    margin:12px 0;
+}
+
+.spec { 
+    font-size:14px; 
+    margin-bottom:4px; 
+}
+
+.price {
+    font-weight:700;
+    font-size:18px;
+    margin-top:10px;
+    color:#ff00ff;
+}
+
+.stock {
+    font-size:12px;
+    color:#aaa;
+    margin-bottom:10px;
+}
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
 
 /* BUY NOW BUTTON */
 button {
@@ -90,9 +174,19 @@ button {
     font-weight:600;
     cursor:pointer;
     transition:0.3s;
+<<<<<<< HEAD
     box-shadow:0 5px 15px rgba(0,255,255,0.3);
 }
 button:hover { transform: scale(1.1); box-shadow:0 10px 25px rgba(255,0,255,0.5); }
+=======
+    position: relative;
+    z-index: 2;
+}
+button:hover {
+    transform: scale(1.05);
+    box-shadow:0 10px 25px rgba(255,0,255,0.5);
+}
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
 </style>
 </head>
 <body>
@@ -101,9 +195,26 @@ button:hover { transform: scale(1.1); box-shadow:0 10px 25px rgba(255,0,255,0.5)
 
 <!-- HEADER -->
 <header>
+<<<<<<< HEAD
     <h2 onclick="window.location.href='products.php'">💻 PC STORE</h2>
     <nav>
         <a href="about.php">About Us</a>
+=======
+    <div class="logo" onclick="window.location.href='product.php'">
+        <img src="storelogo.jpeg" alt="LOZ PC STORE">
+    </div>
+
+    <nav>
+        <a href="about.php">About Us</a>
+
+        <!-- ✅ CART WITH BADGE -->
+        <a href="cart.php">
+            Cart 🛒 <span class="cart-badge"><?= $cart_count ?></span>
+        </a>
+
+        <a href="history.php">Orders</a>
+
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
         <span>Hello, <?= $_SESSION['user']['name'] ?></span>
         <a href="logout.php">Logout</a>
     </nav>
@@ -113,8 +224,15 @@ button:hover { transform: scale(1.1); box-shadow:0 10px 25px rgba(255,0,255,0.5)
     <h1 class="title">Explore Our Futuristic PC Products</h1>
     <div class="grid">
         <?php while($row = mysqli_fetch_assoc($result)): ?>
+<<<<<<< HEAD
         <div class="card">
             <img src="<?= $row['image'] ?: 'https://via.placeholder.com/300x200' ?>" alt="<?= $row['product_name'] ?>">
+=======
+        <div class="card" onclick="goDetail(<?= $row['product_id'] ?>)">
+
+            <img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/300x200' ?>">
+
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
             <h3><?= $row['product_name'] ?></h3>
             <div class="spec">CPU: <?= $row['cpu'] ?></div>
             <div class="spec">GPU: <?= $row['gpu'] ?></div>
@@ -123,7 +241,19 @@ button:hover { transform: scale(1.1); box-shadow:0 10px 25px rgba(255,0,255,0.5)
             <div class="spec">Motherboard: <?= $row['motherboard'] ?></div>
             <div class="price">RM <?= $row['price'] ?></div>
             <div class="stock">Stock: <?= $row['stock'] ?></div>
+<<<<<<< HEAD
             <button onclick="buyNow('<?= $row['product_id'] ?>')">Buy Now</button>
+=======
+
+<?php if($row['stock'] > 0): ?>
+    <button onclick="event.stopPropagation(); buyNow(<?= $row['product_id'] ?>)">
+        Add to Cart
+    </button>
+<?php else: ?>
+    <button disabled style="background:#555; cursor:not-allowed;">Out of Stock</button>
+<?php endif; ?>
+
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
         </div>
         <?php endwhile; ?>
     </div>
@@ -147,11 +277,26 @@ particlesJS("particles-js", {
   "retina_detect":true
 });
 
+<<<<<<< HEAD
 // Buy Now button action
 function buyNow(productId) {
     alert("Product ID " + productId + " added to cart! (Coming Soon)");
     // Optional: redirect to product detail page
     // window.location.href = "product_detail.php?id=" + productId;
+=======
+/* ✅ ADD TO CART */
+function buyNow(id){
+    fetch("add_to_cart.php?id=" + id)
+    .then(() => {
+        alert("✅ Added to cart!");
+        location.reload(); // update badge
+    });
+}
+
+/* ✅ GO TO DETAIL PAGE */
+function goDetail(id){
+    window.location.href = "product_detail.php?id=" + id;
+>>>>>>> b865bc0630f8233b72c7431e436a1fdb733775c8
 }
 </script>
 
