@@ -20,6 +20,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <a href="add_product.php"
     class="<?= $current_page=='add_product.php'?'active':'' ?>">
     ➕ Add Product</a>
+
+    <!-- 新增 View Orders -->
+    <a href="admin_orders.php"
+    class="<?= $current_page=='admin_orders.php'?'active':'' ?>">
+    🧾 View Orders</a>
 </div>
 
 <style>
