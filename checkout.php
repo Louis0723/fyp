@@ -20,9 +20,40 @@ while($row = mysqli_fetch_assoc($res)){
 }
 ?>
 
-<a href="cart.php" style="
+<!DOCTYPE html>
+<html>
+<head>
+<title>Checkout - PC Store</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+body{ background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:white; min-height:100vh; }
+#particles-js{ position:fixed; width:100%; height:100%; z-index:-1; pointer-events:none; }
+
+.container{
+    max-width:600px;
+    margin:100px auto;
+    padding:30px;
+    background: rgba(255,255,255,0.05);
+    border-radius:20px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    text-align:center;
+}
+
+h1{
+    font-size:38px;
+    margin-bottom:30px;
+    color:#00f0ff;
+    text-shadow:0 0 15px #00f0ff;
+}
+
+.back{
     display:inline-block;
-    margin-bottom:15px;
+    margin-bottom:25px;
     padding:10px 20px;
     background:#ff00ff;
     color:#fff;
@@ -30,51 +61,74 @@ while($row = mysqli_fetch_assoc($res)){
     text-decoration:none;
     font-weight:600;
     transition:0.3s;
-">← Back to Cart</a>
+}
+.back:hover{ transform: scale(1.05); }
 
-<h2>Checkout</h2>
+.total{
+    font-size:26px;
+    margin-bottom:20px;
+    color:#ff00ff;
+    text-shadow:0 0 10px #ff00ff;
+}
 
-<p>Total: RM <?= $total ?></p>
+/* SELECT STYLING */
+form select {
+    padding:10px 15px;
+    width:100%;
+    border-radius:12px;
+    border:2px solid #00f0ff; /* added neon cyan border */
+    margin-bottom:20px;
+    font-weight:600;
+    background: rgba(48, 43, 99, 0.8) url('data:image/svg+xml;utf8,<svg fill="white" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 12px center;
+    background-size:12px;
+    color:#00f0ff; /* neon cyan text */
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    box-shadow: 0 0 10px #00f0ff; /* subtle glow */
+    transition: 0.3s;
+}
+form select:focus {
+    outline:none;
+    border-color:#ff00ff; /* border changes on focus to neon magenta */
+    box-shadow: 0 0 15px #ff00ff;
+}
 
-<form method="post">
-<select name="method">
-<option>Credit Card</option>
-<option>Touch n Go</option>
-<option>FPX</option>
-</select>
+form select option {
+    background-color: rgba(48, 43, 99, 0.9);
+    color:#00f0ff;                             
+    font-weight:600;
+}
+form select option:hover {
+    background-color:#ff00ff; 
+    color:#000;
+}
 
-<br><br>
-<button name="pay">Pay Now</button>
-</form>
+form button{
+    padding:12px 20px;
+    width:100%;
+    border:none;
+    border-radius:12px;
+    background: linear-gradient(90deg,#00f0ff,#ff00ff);
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+form button:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 15px #00f0ff,0 0 25px #ff00ff;
+}
 
-<?php
-if(isset($_POST['pay'])){
-
-    // create order
-    mysqli_query($conn,"INSERT INTO orders(user_id,total_price) VALUES($user_id,$total)");
-    $order_id = mysqli_insert_id($conn);
-
-    foreach($items as $row){
-
-        // insert items
-        mysqli_query($conn,"
-        INSERT INTO order_items(order_id,product_id,quantity,price)
-        VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
-        ");
-
-        // reduce stock
-        mysqli_query($conn,"
-        UPDATE products SET stock = stock - {$row['quantity']}
-        WHERE product_id = {$row['product_id']}
-        ");
-    }
-
-    // clear cart
-    mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
-
-    echo "
-<h2>✅ Payment Successful</h2>
-<a href='product.php' style=\"
+.success{
+    margin-top:20px;
+    padding:20px;
+    border-radius:15px;
+    background: rgba(0,255,255,0.1);
+    color:#00ffea;
+    text-shadow:0 0 10px #00f0ff;
+}
+.success a{
     display:inline-block;
     margin-top:20px;
     padding:10px 20px;
@@ -84,6 +138,82 @@ if(isset($_POST['pay'])){
     text-decoration:none;
     font-weight:600;
     transition:0.3s;
-\">🏠 Back to Home</a>
-";
 }
+.success a:hover{ transform:scale(1.05); }
+
+</style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<div class="container">
+
+<h1>Checkout</h1>
+
+<a href="cart.php" class="back">← Back to Cart</a>
+
+<?php if(empty($items)): ?>
+    <div class="success">
+        🛒 Your cart is empty!<br>
+        <a href="product.php">Back to Products</a>
+    </div>
+<?php else: ?>
+
+<div class="total">Total: RM <?= $total ?></div>
+
+<form method="post">
+<select name="method" required>
+<option value="">Select Payment Method</option>
+<option value="Credit Card">Credit Card</option>
+<option value="Touch n Go">Touch n Go</option>
+<option value="FPX">FPX</option>
+</select>
+
+<button name="pay">Pay Now</button>
+</form>
+
+<?php
+if(isset($_POST['pay'])){
+    mysqli_query($conn,"INSERT INTO orders(user_id,total_price) VALUES($user_id,$total)");
+    $order_id = mysqli_insert_id($conn);
+
+    foreach($items as $row){
+        mysqli_query($conn,"
+        INSERT INTO order_items(order_id,product_id,quantity,price)
+        VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
+        ");
+        mysqli_query($conn,"
+        UPDATE products SET stock = stock - {$row['quantity']}
+        WHERE product_id = {$row['product_id']}
+        ");
+    }
+
+    mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
+
+    echo '<div class="success">
+        ✅ Payment Successful!<br>
+        <a href="product.php">🏠 Back to Home</a>
+    </div>';
+}
+?>
+
+<?php endif; ?>
+</div>
+
+<script>
+particlesJS("particles-js",{
+"particles":{
+"number":{"value":70},
+"color":{"value":["#00f0ff","#ff00ff"]},
+"shape":{"type":"circle"},
+"opacity":{"value":0.5},
+"size":{"value":3,"random":true},
+"line_linked":{"enable":true,"distance":150,"color":"#00f0ff","opacity":0.3,"width":1},
+"move":{"enable":true,"speed":2}
+}
+});
+</script>
+
+</body>
+</html>
