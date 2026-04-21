@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <a href="dashboard.php" class="<?= $current=='dashboard.php'?'active':'' ?>">
+    <a href="admin_dashboard.php" class="<?= $current=='admin_dashboard.php'?'active':'' ?>">
         <i data-lucide="layout-dashboard"></i>
         <span class="text">Overview</span>
     </a>
@@ -26,12 +26,12 @@
         <span class="text">Orders</span>
     </a>
 
-    <a href="admin_customers.php" class="<?= $current=='admin_customers.php'?'active':'' ?>">
+    <a href="admin_profile.php" class="<?= $current=='admin_profile.php'?'active':'' ?>">
         <i data-lucide="users"></i>
         <span class="text">Customers</span>
     </a>
 
-    <a href="admin_profile.php" class="<?= $current=='admin_profile.php'?'active':'' ?>">
+    <a href="admin_settings.php" class="<?= $current=='admin_settings.php'?'active':'' ?>">
         <i data-lucide="settings"></i>
         <span class="text">Settings</span>
     </a>

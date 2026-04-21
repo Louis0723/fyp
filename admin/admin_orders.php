@@ -2,13 +2,12 @@
 session_start();
 include "../db.php";
 
-// 检查 admin 登录
 if (!isset($_SESSION["admin"])) {
     header("Location: admin_login.php");
     exit();
 }
 
-// 更新订单状态
+// update status
 if (isset($_POST['update_status'])) {
     $order_id = $_POST['order_id'];
     $status = $_POST['status'];
@@ -19,7 +18,7 @@ if (isset($_POST['update_status'])) {
     $stmt->close();
 }
 
-// 获取订单
+// get orders
 $sql = "SELECT 
             o.order_id,
             u.name AS user_name,
@@ -38,156 +37,150 @@ $result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Admin – Manage Orders</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin – Orders</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- ✅ IMPORTANT -->
+<link rel="stylesheet" href="style.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
-
-/* ✅ 关键修复（防止 header 撑大） */
-* {
-    box-sizing: border-box;
+body{
+    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
 }
 
-body {
-    margin:0;
-    font-family:'Inter',sans-serif;
-    background: linear-gradient(135deg, #f9d976, #f39f86);
+/* layout fix */
+.main-layout{
+    display:flex;
 }
 
-/* layout */
-.main-layout {
-    display: flex;
-    margin-top: 70px; /* match header */
+.content-area{
+    margin-left:240px;
+    margin-top:90px;
+    padding:30px;
+    width:100%;
 }
 
-.content-area {
-    margin-left: 230px;
-    flex:1;
-    padding: 40px;
+/* collapse support */
+.sidebar.collapsed ~ .main-layout .content-area{
+    margin-left:70px;
 }
 
-/* TABLE */
-.table-container {
-    overflow-x:auto;
-    background: #fff;
+/* table */
+.table-container{
+    background:#fff;
+    padding:20px;
     border-radius:16px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    padding: 20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
 }
 
-table {
-    width: 100%;
-    border-collapse: separate;
+table{
+    width:100%;
+    border-collapse:collapse;
 }
 
-th, td {
-    padding: 12px;
-    text-align: center;
+th,td{
+    padding:12px;
+    text-align:center;
 }
 
-th {
-    background: linear-gradient(90deg, #6366F1, #4F46E5);
-    color: #fff;
+th{
+    background:#3b82f6;
+    color:#fff;
 }
 
-tr:nth-child(even) td { background: #f9fafb; }
-tr:hover td { background: #e0e7ff; }
-
-/* STATUS */
-.status-Pending { color:#D97706; font-weight:600; background:#FEF3C7; padding:4px 10px; border-radius:12px; }
-.status-Completed { color:#15803D; font-weight:600; background:#D1FAE5; padding:4px 10px; border-radius:12px; }
-.status-Cancelled { color:#B91C1C; font-weight:600; background:#FECACA; padding:4px 10px; border-radius:12px; }
-
-select {
-    padding:6px 10px;
-    border-radius:8px;
+tr:nth-child(even){
+    background:#f9fafb;
 }
 
-button {
-    padding:6px 12px;
-    background: linear-gradient(90deg, #6366F1, #4F46E5);
-    color:white;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
+/* status */
+.status-Pending{
+    color:#b45309;
+    background:#fde68a;
+    padding:4px 10px;
+    border-radius:12px;
 }
 
+.status-Completed{
+    color:#065f46;
+    background:#a7f3d0;
+    padding:4px 10px;
+    border-radius:12px;
+}
+
+.status-Cancelled{
+    color:#991b1b;
+    background:#fecaca;
+    padding:4px 10px;
+    border-radius:12px;
+}
 </style>
+
 </head>
 
 <body>
 
-<!-- ✅ HEADER -->
 <?php include "admin_header.php"; ?>
+<?php include "admin_sidebar.php"; ?>
 
 <div class="main-layout">
 
-    <!-- ✅ SIDEBAR -->
-    <?php include "admin_sidebar.php"; ?>
+<div class="content-area">
 
-    <!-- CONTENT -->
-    <div class="content-area">
-        <h2>🧾 Admin – Manage Orders</h2>
+<h2>🧾 Manage Orders</h2>
 
-        <div class="table-container">
-        <table>
-        <tr>
-            <th>Order ID</th>
-            <th>User</th>
-            <th>Products</th>
-            <th>Quantity</th>
-            <th>Total (RM)</th>
-            <th>Status</th>
-            <th>Update</th>
-        </tr>
+<div class="table-container">
+<table>
+<tr>
+    <th>ID</th>
+    <th>User</th>
+    <th>Products</th>
+    <th>Qty</th>
+    <th>Total</th>
+    <th>Status</th>
+    <th>Update</th>
+</tr>
 
-        <?php if ($result && $result->num_rows > 0): ?>
-            <?php while ($row = $result->fetch_assoc()): ?>
-            <tr>
-                <td><?= $row['order_id'] ?></td>
-                <td><?= htmlspecialchars($row['user_name']) ?></td>
-                <td><?= $row['products'] ?></td>
-                <td><?= $row['total_qty'] ?></td>
-                <td><?= number_format($row['total_price'],2) ?></td>
+<?php while($row = $result->fetch_assoc()): ?>
+<tr>
+    <td><?= $row['order_id'] ?></td>
+    <td><?= $row['user_name'] ?></td>
+    <td><?= $row['products'] ?></td>
+    <td><?= $row['total_qty'] ?></td>
+    <td><?= $row['total_price'] ?></td>
 
-                <td class="status-<?= $row['status'] ?>">
-                    <?= $row['status'] ?>
-                </td>
+    <td class="status-<?= $row['status'] ?>">
+        <?= $row['status'] ?>
+    </td>
 
-                <td>
-                    <form method="post">
-                        <input type="hidden" name="order_id" value="<?= $row['order_id'] ?>">
+    <td>
+        <form method="post">
+            <input type="hidden" name="order_id" value="<?= $row['order_id'] ?>">
 
-                        <select name="status">
-                            <option value="Pending" <?= $row['status']=="Pending"?"selected":"" ?>>Pending</option>
-                            <option value="Completed" <?= $row['status']=="Completed"?"selected":"" ?>>Completed</option>
-                            <option value="Cancelled" <?= $row['status']=="Cancelled"?"selected":"" ?>>Cancelled</option>
-                        </select>
+            <select name="status">
+                <option <?= $row['status']=="Pending"?"selected":"" ?>>Pending</option>
+                <option <?= $row['status']=="Completed"?"selected":"" ?>>Completed</option>
+                <option <?= $row['status']=="Cancelled"?"selected":"" ?>>Cancelled</option>
+            </select>
 
-                        <button name="update_status">Update</button>
-                    </form>
-                </td>
-            </tr>
-            <?php endwhile; ?>
-        <?php else: ?>
-        <tr>
-            <td colspan="7">No orders found.</td>
-        </tr>
-        <?php endif; ?>
+            <button name="update_status">Update</button>
+        </form>
+    </td>
+</tr>
+<?php endwhile; ?>
 
-        </table>
-        </div>
-
-    </div>
+</table>
+</div>
 
 </div>
+</div>
+
+<script src="admin.js"></script>
+<script>lucide.createIcons();</script>
 
 </body>
 </html>
-
-<?php $conn->close(); ?>
