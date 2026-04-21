@@ -7,11 +7,11 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-// 统计数据
+// stats
 $productCount = $conn->query("SELECT COUNT(*) as total FROM products")->fetch_assoc()['total'];
 $totalStock = $conn->query("SELECT SUM(stock) as total FROM products")->fetch_assoc()['total'];
 
-// Chart 数据（按产品）
+// chart data
 $productData = [];
 $productLabels = [];
 
@@ -28,6 +28,10 @@ while($row = $res->fetch_assoc()){
 <head>
 <title>Admin Dashboard</title>
 
+<!-- ✅ IMPORTANT: LOAD YOUR CSS -->
+<link rel="stylesheet" href="style.css">
+
+<!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -43,13 +47,20 @@ body{
     display:flex;
 }
 
+/* content area */
 .content-area{
     flex:1;
     padding:40px;
     padding-top:120px;
+    margin-left:240px; /* ✅ push away from sidebar */
     display:flex;
     flex-direction:column;
     align-items:center;
+}
+
+/* when sidebar collapsed */
+.sidebar.collapsed ~ .main-layout .content-area{
+    margin-left:70px;
 }
 
 /* title */
@@ -70,13 +81,6 @@ body{
     padding:25px;
     box-shadow:0 10px 30px rgba(0,0,0,0.15);
     margin-bottom:40px;
-    position:relative;
-}
-
-.chart-title{
-    font-weight:600;
-    color:#0072ff;
-    margin-bottom:10px;
 }
 
 /* cards */
@@ -113,6 +117,7 @@ body{
     color:#0072ff;
 }
 </style>
+
 </head>
 
 <body>
@@ -122,41 +127,41 @@ body{
 
 <div class="main-layout">
 
-<div class="content-area">
+    <div class="content-area">
 
-<div class="dashboard-title">📊 PC Store Dashboard</div>
+        <div class="dashboard-title">📊 PC Store Dashboard</div>
 
-<!-- Chart -->
-<div class="chart-wrapper">
-    <div class="chart-title">Product Stock Distribution</div>
-    <canvas id="stockChart"></canvas>
-</div>
+        <!-- Chart -->
+        <div class="chart-wrapper">
+            <div class="chart-title">Product Stock Distribution</div>
+            <canvas id="stockChart"></canvas>
+        </div>
 
-<!-- Cards -->
-<div class="dashboard-grid">
-    <div class="card">
-        <h3>Total Products</h3>
-        <p><?= $productCount ?></p>
+        <!-- Cards -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Total Products</h3>
+                <p><?= $productCount ?></p>
+            </div>
+
+            <div class="card">
+                <h3>Total Stock</h3>
+                <p><?= $totalStock ?></p>
+            </div>
+
+            <div class="card">
+                <h3>Admin</h3>
+                <p><?= $_SESSION['admin'] ?></p>
+            </div>
+        </div>
+
     </div>
 
-    <div class="card">
-        <h3>Total Stock</h3>
-        <p><?= $totalStock ?></p>
-    </div>
-
-    <div class="card">
-        <h3>Admin</h3>
-        <p><?= $_SESSION['admin'] ?></p>
-    </div>
 </div>
 
-</div>
-</div>
-
+<!-- Chart JS -->
 <script>
 const ctx = document.getElementById('stockChart').getContext('2d');
-
-const colors = ['#00c6ff','#0072ff','#4facfe','#43e97b','#f9d423','#ff4e50'];
 
 new Chart(ctx,{
     type:'doughnut',
@@ -164,19 +169,21 @@ new Chart(ctx,{
         labels: <?= json_encode($productLabels) ?>,
         datasets:[{
             data: <?= json_encode($productData) ?>,
-            backgroundColor: colors,
+            backgroundColor: ['#00c6ff','#0072ff','#4facfe','#43e97b','#f9d423','#ff4e50'],
             borderWidth:2
         }]
-    },
-    options:{
-        responsive:true,
-        plugins:{
-            legend:{
-                position:'bottom'
-            }
-        }
     }
 });
+</script>
+
+<!-- icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- your JS -->
+<script src="admin.js"></script>
+
+<script>
+lucide.createIcons();
 </script>
 
 </body>

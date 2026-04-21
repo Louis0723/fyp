@@ -1,67 +1,39 @@
-<?php
-$current_page = basename($_SERVER['PHP_SELF']);
-?>
+<?php $current = basename($_SERVER['PHP_SELF']); ?>
 
-<div class="sidebar">
-    <h3>⚙️ Admin</h3>
+<div class="sidebar" id="sidebar">
 
-    <a href="admin_dashboard.php"
-    class="<?= $current_page=='admin_dashboard.php'?'active':'' ?>">
-    📊 Dashboard</a>
+    <div class="brand">
+        <img src="storelogo.jpeg" class="logo-img">
 
-    <a href="admin_profile.php"
-    class="<?= $current_page=='admin_profile.php'?'active':'' ?>">
-    👤 Profile</a>
+        <div class="brand-text">
+            <div class="store-name">LOZ PC Store</div>
+            <div class="store-sub">Admin Console</div>
+        </div>
+    </div>
 
-    <a href="admin_product.php"
-    class="<?= $current_page=='admin_product.php'?'active':'' ?>">
-    📦 View Products</a>
+    <a href="dashboard.php" class="<?= $current=='dashboard.php'?'active':'' ?>">
+        <i data-lucide="layout-dashboard"></i>
+        <span class="text">Overview</span>
+    </a>
 
-    <a href="add_product.php"
-    class="<?= $current_page=='add_product.php'?'active':'' ?>">
-    ➕ Add Product</a>
+    <a href="admin_product.php" class="<?= $current=='admin_product.php'?'active':'' ?>">
+        <i data-lucide="box"></i>
+        <span class="text">Products</span>
+    </a>
 
-    <!-- 新增 View Orders -->
-    <a href="admin_orders.php"
-    class="<?= $current_page=='admin_orders.php'?'active':'' ?>">
-    🧾 View Orders</a>
+    <a href="admin_orders.php" class="<?= $current=='admin_orders.php'?'active':'' ?>">
+        <i data-lucide="file-text"></i>
+        <span class="text">Orders</span>
+    </a>
+
+    <a href="admin_customers.php" class="<?= $current=='admin_customers.php'?'active':'' ?>">
+        <i data-lucide="users"></i>
+        <span class="text">Customers</span>
+    </a>
+
+    <a href="admin_profile.php" class="<?= $current=='admin_profile.php'?'active':'' ?>">
+        <i data-lucide="settings"></i>
+        <span class="text">Settings</span>
+    </a>
+
 </div>
-
-<style>
-.sidebar{
-    position:fixed;
-    top:60px;
-    left:0;
-    width:230px;
-    height:100%;
-    background:linear-gradient(180deg,#0f2027,#203a43);
-    padding:20px;
-    box-shadow:2px 0 20px rgba(0,0,0,0.5);
-}
-
-.sidebar h3{
-    color:#fff;
-    margin-bottom:20px;
-}
-
-.sidebar a{
-    display:block;
-    color:#ccc;
-    padding:12px;
-    border-radius:10px;
-    margin-bottom:10px;
-    text-decoration:none;
-    transition:0.3s;
-}
-
-.sidebar a:hover{
-    background:#00c6ff;
-    color:#fff;
-    transform:translateX(5px);
-}
-
-.sidebar a.active{
-    background:linear-gradient(90deg,#00c6ff,#0072ff);
-    color:#fff;
-}
-</style>
