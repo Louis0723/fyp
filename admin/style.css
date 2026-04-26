@@ -1,0 +1,178 @@
+body{
+    margin:0;
+    font-family:Segoe UI;
+    background:#f8fafc;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:240px;
+    height:100vh;
+    background:#0f172a;
+    padding:20px 12px;
+    transition:0.3s;
+    overflow:hidden;
+}
+
+/* COLLAPSE */
+.sidebar.collapsed{
+    width:70px;
+}
+
+/* BRAND */
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:30px;
+}
+
+/* LOGO */
+.logo-img{
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    object-fit:cover;
+    flex-shrink:0;
+}
+
+/* TEXT */
+.brand-text{
+    color:#fff;
+}
+
+.store-name{
+    font-weight:600;
+    font-size:15px;
+}
+
+.store-sub{
+    font-size:12px;
+    color:#94a3b8;
+}
+
+/* MENU */
+.sidebar a{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+    color:#cbd5f5;
+    text-decoration:none;
+    border-radius:10px;
+    margin-bottom:10px;
+    transition:0.2s;
+}
+
+.sidebar a i{
+    min-width:20px;
+    stroke:#cbd5f5;
+}
+
+/* hover */
+.sidebar a:hover{
+    background:#1e293b;
+}
+
+/* active */
+.sidebar a.active{
+    background:#3b82f6;
+    color:#fff;
+}
+
+/* COLLAPSED */
+.sidebar.collapsed .text,
+.sidebar.collapsed .brand-text{
+    display:none;
+}
+
+/* center when collapsed */
+.sidebar.collapsed .brand{
+    justify-content:center;
+}
+
+.sidebar.collapsed a{
+    justify-content:center;
+}
+
+/* ================= HEADER ================= */
+.admin-header{
+    position:fixed;
+    top:0;
+    left:240px;
+    width:calc(100% - 240px);
+    height:70px;
+    background:#fff;
+    border-bottom:1px solid #eee;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 20px;
+    transition:0.3s;
+    z-index:100;
+}
+
+.sidebar.collapsed ~ .admin-header{
+    left:70px;
+    width:calc(100% - 70px);
+}
+
+/* SEARCH */
+.search-box{
+    display:flex;
+    align-items:center;
+    background:#f1f5f9;
+    padding:8px 12px;
+    border-radius:10px;
+    gap:8px;
+}
+
+.search-box input{
+    border:none;
+    background:none;
+    outline:none;
+}
+
+/* NOTIFICATION */
+.notif{
+    position:relative;
+}
+
+.notif-box{
+    display:none;
+    position:absolute;
+    background:#fff;
+    padding:10px;
+    width:220px;
+    right:0;
+    top:40px;
+    border-radius:10px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+/* AVATAR */
+.avatar{
+    width:35px;
+    height:35px;
+    background:#3b82f6;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+}
+
+/* MAIN */
+.main-content{
+    margin-left:240px;
+    margin-top:80px;
+    padding:20px;
+    transition:0.3s;
+}
+
+.sidebar.collapsed ~ .main-content{
+    margin-left:70px;
+}

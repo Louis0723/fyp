@@ -46,123 +46,94 @@ if(isset($_POST['update'])){
 <head>
 <title>Admin Profile</title>
 
+<link rel="stylesheet" href="style.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
-/* 不影响 header */
-.main{
-    margin-left:240px;
-    margin-top:80px;
-    padding:30px;
-    background: linear-gradient(135deg, #eef2ff, #f8fbff);
-    min-height:100vh;
+
+/* ✅ FIXED LAYOUT */
+.main-layout{
+    display:flex;
 }
 
-/* ✅ 左对齐关键 */
-.main .profile-card{
+.content-area{
+    margin-left:240px;
+    margin-top:90px;
+    padding:30px;
+    width:100%;
+}
+
+/* collapse support */
+.sidebar.collapsed ~ .main-layout .content-area{
+    margin-left:70px;
+}
+
+/* CARD */
+.profile-card{
     max-width:600px;
-    margin:0; /* ❌ 去掉 auto */
-    background: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.95);
     border-radius:20px;
     padding:40px;
     box-shadow:0 20px 50px rgba(0,0,0,0.15);
-    position:relative;
-    transition:0.3s;
 }
 
-/* hover */
-.main .profile-card:hover{
-    transform:translateY(-8px);
-}
-
-/* 顶部渐变 */
-.main .profile-card::before{
+/* header line */
+.profile-card::before{
     content:"";
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
+    display:block;
     height:6px;
+    border-radius:20px 20px 0 0;
     background: linear-gradient(135deg, #4facfe, #00c6ff);
+    margin:-40px -40px 20px -40px;
 }
 
-/* 标题 */
-.main h2{
-    text-align:left; /* ✅ 改左 */
+/* title */
+h2{
     font-weight:700;
     color:#2c3e50;
     margin-bottom:30px;
 }
 
-/* 行 */
-.main .profile-row{
+/* rows */
+.profile-row{
     display:flex;
     justify-content:space-between;
     padding:12px 0;
     border-bottom:1px solid #eee;
 }
 
-.main .label{
-    font-weight:600;
-    color:#555;
+.label{font-weight:600;}
+.value{color:#333;}
+
+/* input */
+input{
+    border-radius:10px;
+    padding:10px;
+    margin-bottom:10px;
 }
 
-.main .value{
-    color:#333;
-}
-
-/* 输入 */
-.main input{
-    border-radius:12px;
-    padding:12px;
-    border:1px solid #ddd;
-    margin-bottom:15px;
-    transition:0.25s;
-}
-
-.main input:focus{
-    border-color:#4facfe;
-    box-shadow:0 0 8px rgba(79,172,254,0.3);
-    outline:none;
-}
-
-/* 按钮 */
-.main .btn-main{
-    background: linear-gradient(135deg, #4facfe, #00c6ff);
+/* buttons */
+.btn-main{
+    background:#3b82f6;
+    color:#fff;
     border:none;
-    color:white;
-    padding:12px 25px;
-    border-radius:25px;
-    font-weight:600;
-    transition:0.3s;
+    padding:10px 20px;
+    border-radius:10px;
 }
 
-.main .btn-main:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 25px rgba(0,198,255,0.4);
-}
-
-.main .btn-cancel{
+.btn-cancel{
     background:#ccc;
     color:#333;
 }
 
-.main .btn-cancel:hover{
-    background:#999;
-}
-
-/* ✅ 按钮靠左 */
-.main .button-group{
+/* buttons group */
+.button-group{
     display:flex;
-    justify-content:flex-start;
-    gap:15px;
-    margin-top:20px;
+    gap:10px;
+    margin-top:15px;
 }
 
-/* alert */
-.main .alert{
-    border-radius:12px;
-}
 </style>
 </head>
 
@@ -171,7 +142,9 @@ if(isset($_POST['update'])){
 <?php include "admin_header.php"; ?>
 <?php include "admin_sidebar.php"; ?>
 
-<div class="main">
+<div class="main-layout">
+
+<div class="content-area">
 
 <div class="profile-card">
 
@@ -198,7 +171,7 @@ if(isset($_POST['update'])){
     </div>
 
     <div class="button-group">
-        <button id="edit-btn" class="btn-main">Edit Profile</button>
+        <button id="edit-btn" class="btn-main">Edit</button>
     </div>
 </div>
 
@@ -207,7 +180,7 @@ if(isset($_POST['update'])){
     <form method="POST">
         <input value="<?= htmlspecialchars($admin['username']) ?>" disabled class="form-control">
 
-        <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" class="form-control" required>
+        <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" class="form-control">
 
         <div class="button-group">
             <button name="update" class="btn-main">Save</button>
@@ -217,15 +190,20 @@ if(isset($_POST['update'])){
 </div>
 
 </div>
+
+</div>
 </div>
 
+<script src="admin.js"></script>
 <script>
-document.getElementById('edit-btn').onclick = function(){
+lucide.createIcons();
+
+document.getElementById('edit-btn').onclick = () => {
     document.getElementById('view-mode').style.display = 'none';
     document.getElementById('edit-mode').style.display = 'block';
 };
 
-document.getElementById('cancel-btn').onclick = function(){
+document.getElementById('cancel-btn').onclick = () => {
     document.getElementById('edit-mode').style.display = 'none';
     document.getElementById('view-mode').style.display = 'block';
 };
