@@ -7,7 +7,22 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-$result = mysqli_query($conn, "SELECT * FROM products");
+$search = $_GET['search'] ?? '';
+$sort = $_GET['sort'] ?? '';
+
+$sql = "SELECT * FROM products WHERE 1";
+
+if(!empty($search)){
+    $sql .= " AND product_name LIKE '%$search%'";
+}
+
+if($sort == "low"){
+    $sql .= " ORDER BY price ASC";
+}else if($sort == "high"){
+    $sql .= " ORDER BY price DESC";
+}
+
+$result = mysqli_query($conn, $sql);
 
 $user_id = $_SESSION['user']['user_id'];
 
@@ -233,6 +248,22 @@ Cart 🛒 <span class="cart-badge"><?= $cart_count ?></span>
 <div class="container">
 
 <h1 class="title">Explore Our Futuristic PC Products</h1>
+
+<form method="get" style="text-align:center; margin-bottom:30px;">
+
+<input type="text" name="search" placeholder="Search product..."
+value="<?= htmlspecialchars($search) ?>"
+style="padding:10px; width:250px; border-radius:10px;">
+
+<select name="sort" style="padding:10px; border-radius:10px;">
+<option value="">Sort By</option>
+<option value="low">Price Low → High</option>
+<option value="high">Price High → Low</option>
+</select>
+
+<button type="submit">Search</button>
+
+</form>
 
 <div class="grid">
 

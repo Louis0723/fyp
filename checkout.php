@@ -18,6 +18,55 @@ while($row = mysqli_fetch_assoc($res)){
     $total += $row['price'] * $row['quantity'];
     $items[] = $row;
 }
+
+if(isset($_POST['pay'])){
+
+    $address = mysqli_real_escape_string($conn, $_POST['address']);
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $method = mysqli_real_escape_string($conn, $_POST['method']);
+
+    $res = mysqli_query($conn,"
+    SELECT p.*, c.quantity 
+    FROM cart c 
+    JOIN products p ON c.product_id = p.product_id
+    WHERE c.user_id = $user_id
+    ");
+
+    $total = 0;
+    $items = [];
+
+    while($row = mysqli_fetch_assoc($res)){
+        $total += $row['price'] * $row['quantity'];
+        $items[] = $row;
+    }
+
+    if(!empty($items)){
+        mysqli_query($conn,"
+        INSERT INTO orders(user_id,total_price,address,phone)
+        VALUES($user_id,$total,'$address','$phone')
+        ");
+
+        $order_id = mysqli_insert_id($conn);
+
+        foreach($items as $row){
+            mysqli_query($conn,"
+            INSERT INTO order_items(order_id,product_id,quantity,price)
+            VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
+            ");
+
+            mysqli_query($conn,"
+            UPDATE products 
+            SET stock = stock - {$row['quantity']}
+            WHERE product_id = {$row['product_id']}
+            ");
+        }
+
+        mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
+
+        header("Location: checkout.php?success=1");
+        exit;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -71,7 +120,6 @@ h1{
     text-shadow:0 0 10px #ff00ff;
 }
 
-/* SELECT STYLING */
 form select {
     padding:10px 15px;
     width:100%;
@@ -153,16 +201,41 @@ form button:hover{
 
 <a href="cart.php" class="back">← Back to Cart</a>
 
-<?php if(empty($items)): ?>
+<?php if(isset($_GET['success'])): ?>
+    <div class="success">
+        ✅ Payment Successful!<br>
+        <a href="product.php">🏠 Back to Home</a>
+    </div>
+
+<?php elseif(empty($items)): ?>
     <div class="success">
         🛒 Your cart is empty!<br>
         <a href="product.php">Back to Products</a>
     </div>
+
 <?php else: ?>
 
+<div style="text-align:left; margin-bottom:20px;">
+<h3>Order Summary</h3>
+
+<?php foreach($items as $row): ?>
+<p>
+<?= $row['product_name'] ?> x <?= $row['quantity'] ?>
+= RM <?= $row['price'] * $row['quantity'] ?>
+</p>
+<?php endforeach; ?>
+
+</div>
 <div class="total">Total: RM <?= $total ?></div>
 
 <form method="post">
+
+<input type="text" name="address" placeholder="Enter Address" required
+style="width:100%; padding:10px; margin-bottom:10px;">
+
+<input type="text" name="phone" placeholder="Phone Number" required
+style="width:100%; padding:10px; margin-bottom:10px;">
+
 <select name="method" required>
 <option value="">Select Payment Method</option>
 <option value="Credit Card">Credit Card</option>
@@ -173,30 +246,7 @@ form button:hover{
 <button name="pay">Pay Now</button>
 </form>
 
-<?php
-if(isset($_POST['pay'])){
-    mysqli_query($conn,"INSERT INTO orders(user_id,total_price) VALUES($user_id,$total)");
-    $order_id = mysqli_insert_id($conn);
 
-    foreach($items as $row){
-        mysqli_query($conn,"
-        INSERT INTO order_items(order_id,product_id,quantity,price)
-        VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
-        ");
-        mysqli_query($conn,"
-        UPDATE products SET stock = stock - {$row['quantity']}
-        WHERE product_id = {$row['product_id']}
-        ");
-    }
-
-    mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
-
-    echo '<div class="success">
-        ✅ Payment Successful!<br>
-        <a href="product.php">🏠 Back to Home</a>
-    </div>';
-}
-?>
 
 <?php endif; ?>
 </div>

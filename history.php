@@ -109,7 +109,15 @@ $result = mysqli_query($conn, "SELECT * FROM orders WHERE user_id=$user_id ORDER
                 <span>Order ID: {$order['order_id']}</span>
                 <span>Date: {$order['created_at']}</span>
               </div>";
-        echo "<div class='order-header'>Total: RM {$order['total_price']}</div>";
+        echo "<div class='order-header'>
+        <span>Total:</span>
+        <span>RM {$order['total_price']}</span>
+        </div>";
+
+        echo "<div style='margin:10px 0; padding:10px; border:1px solid rgba(0,255,255,0.3); border-radius:10px;'>
+        <div>📍 <b>Address:</b> {$order['address']}</div>
+        <div>📞 <b>Phone:</b> {$order['phone']}</div>
+        </div>";
 
         // Fetch order items
         $items = mysqli_query($conn,"SELECT oi.*, p.product_name, p.price 

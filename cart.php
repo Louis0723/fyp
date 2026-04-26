@@ -10,7 +10,7 @@ FROM cart c
 JOIN products p ON c.product_id = p.product_id
 WHERE c.user_id = $user_id
 ");
-// calculate total
+
 $total = 0;
 ?>
 
