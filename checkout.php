@@ -4,6 +4,9 @@ include "db.php";
 
 $user_id = $_SESSION['user']['user_id'];
 
+$res_user = mysqli_query($conn,"SELECT * FROM users WHERE user_id=$user_id");
+$user = mysqli_fetch_assoc($res_user);
+
 $res = mysqli_query($conn,"
 SELECT p.*, c.quantity 
 FROM cart c 
@@ -62,6 +65,15 @@ if(isset($_POST['pay'])){
         }
 
         mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
+
+        $to = $user['email'];
+        $subject = "Order Receipt - PC Store";
+
+        $message = "Thank you for your order!\n\nOrder ID: $order_id\nTotal: RM $total";
+
+        $headers = "From: noreply@pcstore.com";
+
+        mail($to, $subject, $message, $headers);
 
         header("Location: checkout.php?success=1");
         exit;
@@ -189,6 +201,33 @@ form button:hover{
 }
 .success a:hover{ transform:scale(1.05); }
 
+.input-box{
+    margin-bottom:15px;
+}
+
+.input-box input{
+    width:100%;
+    padding:12px 15px;
+    border-radius:12px;
+    border:2px solid #00f0ff;
+    background: rgba(48, 43, 99, 0.8);
+    color:#00f0ff;
+    font-weight:600;
+    outline:none;
+    box-shadow: 0 0 10px #00f0ff;
+    transition:0.3s;
+}
+
+.input-box input::placeholder{
+    color:rgba(0,240,255,0.6);
+}
+
+.input-box input:focus{
+    border-color:#ff00ff;
+    box-shadow: 0 0 15px #ff00ff;
+    color:#ff00ff;
+}
+
 </style>
 </head>
 <body>
@@ -230,11 +269,19 @@ form button:hover{
 
 <form method="post">
 
-<input type="text" name="address" placeholder="Enter Address" required
-style="width:100%; padding:10px; margin-bottom:10px;">
+<div class="input-box">
+    <input type="text" name="address"
+           value="<?= htmlspecialchars($user['address']) ?>"
+           placeholder="Enter Address"
+           required>
+</div>
 
-<input type="text" name="phone" placeholder="Phone Number" required
-style="width:100%; padding:10px; margin-bottom:10px;">
+<div class="input-box">
+    <input type="text" name="phone"
+           value="<?= $user['phone'] ?>"
+           placeholder="Phone Number"
+           required>
+</div>
 
 <select name="method" required>
 <option value="">Select Payment Method</option>

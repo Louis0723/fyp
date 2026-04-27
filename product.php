@@ -235,16 +235,26 @@ cursor:not-allowed;
 Cart 🛒 <span class="cart-badge"><?= $cart_count ?></span>
 </a>
 
+<a href="track_order.php">Track Order 🚚</a>
+
+
 <a href="history.php">Orders</a>
 
-<span>Hello, <?= $_SESSION['user']['name'] ?></span>
+<a href="profile.php" style="
+padding:8px 15px;
+background:#00f0ff;
+color:#000;
+border-radius:10px;
+">
+👤 Profile
+</a>
 
 <a href="logout.php">Logout</a>
 
 </nav>
 
 </header>
-<!-- ✅ MAIN CONTENT -->
+
 <div class="container">
 
 <h1 class="title">Explore Our Futuristic PC Products</h1>
