@@ -109,7 +109,31 @@ $result = mysqli_query($conn, "SELECT * FROM orders WHERE user_id=$user_id ORDER
                 <span>Order ID: {$order['order_id']}</span>
                 <span>Date: {$order['created_at']}</span>
               </div>";
-        echo "<div class='order-header'>Total: RM {$order['total_price']}</div>";
+        echo "<div class='order-header'>
+        <span>Total:</span>
+        <span>RM {$order['total_price']}</span>
+        </div>";
+
+echo "<div style='margin-top:10px;'>";
+
+if($order['status'] == "Pending"){
+    echo "<a href='cancel_order.php?id={$order['order_id']}' 
+    style='background:red;color:white;padding:5px 10px;border-radius:8px;margin-right:10px;text-decoration:none;'>
+    Cancel Order
+    </a>";
+}
+
+echo "<a href='order_detail.php?id={$order['order_id']}' 
+style='padding:8px 15px;background:#00f0ff;color:#000;border-radius:8px;text-decoration:none;margin-right:10px;'>
+View Details
+</a>";
+
+echo "<a href='invoice.php?id={$order['order_id']}' 
+style='padding:8px 15px;background:#ff00ff;color:white;border-radius:8px;text-decoration:none;'>
+🧾 Invoice
+</a>";
+
+echo "</div>";
 
         // Fetch order items
         $items = mysqli_query($conn,"SELECT oi.*, p.product_name, p.price 

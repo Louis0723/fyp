@@ -4,6 +4,9 @@ include "db.php";
 
 $user_id = $_SESSION['user']['user_id'];
 
+$res_user = mysqli_query($conn,"SELECT * FROM users WHERE user_id=$user_id");
+$user = mysqli_fetch_assoc($res_user);
+
 $res = mysqli_query($conn,"
 SELECT p.*, c.quantity 
 FROM cart c 
@@ -17,6 +20,64 @@ $items = [];
 while($row = mysqli_fetch_assoc($res)){
     $total += $row['price'] * $row['quantity'];
     $items[] = $row;
+}
+
+if(isset($_POST['pay'])){
+
+    $address = mysqli_real_escape_string($conn, $_POST['address']);
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $method = mysqli_real_escape_string($conn, $_POST['method']);
+
+    $res = mysqli_query($conn,"
+    SELECT p.*, c.quantity 
+    FROM cart c 
+    JOIN products p ON c.product_id = p.product_id
+    WHERE c.user_id = $user_id
+    ");
+
+    $total = 0;
+    $items = [];
+
+    while($row = mysqli_fetch_assoc($res)){
+        $total += $row['price'] * $row['quantity'];
+        $items[] = $row;
+    }
+
+    if(!empty($items)){
+        mysqli_query($conn,"
+        INSERT INTO orders(user_id,total_price,address,phone)
+        VALUES($user_id,$total,'$address','$phone')
+        ");
+
+        $order_id = mysqli_insert_id($conn);
+
+        foreach($items as $row){
+            mysqli_query($conn,"
+            INSERT INTO order_items(order_id,product_id,quantity,price)
+            VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
+            ");
+
+            mysqli_query($conn,"
+            UPDATE products 
+            SET stock = stock - {$row['quantity']}
+            WHERE product_id = {$row['product_id']}
+            ");
+        }
+
+        mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
+
+        $to = $user['email'];
+        $subject = "Order Receipt - PC Store";
+
+        $message = "Thank you for your order!\n\nOrder ID: $order_id\nTotal: RM $total";
+
+        $headers = "From: noreply@pcstore.com";
+
+        mail($to, $subject, $message, $headers);
+
+        header("Location: checkout.php?success=1");
+        exit;
+    }
 }
 ?>
 
@@ -71,7 +132,6 @@ h1{
     text-shadow:0 0 10px #ff00ff;
 }
 
-/* SELECT STYLING */
 form select {
     padding:10px 15px;
     width:100%;
@@ -141,6 +201,33 @@ form button:hover{
 }
 .success a:hover{ transform:scale(1.05); }
 
+.input-box{
+    margin-bottom:15px;
+}
+
+.input-box input{
+    width:100%;
+    padding:12px 15px;
+    border-radius:12px;
+    border:2px solid #00f0ff;
+    background: rgba(48, 43, 99, 0.8);
+    color:#00f0ff;
+    font-weight:600;
+    outline:none;
+    box-shadow: 0 0 10px #00f0ff;
+    transition:0.3s;
+}
+
+.input-box input::placeholder{
+    color:rgba(0,240,255,0.6);
+}
+
+.input-box input:focus{
+    border-color:#ff00ff;
+    box-shadow: 0 0 15px #ff00ff;
+    color:#ff00ff;
+}
+
 </style>
 </head>
 <body>
@@ -153,16 +240,49 @@ form button:hover{
 
 <a href="cart.php" class="back">← Back to Cart</a>
 
-<?php if(empty($items)): ?>
+<?php if(isset($_GET['success'])): ?>
+    <div class="success">
+        ✅ Payment Successful!<br>
+        <a href="product.php">🏠 Back to Home</a>
+    </div>
+
+<?php elseif(empty($items)): ?>
     <div class="success">
         🛒 Your cart is empty!<br>
         <a href="product.php">Back to Products</a>
     </div>
+
 <?php else: ?>
 
+<div style="text-align:left; margin-bottom:20px;">
+<h3>Order Summary</h3>
+
+<?php foreach($items as $row): ?>
+<p>
+<?= $row['product_name'] ?> x <?= $row['quantity'] ?>
+= RM <?= $row['price'] * $row['quantity'] ?>
+</p>
+<?php endforeach; ?>
+
+</div>
 <div class="total">Total: RM <?= $total ?></div>
 
 <form method="post">
+
+<div class="input-box">
+    <input type="text" name="address"
+           value="<?= htmlspecialchars($user['address']) ?>"
+           placeholder="Enter Address"
+           required>
+</div>
+
+<div class="input-box">
+    <input type="text" name="phone"
+           value="<?= $user['phone'] ?>"
+           placeholder="Phone Number"
+           required>
+</div>
+
 <select name="method" required>
 <option value="">Select Payment Method</option>
 <option value="Credit Card">Credit Card</option>
@@ -173,30 +293,7 @@ form button:hover{
 <button name="pay">Pay Now</button>
 </form>
 
-<?php
-if(isset($_POST['pay'])){
-    mysqli_query($conn,"INSERT INTO orders(user_id,total_price) VALUES($user_id,$total)");
-    $order_id = mysqli_insert_id($conn);
 
-    foreach($items as $row){
-        mysqli_query($conn,"
-        INSERT INTO order_items(order_id,product_id,quantity,price)
-        VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
-        ");
-        mysqli_query($conn,"
-        UPDATE products SET stock = stock - {$row['quantity']}
-        WHERE product_id = {$row['product_id']}
-        ");
-    }
-
-    mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
-
-    echo '<div class="success">
-        ✅ Payment Successful!<br>
-        <a href="product.php">🏠 Back to Home</a>
-    </div>';
-}
-?>
 
 <?php endif; ?>
 </div>

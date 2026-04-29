@@ -2,24 +2,21 @@
 include "../db.php";
 session_start();
 
-// check admin login
 if(!isset($_SESSION['admin'])){
     header("Location: login.php");
     exit();
 }
 
-// DELETE PRODUCT (安全 + 删除图片)
+/* DELETE PRODUCT */
 if(isset($_GET['delete'])){
     $id = intval($_GET['delete']);
 
-    // 先拿图片名
     $stmt = $conn->prepare("SELECT image FROM products WHERE product_id=?");
     $stmt->bind_param("i",$id);
     $stmt->execute();
     $resultImg = $stmt->get_result();
     $data = $resultImg->fetch_assoc();
 
-    // 删除图片文件
     if($data && !empty($data['image'])){
         $file = "../uploads/" . $data['image'];
         if(file_exists($file)){
@@ -27,7 +24,6 @@ if(isset($_GET['delete'])){
         }
     }
 
-    // 删除产品
     $stmt = $conn->prepare("DELETE FROM products WHERE product_id=?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
@@ -36,7 +32,6 @@ if(isset($_GET['delete'])){
     exit();
 }
 
-// GET PRODUCTS
 $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
 ?>
 
@@ -45,21 +40,36 @@ $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
 <head>
 <title>Manage Products</title>
 
+<!-- ✅ IMPORTANT -->
+<link rel="stylesheet" href="style.css">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 body{
-    background:linear-gradient(135deg,#e0f7ff,#c2e9fb);
+    background:#f8fafc;
 }
 
-/* 不影响 header */
-.main{
+/* ✅ layout FIX */
+.main-layout{
+    display:flex;
+}
+
+/* ✅ content FIX */
+.content-area{
     margin-left:240px;
-    margin-top:80px;
-    padding:20px;
+    margin-top:90px;
+    padding:30px;
+    width:100%;
 }
 
-/* 页面标题 */
+/* collapse support */
+.sidebar.collapsed ~ .main-layout .content-area{
+    margin-left:70px;
+}
+
+/* UI */
 .page-title{
     color:#0072ff;
     font-weight:bold;
@@ -74,17 +84,17 @@ table img{
     border-radius:8px;
 }
 </style>
+
 </head>
 
 <body>
 
-<!-- HEADER -->
 <?php include "admin_header.php"; ?>
-
-<!-- SIDEBAR -->
 <?php include "admin_sidebar.php"; ?>
 
-<div class="main">
+<div class="main-layout">
+
+<div class="content-area">
 
 <h2 class="page-title mb-4">📦 Product List</h2>
 
@@ -112,8 +122,7 @@ table img{
 
 <td>
 <?php if(!empty($row['image'])): ?>
-    <!-- ✅ 关键修复：路径 + 防缓存 -->
-    <img src="../uploads/<?= htmlspecialchars($row['image']) ?>?v=<?= time() ?>" width="80">
+    <img src="../uploads/<?= htmlspecialchars($row['image']) ?>" width="80">
 <?php else: ?>
     No Image
 <?php endif; ?>
@@ -130,7 +139,7 @@ table img{
 <td>
 <a href="?delete=<?= $row['product_id'] ?>"
    class="btn btn-danger btn-sm"
-   onclick="return confirm('Are you sure to delete this product?')">
+   onclick="return confirm('Delete this product?')">
    Delete
 </a>
 </td>
@@ -144,6 +153,10 @@ table img{
 </div>
 
 </div>
+</div>
+
+<script src="admin.js"></script>
+<script>lucide.createIcons();</script>
 
 </body>
 </html>
