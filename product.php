@@ -13,7 +13,13 @@ $sort = $_GET['sort'] ?? '';
 $sql = "SELECT * FROM products WHERE 1";
 
 if(!empty($search)){
-    $sql .= " AND product_name LIKE '%$search%'";
+    $search = "%".$search."%";
+    $stmt = $conn->prepare("SELECT * FROM products WHERE product_name LIKE ?");
+    $stmt->bind_param("s", $search);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = mysqli_query($conn, $sql);
 }
 
 if($sort == "low"){
