@@ -301,7 +301,7 @@ particlesJS("particles-js",{
 "retina_detect":true
 });
 
-/* ADD TO CART */
+/* ADD TO CART *
 
 function buyNow(id){
 fetch("add_to_cart.php?id="+id)
