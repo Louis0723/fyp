@@ -5,7 +5,10 @@ session_start();
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = trim($_POST["email"]);
+    $email = filter_var(trim($_POST["email"]), FILTER_VALIDATE_EMAIL);
+    if(!$email){
+    $message = "Invalid email format!";
+    }
     $password = $_POST["password"];
 
     $stmt = $conn->prepare("SELECT * FROM users WHERE email=?");
@@ -14,12 +17,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $res = $stmt->get_result();
 
     if($user = $res->fetch_assoc()){
-        if(password_verify($password,$user['password'])){
-            $_SESSION['user'] = $user;
-            header("Location: product.php");
-            exit;
-        } else $message = "Wrong password!";
-    } else $message = "User not found!";
+    if(password_verify($password,$user['password'])){
+        session_regenerate_id(true);
+        $_SESSION['user'] = [
+            'user_id' => $user['user_id'],
+            'name' => $user['name'],
+            'email' => $user['email']
+        ];
+        header("Location: product.php");
+        exit;
+    } else {
+        $message = "Invalid email or password!";
+    }
+    } else {
+    $message = "Invalid email or password!";
+    }
+    $stmt->close();
 }
 ?>
 
@@ -171,6 +184,11 @@ button:hover {
     text-decoration:underline; 
     }
 
+button:disabled{
+    opacity:0.7;
+    cursor:not-allowed;
+}
+
 </style>
 
 </head>
@@ -180,7 +198,7 @@ button:hover {
 
 <header>
     <div class="logo-center">
-        <img src="storelogo.jpeg" alt="LOZ PC STORE" onclick="window.location.href='products.php'">
+        <img src="storelogo.jpeg" alt="LOZ PC STORE" onclick="window.location.href='product.php'">
         <h2>LOZ PC STORE</h2>
     </div>
     <nav>
@@ -192,13 +210,29 @@ button:hover {
 
 <div class="container">
     <h2>🔐 Login</h2>
+
+    <?php if(isset($_GET['success'])): ?>
+        <div class="msg" style="color:lime;">
+            Registration successful! Please login.
+        </div>
+    <?php endif; ?>
+
     <?php if($message!=""): ?>
         <div class="msg"><?= $message ?></div>
     <?php endif; ?>
 
-    <form method="post">
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
+    <form method="post" onsubmit="return validateLogin()">
+        <input type="email" name="email" placeholder="Email" required autocomplete="email">
+        <div style="position:relative;">
+        <input type="password" name="password" id="password" placeholder="Password" required autocomplete="current-password">
+        <span onclick="togglePass(this)" style="
+        position:absolute;
+        right:15px;
+        top:50%;
+        transform:translateY(-50%);
+        cursor:pointer;
+        ">👁️</span>
+        </div>
         <button>Login</button>
     </form>
 
@@ -225,6 +259,33 @@ particlesJS("particles-js", {
   },
   "retina_detect":true
 });
+function togglePass(icon){
+    const p = document.getElementById("password");
+
+    if(p.type === "password"){
+        p.type = "text";
+        icon.textContent = "🙈";
+    } else {
+        p.type = "password";
+        icon.textContent = "👁️";
+    }
+}
+
+function validateLogin(){
+    const email = document.querySelector("input[name='email']").value.trim();
+    const pass = document.querySelector("input[name='password']").value;
+
+    if(email === "" || pass === ""){
+        alert("Please fill in all fields");
+        return false;
+    }
+
+    const btn = document.querySelector("button");
+    btn.disabled = true;
+    btn.innerText = "Logging in...";
+
+    return true;
+}
 </script>
 
 </body>

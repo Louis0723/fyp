@@ -1,6 +1,9 @@
 <?php
 session_start();
 include "db.php";
+require "vendor/autoload.php";
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
@@ -9,22 +12,89 @@ if (!isset($_SESSION['user'])) {
 
 $user_id = $_SESSION['user']['user_id'];
 
-$res = mysqli_query($conn,"SELECT * FROM users WHERE user_id=$user_id");
+$res = mysqli_query($conn, "SELECT * FROM users WHERE user_id=$user_id");
 $user = mysqli_fetch_assoc($res);
 
-if(isset($_POST['update'])){
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $address = $_POST['address'];
-    $phone = $_POST['phone'];
+if (isset($_POST['update'])) {
 
-    mysqli_query($conn,"
-    UPDATE users 
-    SET name='$name', email='$email', address='$address', phone='$phone'
-    WHERE user_id=$user_id
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $address = trim($_POST['address']);
+    $phone = trim($_POST['phone']);
+
+    $new_password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+
+    if (!empty($new_password)) {
+
+        if (strlen($new_password) < 8) {
+            echo "<script>alert('❌ Password must be at least 8 characters');</script>";
+            exit;
+        }
+
+        if ($new_password !== $confirm_password) {
+            echo "<script>alert('❌ Passwords do not match!');</script>";
+            exit;
+        }
+
+        if ($user['last_password_change'] != NULL) {
+            $last = strtotime($user['last_password_change']);
+            $six_months = strtotime("+6 months", $last);
+
+            if (time() < $six_months) {
+                echo "<script>alert('❌ You can only change password once every 6 months');</script>";
+                exit;
+            }
+        }
+
+        $otp = rand(100000, 999999);
+        $expiry = date("Y-m-d H:i:s", strtotime("+10 minutes"));
+
+        mysqli_query($conn, "
+            UPDATE users 
+            SET otp_code='$otp', otp_expiry='$expiry'
+            WHERE user_id=$user_id
+        ");
+
+        $mail = new PHPMailer(true);
+
+try {
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'ziyiyap2006@gmail.com';
+    $mail->Password = 'ncprqebxyjjoegxx';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
+
+    $mail->setFrom('ziyiyap2006@gmail.com', 'LOZ PC STORE');
+    $mail->addAddress($user['email']);
+
+    $mail->isHTML(true);
+    $mail->Subject = "Your OTP Code";
+    $mail->Body = "<h2>Your OTP is</h2><h1>$otp</h1>";
+
+    $mail->send();
+
+} catch (Exception $e) {
+    die("Email failed: " . $mail->ErrorInfo);
+}
+
+        $_SESSION['otp_type'] = 'password_change';
+        $_SESSION['temp_user_id'] = $user_id;
+        $_SESSION['temp_new_password'] = $new_password;
+
+        header("Location: verify.php");
+        exit;
+    }
+
+    mysqli_query($conn, "
+        UPDATE users 
+        SET name='$name', email='$email', address='$address', phone='$phone'
+        WHERE user_id=$user_id
     ");
 
-    header("Location: profile.php");
+    header("Location: profile.php?updated=1");
     exit;
 }
 ?>
@@ -105,6 +175,10 @@ button:hover{
 <input name="name" placeholder="Name" value="<?= $user['name'] ?>" required>
 
 <input name="email" placeholder="Email" value="<?= $user['email'] ?>" required>
+
+<input type="password" name="password" placeholder="New Password">
+
+<input type="password" name="confirm_password" placeholder="Confirm New Password">
 
 <textarea name="address" placeholder="Address" required><?= $user['address'] ?></textarea>
 

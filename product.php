@@ -241,9 +241,6 @@ cursor:not-allowed;
 Cart 🛒 <span class="cart-badge"><?= $cart_count ?></span>
 </a>
 
-<a href="track_order.php">Track Order 🚚</a>
-
-
 <a href="history.php">Orders</a>
 
 <a href="profile.php" style="
@@ -348,7 +345,7 @@ particlesJS("particles-js",{
 "retina_detect":true
 });
 
-/* ADD TO CART *
+/* ADD TO CART */
 
 function buyNow(id){
 fetch("add_to_cart.php?id="+id)

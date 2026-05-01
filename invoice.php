@@ -123,6 +123,60 @@ button:hover{
     transform:scale(1.05);
     box-shadow:0 0 15px #00f0ff;
 }
+
+.actions{
+    margin-top:30px;
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    padding:15px;
+    background:rgba(255,255,255,0.05);
+    border-radius:15px;
+    backdrop-filter:blur(10px);
+}
+
+/* Base button style */
+.btn{
+    padding:12px 18px;
+    border-radius:12px;
+    text-decoration:none;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.5px;
+    transition:0.3s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border:2px solid transparent;
+}
+
+/* PRINT BUTTON */
+.btn.print{
+    background:rgba(0,240,255,0.1);
+    color:#00f0ff;
+    border:2px solid #00f0ff;
+}
+
+.btn.print:hover{
+    background:#00f0ff;
+    color:#000;
+    box-shadow:0 0 20px #00f0ff;
+    transform:translateY(-2px);
+}
+
+/* PDF BUTTON */
+.btn.pdf{
+    background:rgba(255,0,255,0.1);
+    color:#ff00ff;
+    border:2px solid #ff00ff;
+}
+
+.btn.pdf:hover{
+    background:#ff00ff;
+    color:#fff;
+    box-shadow:0 0 20px #ff00ff;
+    transform:translateY(-2px);
+}
 </style>
 
 </head>
@@ -156,8 +210,17 @@ Total: RM <?= $total ?>
 </div>
 
 <div class="actions">
-    <button onclick="window.print()">🖨 Print Invoice</button>
+
+    <a href="invoice_pdf.php?id=<?= $order_id ?>" class="btn pdf">
+        ⬇ Download PDF
+    </a>
+
+    <button onclick="window.print()" class="btn print">
+        🖨 Print Invoice
+    </button>
+
 </div>
+
 
 </div>
 
