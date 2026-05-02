@@ -1,6 +1,9 @@
 <?php
 session_start();
 include "db.php";
+require "vendor/autoload.php";
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 $user_id = $_SESSION['user']['user_id'];
 
@@ -73,7 +76,36 @@ if(isset($_POST['pay'])){
 
         $headers = "From: noreply@pcstore.com";
 
-        mail($to, $subject, $message, $headers);
+        $mail = new PHPMailer(true);
+
+try {
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'ziyiyap2006@gmail.com';
+    $mail->Password = 'ncprqebxyjjoegxx';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
+
+    $mail->setFrom('ziyiyap2006@gmail.com', 'PC STORE');
+    $mail->addAddress($user['email']);
+
+    $mail->isHTML(true);
+    $mail->Subject = "Order Receipt - PC STORE";
+
+    $mail->Body = "
+        <h2>Thank you for your order 🎉</h2>
+        <p><b>Order ID:</b> $order_id</p>
+        <p><b>Total:</b> RM $total</p>
+        <p>We are preparing your order now.</p>
+    ";
+
+    $mail->send();
+
+} catch (Exception $e) {
+    // optional debug
+    error_log($mail->ErrorInfo);
+}
 
         header("Location: checkout.php?success=1");
         exit;

@@ -1,31 +1,90 @@
 <?php
 include "db.php";
 session_start();
+require "vendor/autoload.php";
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = trim($_POST["name"]);
-    $email = trim($_POST["email"]);
+
+    $name = htmlspecialchars(trim($_POST["name"]));
+    $email = filter_var(trim($_POST["email"]), FILTER_VALIDATE_EMAIL);
+    $phone = trim($_POST["phone"] ?? "");
     $password = $_POST["password"];
     $confirm_password = $_POST["confirm_password"];
 
-    if ($password !== $confirm_password) {
+    if (!$email) {
+        $message = "Invalid email format!";
+    }
+    else if (strlen($password) < 8) {
+        $message = "Password must be at least 8 characters!";
+    }
+    else if ($password !== $confirm_password) {
         $message = "Passwords do not match!";
-    } else {
+    }
+    else {
+
         $hashed = password_hash($password, PASSWORD_DEFAULT);
+
         $stmt = $conn->prepare("SELECT * FROM users WHERE email=?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $res = $stmt->get_result();
+        $stmt->close();
 
         if ($res->num_rows > 0) {
             $message = "Email already registered!";
-        } else {
-            $stmt = $conn->prepare("INSERT INTO users (name,email,password) VALUES (?,?,?)");
-            $stmt->bind_param("sss", $name,$email,$hashed);
-            if ($stmt->execute()) $message = "Registration successful!";
-            else $message = "Something went wrong!";
+        } 
+        else {
+
+            $otp = rand(100000, 999999);
+
+$_SESSION['otp_type'] = 'register';
+
+$_SESSION['temp_user'] = [
+    'name' => $name,
+    'email' => $email,
+    'phone' => $phone,
+    'password' => $hashed,
+    'otp' => password_hash($otp, PASSWORD_DEFAULT),
+    'time' => time()
+];
+
+            $mail = new PHPMailer(true);
+
+            try {
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ziyiyap2006@gmail.com';
+                $mail->Password = 'ncprqebxyjjoegxx';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 587;
+
+                $mail->setFrom('ziyiyap2006@gmail.com', 'LOZ PC STORE');
+                $mail->addAddress($email);
+
+                $mail->isHTML(true);
+                $mail->Subject = "Your OTP Code";
+                $mail->Body = "
+                    <h2>LOZ PC STORE Verification</h2>
+                    <p>Your OTP is:</p>
+                    <h1>$otp</h1>
+                ";
+
+                if ($mail->send()) {
+                    header("Location: verify.php");
+                    exit;
+                } else {
+                    $message = "Failed to send OTP.";
+                }
+
+            } catch (Exception $e) {
+                $message = "Failed to send OTP. Try again.";
+            }
         }
     }
 }
@@ -76,14 +135,13 @@ header nav a:hover {
 }
 
 .container {
-    width:400px;
-    margin:100px auto;
+    width: 600px;
+    margin: 80px auto;
+    padding: 40px;
     background: rgba(255,255,255,0.1);
     backdrop-filter: blur(15px);
-    border-radius:25px;
-    padding:40px;
+    border-radius: 25px;
     box-shadow: 0 10px 30px rgba(0,255,255,0.2);
-    text-align:center;
 }
 
 .container h2 { 
@@ -164,7 +222,51 @@ button:hover {
 
 .link-text a:hover { 
     text-decoration:underline; 
-    }
+}
+
+.row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.input-group {
+    flex: 1;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.input-group.full {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.eye {
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+}
+
+input {
+    margin-top: 5px;
+}
+
+#strength, #matchMsg {
+    font-size: 13px;
+    margin-top: 5px;
+}
     
 </style>
 
@@ -175,7 +277,7 @@ button:hover {
 
 <header>
     <div class="logo-center">
-        <img src="storelogo.jpeg" alt="LOZ PC STORE" onclick="window.location.href='products.php'">
+        <img src="storelogo.jpeg" alt="LOZ PC STORE" onclick="window.location.href='product.php'">
         <h2>LOZ PC STORE</h2>
     </div>
     <nav>
@@ -187,15 +289,55 @@ button:hover {
 
 <div class="container">
     <h2>📝 Create Account</h2>
+
     <?php if($message!=""): ?>
         <div class="msg"><?= $message ?></div>
     <?php endif; ?>
 
-    <form method="post">
-        <input type="text" name="name" placeholder="Full Name" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+    <form method="post" onsubmit="return validateForm()">
+
+        <!-- Row 1 -->
+        <div class="row">
+            <div class="input-group">
+                <label>Full Name <span style="color:red">*</span></label>
+                <input type="text" name="name" required>
+            </div>
+
+            <div class="input-group">
+                <label>Email <span style="color:red">*</span></label>
+                <input type="email" name="email" placeholder="abc@gmail.com" required>
+            </div>
+        </div>
+
+        <div class="input-group full">
+            <label>Phone Number <span style="color:white">*</span></label>
+            <input type="text" name="phone">
+        </div>
+
+        <div class="row">
+            <div class="input-group">
+                <label>Password <span style="color:red">*</span></label>
+
+                <div style="position:relative;">
+                    <input type="password" name="password" id="password" required>
+                    <span onclick="togglePass('password', this)" class="eye">👁️</span>
+                </div>
+
+                <div id="strength"></div>
+            </div>
+
+            <div class="input-group">
+                <label>Confirm Password <span style="color:red">*</span></label>
+
+                <div style="position:relative;">
+                    <input type="password" name="confirm_password" id="confirm_password" required>
+                    <span onclick="togglePass('confirm_password', this)" class="eye">👁️</span>
+                </div>
+
+                <div id="matchMsg"></div>
+            </div>
+        </div>
+
         <button>Register</button>
     </form>
 
@@ -222,6 +364,77 @@ particlesJS("particles-js", {
   },
   "retina_detect":true
 });
+
+const password = document.getElementById("password");
+const confirmPassword = document.getElementById("confirm_password");
+const strengthText = document.getElementById("strength");
+const matchMsg = document.getElementById("matchMsg");
+
+password.addEventListener("input", () => {
+    const val = password.value;
+
+    if(val.length < 8){
+        strengthText.textContent = "Too short (min 8 characters)";
+        strengthText.style.color = "red";
+    }
+    else if(/[A-Z]/.test(val) && /[0-9]/.test(val) && /[!@#$%^&*]/.test(val)){
+        strengthText.textContent = "Strong password 💪";
+        strengthText.style.color = "lime";
+    }
+    else if(/[A-Z]/.test(val) || /[0-9]/.test(val)){
+        strengthText.textContent = "Medium strength";
+        strengthText.style.color = "orange";
+    }
+    else{
+        strengthText.textContent = "Weak password";
+        strengthText.style.color = "red";
+    }
+});
+
+confirmPassword.addEventListener("input", () => {
+    if(confirmPassword.value === ""){
+        matchMsg.textContent = "";
+        return;
+    }
+
+    if(password.value === confirmPassword.value){
+        matchMsg.textContent = "Passwords match ✅";
+        matchMsg.style.color = "lime";
+    } else {
+        matchMsg.textContent = "Passwords do not match ❌";
+        matchMsg.style.color = "red";
+    }
+});
+
+function validateForm(){
+    if(password.value.length < 8){
+        alert("Password must be at least 8 characters");
+        return false;
+    }
+
+    if(password.value !== confirmPassword.value){
+        matchMsg.textContent = "Fix errors before submitting!";
+        return false;
+    }
+
+    const btn = document.querySelector("button");
+    btn.disabled = true;
+    btn.innerText = "Registering...";
+
+    return true;
+}
+
+function togglePass(fieldId, icon){
+    const input = document.getElementById(fieldId);
+
+    if(input.type === "password"){
+        input.type = "text";
+        icon.textContent = "🙈";
+    } else {
+        input.type = "password";
+        icon.textContent = "👁️";
+    }
+}
 </script>
 
 </body>

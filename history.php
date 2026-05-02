@@ -10,8 +10,11 @@ if (!isset($_SESSION['user'])) {
 
 $user_id = $_SESSION['user']['user_id']; // current logged-in user
 
-// Fetch orders for this user
-$result = mysqli_query($conn, "SELECT * FROM orders WHERE user_id=$user_id ORDER BY created_at DESC");
+$result = mysqli_query($conn, "
+SELECT * FROM orders 
+WHERE user_id=" . (int)$user_id . "
+ORDER BY created_at DESC
+");
 ?>
 
 <!DOCTYPE html>
@@ -88,6 +91,24 @@ $result = mysqli_query($conn, "SELECT * FROM orders WHERE user_id=$user_id ORDER
             transition:0.3s;
         }
         .back:hover{transform:scale(1.05);}
+
+        .status{
+    padding:5px 10px;
+    border-radius:8px;
+    font-weight:600;
+    display:inline-block;
+    margin-top:5px;
+}
+.actions{
+    margin-top:15px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.pending{background:orange;color:black;}
+.shipped{background:#00f0ff;color:black;}
+.delivered{background:#00ff99;color:black;}
     </style>
 </head>
 <body>
@@ -104,50 +125,71 @@ $result = mysqli_query($conn, "SELECT * FROM orders WHERE user_id=$user_id ORDER
     }
 
     while($order = mysqli_fetch_assoc($result)){
-        echo "<div class='order'>";
-        echo "<div class='order-header'>
-                <span>Order ID: {$order['order_id']}</span>
-                <span>Date: {$order['created_at']}</span>
-              </div>";
-        echo "<div class='order-header'>
+$status = trim($order['status'] ?? 'Pending');
+$statusLower = strtolower($status);
+
+// force valid class only
+if ($statusLower !== 'pending' && $statusLower !== 'shipped' && $statusLower !== 'delivered') {
+    $statusLower = 'pending';
+}
+
+echo "<div class='order'>";
+
+echo "<div class='order-header'>
+        <span>Order ID: {$order['order_id']}</span>
+        <span>Date: {$order['created_at']}</span>
+      </div>";
+
+echo "<div class='order-header'>
         <span>Total:</span>
         <span>RM {$order['total_price']}</span>
-        </div>";
+      </div>";
 
-echo "<div style='margin-top:10px;'>";
+echo "<div style='margin-top:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;'>";
 
-if($order['status'] == "Pending"){
+echo "<div>
+        Status:
+        <span class='status $statusLower'>
+            " . htmlspecialchars($status) . "
+        </span>
+      </div>";
+
+echo "<div class='actions'>";
+
+if ($statusLower === "pending") {
     echo "<a href='cancel_order.php?id={$order['order_id']}' 
-    style='background:red;color:white;padding:5px 10px;border-radius:8px;margin-right:10px;text-decoration:none;'>
+    style='background:red;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;'>
     Cancel Order
     </a>";
 }
 
 echo "<a href='order_detail.php?id={$order['order_id']}' 
-style='padding:8px 15px;background:#00f0ff;color:#000;border-radius:8px;text-decoration:none;margin-right:10px;'>
+style='padding:8px 12px;background:#00f0ff;color:#000;border-radius:8px;text-decoration:none;'>
 View Details
 </a>";
 
 echo "<a href='invoice.php?id={$order['order_id']}' 
-style='padding:8px 15px;background:#ff00ff;color:white;border-radius:8px;text-decoration:none;'>
+style='padding:8px 12px;background:#ff00ff;color:white;border-radius:8px;text-decoration:none;'>
 🧾 Invoice
 </a>";
 
-echo "</div>";
+echo "</div>"; // actions
 
+echo "</div>";
         // Fetch order items
         $items = mysqli_query($conn,"SELECT oi.*, p.product_name, p.price 
                                      FROM order_items oi 
                                      JOIN products p ON oi.product_id=p.product_id 
                                      WHERE order_id={$order['order_id']}");
 
-        while($item = mysqli_fetch_assoc($items)){
-            $subtotal = $item['price'] * $item['quantity'];
-            echo "<div class='order-item'>
-                    <span>{$item['product_name']} x {$item['quantity']}</span>
-                    <span>RM $subtotal</span>
-                  </div>";
-        }
+while($item = mysqli_fetch_assoc($items)){
+    $subtotal = $item['price'] * $item['quantity'];
+
+    echo "<div class='order-item'>
+            <span>{$item['product_name']} x {$item['quantity']}</span>
+            <span>RM $subtotal</span>
+          </div>";
+}
 
         echo "</div>"; // end order
     }
