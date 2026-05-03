@@ -26,12 +26,12 @@ try {
     $mail->isSMTP();
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
-    $mail->Username = 'yourgmail@gmail.com';
-    $mail->Password = 'your_app_password';
-    $mail->SMTPSecure = 'tls';
+    $mail->Username = 'ziyiyap2006@gmail.com';
+    $mail->Password = 'ncprqebxyjjoegxx';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
 
-    $mail->setFrom('yourgmail@gmail.com', 'LOZ PC STORE');
+    $mail->setFrom('ziyiyap2006@gmail.com', 'LOZ PC STORE');
     $mail->addAddress($data['email']);
 
     $mail->isHTML(true);
