@@ -226,7 +226,7 @@ cursor:not-allowed;
 <body>
 
 <div id="particles-js"></div>
-
+//
 <header>
 
 <div class="logo" onclick="window.location.href='product.php'">
