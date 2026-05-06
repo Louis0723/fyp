@@ -7,206 +7,274 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-$username = $_SESSION['admin'];
-
-$success_msg = "";
-$error_msg = "";
-
-// GET DATA
-$stmt = $conn->prepare("SELECT username, email FROM admins WHERE username=?");
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$result = $stmt->get_result();
-$admin = $result->fetch_assoc();
-$stmt->close();
-
-// UPDATE
-if(isset($_POST['update'])){
-    $email = trim($_POST['email']);
-
-    if($email == ""){
-        $error_msg = "Email cannot be empty!";
-    }else{
-        $stmt = $conn->prepare("UPDATE admins SET email=? WHERE username=?");
-        $stmt->bind_param("ss", $email, $username);
-
-        if($stmt->execute()){
-            $success_msg = "Profile updated successfully!";
-            $admin['email'] = $email;
-        }else{
-            $error_msg = "Update failed!";
-        }
-        $stmt->close();
-    }
-}
+/* GET USERS + STATS */
+$users = $conn->query("
+    SELECT 
+        u.user_id,
+        u.name,
+        u.email,
+        COUNT(o.order_id) AS total_orders,
+        IFNULL(SUM(o.total_price),0) AS total_spent,
+        YEAR(u.created_at) AS joined_year
+    FROM users u
+    LEFT JOIN orders o ON u.user_id = o.user_id
+    GROUP BY u.user_id
+");
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin Profile</title>
+<title>Customers</title>
 
-<link rel="stylesheet" href="style.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=2">
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
-/* ✅ FIXED LAYOUT */
-.main-layout{
-    display:flex;
+/* ===== LAYOUT ===== */
+.main{
+    margin-left:270px;
+    margin-top:100px;
+    padding:30px;
 }
 
-.content-area{
-    margin-left:240px;
-    margin-top:90px;
-    padding:30px;
+.sidebar.collapsed ~ .main{
+    margin-left:90px;
+}
+
+/* ===== HEADER ===== */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.title{
+    font-size:26px;
+    font-weight:700;
+}
+
+.subtitle{
+    color:#6b7280;
+    font-size:14px;
+}
+
+/* ===== SEARCH ===== */
+.search-box{
+    background:#fff;
+    padding:12px 15px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.05);
+    width:300px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.search-box input{
+    border:none;
+    outline:none;
     width:100%;
 }
 
-/* collapse support */
-.sidebar.collapsed ~ .main-layout .content-area{
-    margin-left:70px;
-}
-
-/* CARD */
-.profile-card{
-    max-width:600px;
-    background: rgba(255,255,255,0.95);
-    border-radius:20px;
-    padding:40px;
-    box-shadow:0 20px 50px rgba(0,0,0,0.15);
-}
-
-/* header line */
-.profile-card::before{
-    content:"";
-    display:block;
-    height:6px;
-    border-radius:20px 20px 0 0;
-    background: linear-gradient(135deg, #4facfe, #00c6ff);
-    margin:-40px -40px 20px -40px;
-}
-
-/* title */
-h2{
-    font-weight:700;
-    color:#2c3e50;
-    margin-bottom:30px;
-}
-
-/* rows */
-.profile-row{
-    display:flex;
-    justify-content:space-between;
-    padding:12px 0;
-    border-bottom:1px solid #eee;
-}
-
-.label{font-weight:600;}
-.value{color:#333;}
-
-/* input */
-input{
-    border-radius:10px;
-    padding:10px;
-    margin-bottom:10px;
-}
-
-/* buttons */
-.btn-main{
-    background:#3b82f6;
+/* ===== BUTTON ===== */
+.btn-add{
+    background:#2563eb;
     color:#fff;
     border:none;
-    padding:10px 20px;
+    padding:10px 18px;
     border-radius:10px;
-}
-
-.btn-cancel{
-    background:#ccc;
-    color:#333;
-}
-
-/* buttons group */
-.button-group{
     display:flex;
-    gap:10px;
-    margin-top:15px;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
 }
+
+/* ===== GRID ===== */
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+}
+
+/* ===== CARD ===== */
+.card{
+    background:#fff;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    transition:0.2s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
+
+/* ===== PROFILE ===== */
+.profile{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.avatar{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    background:#2563eb;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:600;
+}
+
+.name{
+    font-weight:600;
+}
+
+.email{
+    font-size:13px;
+    color:#6b7280;
+}
+
+/* ===== BADGE ===== */
+.badge{
+    background:#e5e7eb;
+    padding:4px 10px;
+    border-radius:10px;
+    font-size:12px;
+}
+
+/* ===== STATS ===== */
+.stats{
+    display:flex;
+    justify-content:space-between;
+    margin-top:15px;
+    text-align:center;
+}
+
+.stats div{
+    font-weight:600;
+}
+
+.stats small{
+    display:block;
+    color:#6b7280;
+}
+
+/* ===== ACTIONS ===== */
+.actions{
+    margin-top:15px;
+    display:flex;
+    justify-content:center;
+    gap:20px;
+}
+
+.actions i{
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.actions i:hover{
+    transform:scale(1.2);
+}
+
+.edit{ color:#2563eb; }
+.delete{ color:#ef4444; }
 
 </style>
 </head>
 
 <body>
 
-<?php include "admin_header.php"; ?>
 <?php include "admin_sidebar.php"; ?>
+<?php include "admin_header.php"; ?>
 
-<div class="main-layout">
+<div class="main">
 
-<div class="content-area">
+<!-- HEADER -->
+<div class="header">
 
-<div class="profile-card">
+<div>
+    <div class="title">Customers</div>
+    <div class="subtitle">Your loyal builders and gamers.</div>
+</div>
 
-<h2>👤 Admin Profile</h2>
+<button class="btn-add">
+    <i data-lucide="plus"></i> Add Customer
+</button>
 
-<?php if($success_msg): ?>
-<div class="alert alert-success"><?= $success_msg ?></div>
-<?php endif; ?>
+</div>
 
-<?php if($error_msg): ?>
-<div class="alert alert-danger"><?= $error_msg ?></div>
-<?php endif; ?>
+<!-- SEARCH -->
+<div class="search-box">
+    <i data-lucide="search"></i>
+    <input type="text" id="searchInput" placeholder="Search customers...">
+</div>
 
-<!-- VIEW -->
-<div id="view-mode">
-    <div class="profile-row">
-        <div class="label">Username</div>
-        <div class="value"><?= htmlspecialchars($admin['username']) ?></div>
+<br>
+
+<!-- GRID -->
+<div class="grid" id="customerGrid">
+
+<?php while($u = $users->fetch_assoc()): 
+
+/* initials */
+$initials = strtoupper(substr($u['name'] ?? $u['email'],0,2));
+
+/* badge logic */
+$badge = "Bronze";
+if($u['total_spent'] > 5000) $badge = "Gold";
+elseif($u['total_spent'] > 1000) $badge = "Silver";
+?>
+
+<div class="card customer-card">
+
+<div class="profile">
+    <div class="avatar"><?= $initials ?></div>
+
+    <div>
+        <div class="name"><?= htmlspecialchars($u['name'] ?? 'User') ?></div>
+        <div class="email"><?= htmlspecialchars($u['email']) ?></div>
     </div>
 
-    <div class="profile-row">
-        <div class="label">Email</div>
-        <div class="value"><?= htmlspecialchars($admin['email']) ?></div>
-    </div>
-
-    <div class="button-group">
-        <button id="edit-btn" class="btn-main">Edit</button>
-    </div>
+    <div style="margin-left:auto" class="badge"><?= $badge ?></div>
 </div>
 
-<!-- EDIT -->
-<div id="edit-mode" style="display:none;">
-    <form method="POST">
-        <input value="<?= htmlspecialchars($admin['username']) ?>" disabled class="form-control">
+<div class="stats">
+    <div><?= $u['total_orders'] ?><small>Orders</small></div>
+    <div>$<?= number_format($u['total_spent'],0) ?><small>Spent</small></div>
+    <div><?= $u['joined_year'] ?><small>Joined</small></div>
+</div>
 
-        <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" class="form-control">
-
-        <div class="button-group">
-            <button name="update" class="btn-main">Save</button>
-            <button type="button" id="cancel-btn" class="btn-main btn-cancel">Cancel</button>
-        </div>
-    </form>
+<div class="actions">
+    <i class="edit" data-lucide="pencil"></i>
+    <i class="delete" data-lucide="trash-2"></i>
 </div>
 
 </div>
 
-</div>
+<?php endwhile; ?>
+
 </div>
 
+</div>
 <script src="admin.js"></script>
 <script>
 lucide.createIcons();
 
-document.getElementById('edit-btn').onclick = () => {
-    document.getElementById('view-mode').style.display = 'none';
-    document.getElementById('edit-mode').style.display = 'block';
-};
+/* SEARCH FILTER */
+document.getElementById("searchInput").addEventListener("keyup", function(){
+    let val = this.value.toLowerCase();
 
-document.getElementById('cancel-btn').onclick = () => {
-    document.getElementById('edit-mode').style.display = 'none';
-    document.getElementById('view-mode').style.display = 'block';
-};
+    document.querySelectorAll(".customer-card").forEach(card=>{
+        card.style.display =
+            card.innerText.toLowerCase().includes(val) ? "" : "none";
+    });
+});
 </script>
 
 </body>
