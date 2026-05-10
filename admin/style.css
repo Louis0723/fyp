@@ -1,20 +1,24 @@
 body{
     margin:0;
     font-family:Segoe UI;
-    background:#f8fafc;
+    background:#f1f5f9;
 }
 
 /* ================= SIDEBAR ================= */
 .sidebar{
     position:fixed;
-    top:0;
-    left:0;
+    top:15px;
+    left:15px;
     width:240px;
-    height:100vh;
+    height:calc(100vh - 30px);
     background:#0f172a;
     padding:20px 12px;
-    transition:0.3s;
+    transition:all 0.3s ease;
     overflow:hidden;
+    z-index:1000;
+
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
 }
 
 /* COLLAPSE */
@@ -30,16 +34,13 @@ body{
     margin-bottom:30px;
 }
 
-/* LOGO */
 .logo-img{
     width:36px;
     height:36px;
     border-radius:10px;
     object-fit:cover;
-    flex-shrink:0;
 }
 
-/* TEXT */
 .brand-text{
     color:#fff;
 }
@@ -67,17 +68,10 @@ body{
     transition:0.2s;
 }
 
-.sidebar a i{
-    min-width:20px;
-    stroke:#cbd5f5;
-}
-
-/* hover */
 .sidebar a:hover{
     background:#1e293b;
 }
 
-/* active */
 .sidebar a.active{
     background:#3b82f6;
     color:#fff;
@@ -89,11 +83,6 @@ body{
     display:none;
 }
 
-/* center when collapsed */
-.sidebar.collapsed .brand{
-    justify-content:center;
-}
-
 .sidebar.collapsed a{
     justify-content:center;
 }
@@ -101,23 +90,24 @@ body{
 /* ================= HEADER ================= */
 .admin-header{
     position:fixed;
-    top:0;
-    left:240px;
-    width:calc(100% - 240px);
+    top:15px;
+    left:270px; /* match main */
+    width:calc(100% - 285px);
     height:70px;
     background:#fff;
-    border-bottom:1px solid #eee;
+    border-radius:15px;
     display:flex;
     justify-content:space-between;
     align-items:center;
     padding:0 20px;
-    transition:0.3s;
-    z-index:100;
+    transition:all 0.3s ease;
+    z-index:900;
 }
 
+/* collapse */
 .sidebar.collapsed ~ .admin-header{
-    left:70px;
-    width:calc(100% - 70px);
+    left:95px;
+    width:calc(100% - 110px);
 }
 
 /* SEARCH */
@@ -165,14 +155,49 @@ body{
     border-radius:50%;
 }
 
-/* MAIN */
+/* ================= MAIN ================= */
 .main-content{
-    margin-left:240px;
-    margin-top:80px;
+    margin-left:270px;
+    margin-top:100px;
     padding:20px;
-    transition:0.3s;
+    transition:all 0.3s ease;
 }
 
+/* ✅ COLLAPSE FIX */
 .sidebar.collapsed ~ .main-content{
-    margin-left:70px;
+    margin-left:100px;
+}
+
+/* HEADER FLEX */
+.header-left{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+/* TOGGLE BUTTON */
+.toggle-btn{
+    border:none;
+    background:#f1f5f9;
+    padding:8px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+/* BADGE */
+.badge{
+    position:absolute;
+    top:-5px;
+    right:-5px;
+    background:red;
+    color:#fff;
+    font-size:10px;
+    padding:3px 6px;
+    border-radius:50%;
 }
