@@ -2,7 +2,12 @@
 session_start();
 include "db.php";
 
-$user_id = $_SESSION['user']['user_id'];
+if (!isset($_SESSION['user']['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$user_id = (int)$_SESSION['user']['user_id'];
 
 $res = mysqli_query($conn,"
 SELECT p.*, c.quantity 
@@ -10,6 +15,10 @@ FROM cart c
 JOIN products p ON c.product_id = p.product_id
 WHERE c.user_id = $user_id
 ");
+
+if (!$res) {
+    die("Query Error: " . mysqli_error($conn));
+}
 
 $total = 0;
 ?>
@@ -44,28 +53,23 @@ z-index:-1;
 pointer-events:none;
 }
 
-/* CONTAINER */
-
 .container{
-max-width:1000px;
+max-width:800px;
 margin:100px auto;
 padding:20px;
 text-align:center;
 }
 
 .title{
-text-align:center;
 font-size:40px;
 margin-bottom:40px;
 color:#00f0ff;
-text-shadow: 0 0 15px #00f0ff;
+text-shadow:0 0 15px #00f0ff;
 }
-
-/* BACK BUTTON */
 
 .back{
 display:inline-block;
-margin:20px 0 40px 0; /* Top 20px, Bottom 40px */
+margin:20px 0 40px 0;
 padding:10px 20px;
 background:#00f0ff;
 color:black;
@@ -79,23 +83,7 @@ transition:0.3s;
 transform:scale(1.05);
 }
 
-/* EMPTY CART */
-
-.empty-cart{
-margin-top:50px;
-color:#ff00ff;
-font-size:28px;
-}
-
-.empty-cart i{
-font-size:60px;
-display:block;
-margin-bottom:20px;
-color:#00f0ff;
-}
-
-/* CART ITEM CARD */
-
+/* CART ITEM */
 .cart-item{
 background:rgba(255,255,255,0.05);
 padding:20px;
@@ -106,12 +94,14 @@ box-shadow:0 10px 25px rgba(0,0,0,0.5);
 display:flex;
 align-items:center;
 gap:20px;
-transition:0.3s;
+text-align:left;
 }
 
-.cart-item:hover{
-transform:translateY(-3px);
-box-shadow:0 15px 30px rgba(0,255,255,0.4);
+/* BIG CHECKBOX */
+.select-item{
+transform:scale(1.3);
+margin-top:8px;
+cursor:pointer;
 }
 
 .cart-item img{
@@ -121,25 +111,14 @@ object-fit:cover;
 border-radius:12px;
 }
 
-/* DETAILS COLUMN */
-
 .details{
 flex:1;
-text-align:left;
 }
 
 .details h3{
 color:#00f0ff;
 margin-bottom:5px;
-font-size:20px;
-text-shadow:0 0 5px #00f0ff;
 }
-
-.details p{
-margin:5px 0;
-}
-
-/* QUANTITY BUTTONS */
 
 .qty{
 margin:10px 0;
@@ -153,23 +132,13 @@ height:30px;
 border:none;
 border-radius:8px;
 background:#00f0ff;
-color:black;
-font-weight:bold;
 cursor:pointer;
-transition:0.2s;
-}
-
-.qty button:hover{
-transform:scale(1.1);
+font-weight:bold;
 }
 
 .qty span{
 margin:0 10px;
-font-weight:600;
-color:#fff;
 }
-
-/* REMOVE BUTTON */
 
 .remove{
 margin-top:10px;
@@ -179,60 +148,51 @@ border-radius:8px;
 background:#ff0066;
 color:white;
 cursor:pointer;
-transition:0.2s;
 }
 
-.remove:hover{
-transform:scale(1.05);
+/* TOTAL BOX */
+.total-box{
+margin-top:30px;
+background:rgba(255,255,255,0.07);
+padding:20px;
+border-radius:15px;
+backdrop-filter:blur(10px);
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
+text-align:left;
 }
 
-/* TOTAL */
+.total-box div{
+display:flex;
+justify-content:space-between;
+margin:6px 0;
+font-size:18px;
+}
 
-.total{
-text-align:right;
-font-size:28px;
-margin-top:20px;
+.total-box h2{
+color:#00f0ff;
+margin-bottom:15px;
+text-align:left;
+}
+
+.total-box .grand{
+font-size:26px;
 color:#ff00ff;
-text-shadow:0 0 10px #ff00ff;
+font-weight:bold;
+display:flex;
+justify-content:space-between;
+margin-top:10px;
 }
-
-/* CHECKOUT BUTTON */
 
 .checkout{
 display:block;
 margin-top:20px;
-text-align:center;
 padding:15px;
 background:linear-gradient(90deg,#00f0ff,#ff00ff);
 border-radius:12px;
 color:white;
 text-decoration:none;
 font-weight:600;
-font-size:18px;
-transition:0.3s;
-}
-
-.checkout:hover{
-transform:scale(1.03);
-}
-
-/* RESPONSIVE */
-
-@media(max-width:700px){
-.cart-item{
-flex-direction:column;
-align-items:flex-start;
-}
-.cart-item img{
-width:100%;
-height:auto;
-}
-.details{
-text-align:left;
-}
-.qty{
-justify-content:flex-start;
-}
+text-align:center;
 }
 </style>
 </head>
@@ -245,43 +205,104 @@ justify-content:flex-start;
 <h1 class="title">Your Cart</h1>
 
 <?php if(mysqli_num_rows($res) == 0): ?>
-    <div class="empty-cart">
-        <i>🛒</i>
-        Your cart is empty!
-        <br>
-        <a href="product.php" class="back">← Back to Products</a>
-    </div>
+
+<div style="color:#ff00ff; font-size:24px;">
+🛒 Your cart is empty
+<br><br>
+<a href="product.php" class="back">← Back to Products</a>
+</div>
+
 <?php else: ?>
+
+<!-- SELECT ALL -->
+
 
 <a href="product.php" class="back">← Back to Products</a>
 
-<?php while($row = mysqli_fetch_assoc($res)): 
+<div style="text-align:left;margin-bottom:15px;">
+<label>
+<input type="checkbox" id="selectAll" checked style="transform:scale(1.3);margin-right:8px;">
+Select All
+</label>
+</div>
+
+<?php while($row = mysqli_fetch_assoc($res)):
+
 $sub = $row['price'] * $row['quantity'];
 $total += $sub;
+
 ?>
 
 <div class="cart-item">
-<img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/150x100' ?>" alt="<?= $row['product_name'] ?>">
+
+<!-- CHECKBOX ADDED -->
+<input type="checkbox"
+class="select-item"
+data-id="<?= $row['product_id'] ?>"
+data-price="<?= $row['price'] ?>"
+data-qty="<?= $row['quantity'] ?>"
+checked>
+
+<img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/150x100' ?>">
+
 <div class="details">
+
 <h3><?= $row['product_name'] ?></h3>
-<p>Price: RM <?= $row['price'] ?></p>
+<p>Price: RM <?= number_format($row['price'],2) ?></p>
+
 <div class="qty">
 <button onclick="update(<?= $row['product_id'] ?>,'dec')">-</button>
 <span><?= $row['quantity'] ?></span>
 <button onclick="update(<?= $row['product_id'] ?>,'inc')">+</button>
 </div>
-<p>Subtotal: RM <?= $sub ?></p>
+
+<p>Subtotal: RM <?= number_format($sub,2) ?></p>
+
 <button class="remove" onclick="removeItem(<?= $row['product_id'] ?>)">Remove</button>
+
 </div>
 </div>
 
 <?php endwhile; ?>
 
-<div class="total">
-Total: RM <?= $total ?>
+<?php
+$delivery_fee = 5;
+$tax_rate = 0.06;
+
+$tax = $total * $tax_rate;
+$grand_total = $total + $tax + $delivery_fee;
+?>
+
+<!-- ORDER SUMMARY -->
+<div class="total-box">
+
+<h2>Order Summary</h2>
+
+<div>
+<span>Subtotal</span>
+<span>RM <?= number_format($total,2) ?></span>
 </div>
 
-<a href="checkout.php" class="checkout">Proceed to Checkout</a>
+<div>
+<span>Tax (6%)</span>
+<span>RM <?= number_format($tax,2) ?></span>
+</div>
+
+<div>
+<span>Delivery Fee</span>
+<span>RM <?= number_format($delivery_fee,2) ?></span>
+</div>
+
+<hr style="margin:10px 0; opacity:0.3;">
+
+<div class="grand">
+<span>Grand Total</span>
+<span>RM <?= number_format($grand_total,2) ?></span>
+</div>
+
+<a href="#" class="checkout" onclick="goCheckout()">Proceed to Checkout</a>
+
+</div>
 
 <?php endif; ?>
 
@@ -295,7 +316,7 @@ particlesJS("particles-js",{
 "shape":{"type":"circle"},
 "opacity":{"value":0.5},
 "size":{"value":3,"random":true},
-"line_linked":{"enable":true,"distance":150,"color":"#00f0ff","opacity":0.3,"width":1},
+"line_linked":{"enable":true,"distance":150,"color":"#00f0ff","opacity":0.3},
 "move":{"enable":true,"speed":2}
 }
 });
@@ -308,6 +329,29 @@ fetch(`update_cart.php?id=${id}&action=${action}`)
 function removeItem(id){
 fetch("remove_cart.php?id="+id)
 .then(()=>location.reload());
+}
+
+/* SELECT ALL */
+document.getElementById("selectAll").addEventListener("change",function(){
+document.querySelectorAll(".select-item").forEach(i=>{
+i.checked = this.checked;
+});
+});
+
+/* CHECKOUT SELECTED */
+function goCheckout(){
+let selected = [];
+
+document.querySelectorAll(".select-item:checked").forEach(i=>{
+selected.push(i.dataset.id);
+});
+
+if(selected.length === 0){
+alert("Please select at least one item");
+return;
+}
+
+window.location.href = "checkout.php?items=" + selected.join(",");
 }
 </script>
 

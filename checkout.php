@@ -2,17 +2,23 @@
 session_start();
 include "db.php";
 require "vendor/autoload.php";
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+}
+
 $user_id = $_SESSION['user']['user_id'];
 
-$res_user = mysqli_query($conn,"SELECT * FROM users WHERE user_id=$user_id");
+$res_user = mysqli_query($conn, "SELECT * FROM users WHERE user_id = $user_id");
 $user = mysqli_fetch_assoc($res_user);
 
-$res = mysqli_query($conn,"
-SELECT p.*, c.quantity 
-FROM cart c 
+$res = mysqli_query($conn, "
+SELECT p.*, c.quantity
+FROM cart c
 JOIN products p ON c.product_id = p.product_id
 WHERE c.user_id = $user_id
 ");
@@ -31,115 +37,115 @@ if(isset($_POST['pay'])){
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $method = mysqli_real_escape_string($conn, $_POST['method']);
 
-    $res = mysqli_query($conn,"
-    SELECT p.*, c.quantity 
-    FROM cart c 
-    JOIN products p ON c.product_id = p.product_id
-    WHERE c.user_id = $user_id
+    mysqli_query($conn,"
+    INSERT INTO orders(user_id,total_price,address,phone,payment_method)
+    VALUES($user_id,$total,'$address','$phone','$method')
     ");
 
-    $total = 0;
-    $items = [];
+    $order_id = mysqli_insert_id($conn);
 
-    while($row = mysqli_fetch_assoc($res)){
-        $total += $row['price'] * $row['quantity'];
-        $items[] = $row;
-    }
+    foreach($items as $row){
 
-    if(!empty($items)){
         mysqli_query($conn,"
-        INSERT INTO orders(user_id,total_price,address,phone)
-        VALUES($user_id,$total,'$address','$phone')
+        INSERT INTO order_items(order_id,product_id,quantity,price)
+        VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
         ");
 
-        $order_id = mysqli_insert_id($conn);
+        mysqli_query($conn,"
+        UPDATE products
+        SET stock = stock - {$row['quantity']}
+        WHERE product_id = {$row['product_id']}
+        ");
+    }
 
-        foreach($items as $row){
-            mysqli_query($conn,"
-            INSERT INTO order_items(order_id,product_id,quantity,price)
-            VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
-            ");
+    mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
 
-            mysqli_query($conn,"
-            UPDATE products 
-            SET stock = stock - {$row['quantity']}
-            WHERE product_id = {$row['product_id']}
-            ");
-        }
+    $mail = new PHPMailer(true);
 
-        mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
+    try{
 
-        $to = $user['email'];
-        $subject = "Order Receipt - PC Store";
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
 
-        $message = "Thank you for your order!\n\nOrder ID: $order_id\nTotal: RM $total";
+        $mail->Username = 'yourgmail@gmail.com';
+        $mail->Password = 'your_app_password';
 
-        $headers = "From: noreply@pcstore.com";
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
 
-        $mail = new PHPMailer(true);
+        $mail->setFrom('yourgmail@gmail.com', 'PC STORE');
+        $mail->addAddress($user['email']);
 
-try {
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
-    $mail->Username = 'ziyiyap2006@gmail.com';
-    $mail->Password = 'ncprqebxyjjoegxx';
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port = 587;
+        $mail->isHTML(true);
+        $mail->Subject = "Order Receipt - PC STORE";
 
-    $mail->setFrom('ziyiyap2006@gmail.com', 'PC STORE');
-    $mail->addAddress($user['email']);
-
-    $mail->isHTML(true);
-    $mail->Subject = "Order Receipt - PC STORE";
-
-    $mail->Body = "
+        $mail->Body = "
         <h2>Thank you for your order 🎉</h2>
         <p><b>Order ID:</b> $order_id</p>
         <p><b>Total:</b> RM $total</p>
-        <p>We are preparing your order now.</p>
-    ";
+        <p><b>Payment Method:</b> $method</p>
+        <p>Your order is now being prepared.</p>
+        ";
 
-    $mail->send();
+        $mail->send();
 
-} catch (Exception $e) {
-    // optional debug
-    error_log($mail->ErrorInfo);
-}
-
-        header("Location: checkout.php?success=1");
-        exit;
+    }catch(Exception $e){
+        error_log($mail->ErrorInfo);
     }
+
+    header("Location: checkout.php?success=1");
+    exit;
 }
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Checkout - PC Store</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
 <style>
-*{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
-body{ background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:white; min-height:100vh; }
-#particles-js{ position:fixed; width:100%; height:100%; z-index:-1; pointer-events:none; }
+
+/* ===== YOUR ORIGINAL THEME (UNCHANGED) ===== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    min-height:100vh;
+    color:white;
+}
+
+#particles-js{
+    position:fixed;
+    width:100%;
+    height:100%;
+    z-index:-1;
+}
 
 .container{
-    max-width:600px;
-    margin:100px auto;
-    padding:30px;
-    background: rgba(255,255,255,0.05);
-    border-radius:20px;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-    text-align:center;
+    max-width:750px;
+    margin:60px auto;
+    padding:35px;
+    border-radius:25px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(15px);
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);
 }
 
 h1{
-    font-size:38px;
-    margin-bottom:30px;
+    text-align:center;
+    margin-bottom:25px;
     color:#00f0ff;
     text-shadow:0 0 15px #00f0ff;
 }
@@ -147,201 +153,289 @@ h1{
 .back{
     display:inline-block;
     margin-bottom:25px;
-    padding:10px 20px;
-    background:#ff00ff;
-    color:#fff;
-    border-radius:10px;
-    text-decoration:none;
-    font-weight:600;
-    transition:0.3s;
-}
-.back:hover{ transform: scale(1.05); }
-
-.total{
-    font-size:26px;
-    margin-bottom:20px;
-    color:#ff00ff;
-    text-shadow:0 0 10px #ff00ff;
-}
-
-form select {
-    padding:10px 15px;
-    width:100%;
-    border-radius:12px;
-    border:2px solid #00f0ff; /* added neon cyan border */
-    margin-bottom:20px;
-    font-weight:600;
-    background: rgba(48, 43, 99, 0.8) url('data:image/svg+xml;utf8,<svg fill="white" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 12px center;
-    background-size:12px;
-    color:#00f0ff; /* neon cyan text */
-    appearance:none;
-    -webkit-appearance:none;
-    -moz-appearance:none;
-    box-shadow: 0 0 10px #00f0ff; /* subtle glow */
-    transition: 0.3s;
-}
-form select:focus {
-    outline:none;
-    border-color:#ff00ff; /* border changes on focus to neon magenta */
-    box-shadow: 0 0 15px #ff00ff;
-}
-
-form select option {
-    background-color: rgba(48, 43, 99, 0.9);
-    color:#00f0ff;                             
-    font-weight:600;
-}
-form select option:hover {
-    background-color:#ff00ff; 
-    color:#000;
-}
-
-form button{
-    padding:12px 20px;
-    width:100%;
-    border:none;
-    border-radius:12px;
-    background: linear-gradient(90deg,#00f0ff,#ff00ff);
     color:white;
+    text-decoration:none;
+    background:#ff00ff;
+    padding:10px 18px;
+    border-radius:10px;
     font-weight:600;
-    cursor:pointer;
-    transition:0.3s;
-}
-form button:hover{
-    transform:scale(1.05);
-    box-shadow:0 0 15px #00f0ff,0 0 25px #ff00ff;
 }
 
-.success{
-    margin-top:20px;
+.summary{
+    margin-bottom:25px;
     padding:20px;
     border-radius:15px;
-    background: rgba(0,255,255,0.1);
-    color:#00ffea;
-    text-shadow:0 0 10px #00f0ff;
+    background:rgba(255,255,255,0.05);
 }
-.success a{
-    display:inline-block;
-    margin-top:20px;
-    padding:10px 20px;
-    background:#00f0ff;
-    color:#000;
-    border-radius:10px;
-    text-decoration:none;
+
+/* NEW FORMAL TABLE STYLE */
+.summary table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.summary th,
+.summary td{
+    padding:12px;
+    text-align:left;
+    border-bottom:1px solid rgba(255,255,255,0.2);
+}
+
+.summary th{
+    color:#00f0ff;
     font-weight:600;
-    transition:0.3s;
 }
-.success a:hover{ transform:scale(1.05); }
+
+.total{
+    font-size:30px;
+    color:#00f0ff;
+    margin-bottom:25px;
+    text-align:center;
+    font-weight:700;
+}
+
+.payment-methods{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+    margin-bottom:25px;
+}
+
+.payment-methods label{
+    cursor:pointer;
+}
+
+.payment-methods input{
+    display:none;
+}
+
+.payment-card{
+    padding:20px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.06);
+    border:2px solid transparent;
+    text-align:center;
+    transition:0.3s;
+    font-weight:600;
+}
+
+.payment-card:hover{
+    transform:translateY(-5px);
+}
+
+.payment-methods input:checked + .payment-card{
+    border-color:#00f0ff;
+    box-shadow:0 0 20px #00f0ff;
+}
 
 .input-box{
     margin-bottom:15px;
 }
 
-.input-box input{
+.input-box input,
+select{
     width:100%;
-    padding:12px 15px;
+    padding:14px;
     border-radius:12px;
     border:2px solid #00f0ff;
-    background: rgba(48, 43, 99, 0.8);
-    color:#00f0ff;
-    font-weight:600;
+    background:rgba(255,255,255,0.05);
+    color:white;
     outline:none;
-    box-shadow: 0 0 10px #00f0ff;
+    font-size:15px;
+}
+
+select option{
+    background:#302b63;
+}
+
+.hidden-box{
+    display:none;
+}
+
+button{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(90deg,#00f0ff,#ff00ff);
+    color:white;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
     transition:0.3s;
 }
 
-.input-box input::placeholder{
-    color:rgba(0,240,255,0.6);
-}
-
-.input-box input:focus{
-    border-color:#ff00ff;
-    box-shadow: 0 0 15px #ff00ff;
-    color:#ff00ff;
+button:hover{
+    transform:scale(1.03);
+    box-shadow:0 0 20px #00f0ff;
 }
 
 </style>
 </head>
+
 <body>
 
 <div id="particles-js"></div>
 
 <div class="container">
 
-<h1>Checkout</h1>
+<h1>Secure Checkout</h1>
 
 <a href="cart.php" class="back">← Back to Cart</a>
 
 <?php if(isset($_GET['success'])): ?>
-    <div class="success">
-        ✅ Payment Successful!<br>
-        <a href="product.php">🏠 Back to Home</a>
-    </div>
+
+<div class="summary">
+<h2>✅ Payment Successful</h2>
+<p>Your order has been placed successfully.</p>
+</div>
 
 <?php elseif(empty($items)): ?>
-    <div class="success">
-        🛒 Your cart is empty!<br>
-        <a href="product.php">Back to Products</a>
-    </div>
+
+<div class="summary">
+<h2>🛒 Cart is Empty</h2>
+</div>
 
 <?php else: ?>
 
-<div style="text-align:left; margin-bottom:20px;">
-<h3>Order Summary</h3>
+<div class="summary">
+
+<table>
+<tr>
+<th>Product</th>
+<th>Qty</th>
+<th>Unit Price</th>
+<th>Total</th>
+</tr>
 
 <?php foreach($items as $row): ?>
-<p>
-<?= $row['product_name'] ?> x <?= $row['quantity'] ?>
-= RM <?= $row['price'] * $row['quantity'] ?>
-</p>
+<tr>
+<td><?= $row['product_name'] ?></td>
+<td><?= $row['quantity'] ?></td>
+<td>RM <?= $row['price'] ?></td>
+<td>RM <?= $row['price'] * $row['quantity'] ?></td>
+</tr>
 <?php endforeach; ?>
 
+</table>
+
 </div>
-<div class="total">Total: RM <?= $total ?></div>
+
+<div class="total">
+Total: RM <?= $total ?>
+</div>
 
 <form method="post">
 
-<div class="input-box">
-    <input type="text" name="address"
-           value="<?= htmlspecialchars($user['address']) ?>"
-           placeholder="Enter Address"
-           required>
+<!-- PAYMENT METHODS -->
+<div class="payment-methods">
+
+<label>
+<input type="radio" name="method" value="Credit Card" checked>
+<div class="payment-card">💳 Credit Card</div>
+</label>
+
+<label>
+<input type="radio" name="method" value="Touch n Go">
+<div class="payment-card">📱 TNG</div>
+</label>
+
+<label>
+<input type="radio" name="method" value="FPX">
+<div class="payment-card">🏦 FPX</div>
+</label>
+
+<label>
+<input type="radio" name="method" value="Boost">
+<div class="payment-card">⚡ Boost</div>
+</label>
+
 </div>
 
-<div class="input-box">
-    <input type="text" name="phone"
-           value="<?= $user['phone'] ?>"
-           placeholder="Phone Number"
-           required>
+<!-- CREDIT CARD -->
+<div id="credit-card-box" class="payment-box">
+<div class="input-box"><input placeholder="Cardholder Name"></div>
+<div class="input-box"><input placeholder="Card Number"></div>
+<div class="input-box"><input placeholder="MM/YY"></div>
+<div class="input-box"><input placeholder="CVV"></div>
 </div>
 
-<select name="method" required>
-<option value="">Select Payment Method</option>
-<option value="Credit Card">Credit Card</option>
-<option value="Touch n Go">Touch n Go</option>
-<option value="FPX">FPX</option>
+<!-- TNG (UPGRADED) -->
+<div id="tng-box" class="payment-box hidden-box">
+<div class="input-box"><input name="tng_phone" placeholder="TNG Phone Number"></div>
+<div class="input-box"><input name="tng_name" placeholder="Account Name"></div>
+<div class="input-box"><input name="tng_ref" placeholder="Reference (Optional)"></div>
+</div>
+
+<!-- FPX (UPGRADED) -->
+<div id="fpx-box" class="payment-box hidden-box">
+
+<div class="input-box">
+<select name="fpx_bank">
+<option value="">Select Bank</option>
+<option>Maybank</option>
+<option>CIMB</option>
+<option>Public Bank</option>
+<option>RHB</option>
+<option>Hong Leong</option>
 </select>
+</div>
 
-<button name="pay">Pay Now</button>
+<div class="input-box"><input name="fpx_userid" placeholder="Bank ID"></div>
+<div class="input-box"><input name="fpx_ref" placeholder="Reference (Optional)"></div>
+
+</div>
+
+<!-- BOOST (UPGRADED) -->
+<div id="boost-box" class="payment-box hidden-box">
+<div class="input-box"><input name="boost_phone" placeholder="Boost Phone Number"></div>
+<div class="input-box"><input name="boost_ref" placeholder="Reference (Optional)"></div>
+</div>
+
+<!-- USER INFO -->
+<div class="input-box">
+<input name="address" value="<?= htmlspecialchars($user['address']) ?>" required>
+</div>
+
+<div class="input-box">
+<input name="phone" value="<?= $user['phone'] ?>" required>
+</div>
+
+<button name="pay">🔒 Place Order</button>
+
 </form>
 
-
-
 <?php endif; ?>
+
 </div>
 
 <script>
-particlesJS("particles-js",{
-"particles":{
-"number":{"value":70},
-"color":{"value":["#00f0ff","#ff00ff"]},
-"shape":{"type":"circle"},
-"opacity":{"value":0.5},
-"size":{"value":3,"random":true},
-"line_linked":{"enable":true,"distance":150,"color":"#00f0ff","opacity":0.3,"width":1},
-"move":{"enable":true,"speed":2}
+
+const methods = document.querySelectorAll('input[name="method"]');
+
+const boxes = {
+"Credit Card": document.getElementById('credit-card-box'),
+"Touch n Go": document.getElementById('tng-box'),
+"FPX": document.getElementById('fpx-box'),
+"Boost": document.getElementById('boost-box')
+};
+
+function hideAll(){
+Object.values(boxes).forEach(b => b.classList.add('hidden-box'));
 }
+
+methods.forEach(m=>{
+m.addEventListener('change',()=>{
+hideAll();
+boxes[m.value].classList.remove('hidden-box');
 });
+});
+
+window.onload = () => {
+hideAll();
+boxes["Credit Card"].classList.remove('hidden-box');
+};
+
 </script>
 
 </body>
