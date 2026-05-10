@@ -111,7 +111,7 @@ if(isset($_POST['pay'])){
 
 <style>
 
-/* ===== YOUR ORIGINAL THEME (UNCHANGED) ===== */
+/* YOUR ORIGINAL THEME (UNCHANGED)  */
 
 *{
     margin:0;
@@ -168,7 +168,7 @@ h1{
     background:rgba(255,255,255,0.05);
 }
 
-/* NEW FORMAL TABLE STYLE */
+/* NEW FORMAL TABLE nice STYLE */
 .summary table{
     width:100%;
     border-collapse:collapse;
@@ -304,7 +304,6 @@ button:hover{
 <tr>
 <th>Product</th>
 <th>Qty</th>
-<th>Unit Price</th>
 <th>Total</th>
 </tr>
 
@@ -312,7 +311,6 @@ button:hover{
 <tr>
 <td><?= $row['product_name'] ?></td>
 <td><?= $row['quantity'] ?></td>
-<td>RM <?= $row['price'] ?></td>
 <td>RM <?= $row['price'] * $row['quantity'] ?></td>
 </tr>
 <?php endforeach; ?>

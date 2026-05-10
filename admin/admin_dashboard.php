@@ -1,5 +1,5 @@
 <?php
-include "../db.php";
+include __DIR__ . "/../db.php";
 session_start();
 
 if(!isset($_SESSION['admin'])){
@@ -7,183 +7,91 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-// stats
-$productCount = $conn->query("SELECT COUNT(*) as total FROM products")->fetch_assoc()['total'];
-$totalStock = $conn->query("SELECT SUM(stock) as total FROM products")->fetch_assoc()['total'];
-
-// chart data
-$productData = [];
-$productLabels = [];
-
-$res = $conn->query("SELECT product_name, stock FROM products ORDER BY stock DESC");
-
-while($row = $res->fetch_assoc()){
-    $productLabels[] = $row['product_name'];
-    $productData[] = (int)$row['stock'];
-}
+$productCount = $conn->query("SELECT COUNT(*) as t FROM products")->fetch_assoc()['t'];
+$orderCount   = $conn->query("SELECT COUNT(*) as t FROM orders")->fetch_assoc()['t'];
+$userCount    = $conn->query("SELECT COUNT(*) as t FROM users")->fetch_assoc()['t'];
+$revenue      = $conn->query("SELECT SUM(total_price) as t FROM orders")->fetch_assoc()['t'] ?? 0;
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin Dashboard</title>
+<title>Dashboard</title>
 
-<!-- ✅ IMPORTANT: LOAD YOUR CSS -->
-<link rel="stylesheet" href="style.css">
-
-<!-- Chart -->
+<link rel="stylesheet" href="style.css?v=2">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
-
-body{
-    min-height:100vh;
-    background:linear-gradient(135deg,#e0f7ff,#c2e9fb);
-}
-
-/* layout */
-.main-layout{
-    display:flex;
-}
-
-/* content area */
-.content-area{
-    flex:1;
-    padding:40px;
-    padding-top:120px;
-    margin-left:240px; /* ✅ push away from sidebar */
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-}
-
-/* when sidebar collapsed */
-.sidebar.collapsed ~ .main-layout .content-area{
-    margin-left:70px;
-}
-
-/* title */
-.dashboard-title{
-    font-size:34px;
-    font-weight:700;
-    color:#0072ff;
-    margin-bottom:30px;
-}
-
-/* chart */
-.chart-wrapper{
-    width:100%;
-    max-width:500px;
-    background:rgba(255,255,255,0.7);
-    backdrop-filter:blur(15px);
-    border-radius:20px;
-    padding:25px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.15);
-    margin-bottom:40px;
-}
-
-/* cards */
-.dashboard-grid{
+.cards{
     display:grid;
-    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    grid-template-columns:repeat(4,1fr);
     gap:20px;
-    width:100%;
-    max-width:800px;
 }
-
 .card{
-    background:rgba(255,255,255,0.7);
-    backdrop-filter:blur(10px);
-    padding:25px;
-    border-radius:15px;
-    text-align:center;
-    box-shadow:0 10px 25px rgba(0,0,0,0.1);
-    transition:0.3s;
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
-
-.card:hover{
-    transform:translateY(-5px);
+.charts{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:20px;
+    margin-top:20px;
 }
-
-.card h3{
-    margin-bottom:10px;
-    color:#333;
-}
-
-.card p{
-    font-size:28px;
-    font-weight:bold;
-    color:#0072ff;
+.chart-box{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
 }
 </style>
-
 </head>
 
 <body>
 
-<?php include "admin_header.php"; ?>
 <?php include "admin_sidebar.php"; ?>
+<?php include "admin_header.php"; ?>
 
-<div class="main-layout">
+<div class="main-content">
 
-    <div class="content-area">
+<h2>Overview</h2>
 
-        <div class="dashboard-title">📊 PC Store Dashboard</div>
+<div class="cards">
+    <div class="card"><h4>Revenue</h4><h2>RM <?= number_format($revenue,2) ?></h2></div>
+    <div class="card"><h4>Orders</h4><h2><?= $orderCount ?></h2></div>
+    <div class="card"><h4>Customers</h4><h2><?= $userCount ?></h2></div>
+    <div class="card"><h4>Products</h4><h2><?= $productCount ?></h2></div>
+</div>
 
-        <!-- Chart -->
-        <div class="chart-wrapper">
-            <div class="chart-title">Product Stock Distribution</div>
-            <canvas id="stockChart"></canvas>
-        </div>
-
-        <!-- Cards -->
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Total Products</h3>
-                <p><?= $productCount ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Total Stock</h3>
-                <p><?= $totalStock ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Admin</h3>
-                <p><?= $_SESSION['admin'] ?></p>
-            </div>
-        </div>
-
-    </div>
+<div class="charts">
+    <div class="chart-box"><canvas id="lineChart"></canvas></div>
+    <div class="chart-box"><canvas id="barChart"></canvas></div>
+</div>
 
 </div>
 
-<!-- Chart JS -->
-<script>
-const ctx = document.getElementById('stockChart').getContext('2d');
-
-new Chart(ctx,{
-    type:'doughnut',
-    data:{
-        labels: <?= json_encode($productLabels) ?>,
-        datasets:[{
-            data: <?= json_encode($productData) ?>,
-            backgroundColor: ['#00c6ff','#0072ff','#4facfe','#43e97b','#f9d423','#ff4e50'],
-            borderWidth:2
-        }]
-    }
-});
-</script>
-
-<!-- icons -->
+<!-- ✅ IMPORTANT FIX -->
 <script src="https://unpkg.com/lucide@latest"></script>
-
-<!-- your JS -->
 <script src="admin.js"></script>
 
 <script>
-lucide.createIcons();
+new Chart(document.getElementById("lineChart"), {
+    type: 'line',
+    data: {
+        labels: ['Nov','Dec','Jan','Feb','Mar','Apr'],
+        datasets: [{data: [28000,40000,35000,42000,48000,52000], borderColor:'#3b82f6'}]
+    }
+});
+
+new Chart(document.getElementById("barChart"), {
+    type: 'bar',
+    data: {
+        labels: ['GPU','CPU','RAM','Storage','Case'],
+        datasets: [{data: [150,200,300,250,100], backgroundColor:'#3b82f6'}]
+    }
+});
+
+
 </script>
 
 </body>

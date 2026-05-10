@@ -218,7 +218,6 @@ transform:scale(1.05);
 <body>
 
 <div id="particles-js"></div>
-
 <header>
 <div class="logo" onclick="window.location.href='product.php'">
 <img src="storelogo.jpeg">

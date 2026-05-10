@@ -156,12 +156,6 @@ echo "<div>
 
 echo "<div class='actions'>";
 
-if ($statusLower === "pending") {
-    echo "<a href='cancel_order.php?id={$order['order_id']}' 
-    style='background:red;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;'>
-    Cancel Order
-    </a>";
-}
 
 echo "<a href='order_detail.php?id={$order['order_id']}' 
 style='padding:8px 12px;background:#00f0ff;color:#000;border-radius:8px;text-decoration:none;'>

@@ -267,6 +267,65 @@ input {
     font-size: 13px;
     margin-top: 5px;
 }
+.human-check{
+    margin-top:20px;
+}
+
+.human-box{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:white;
+    color:black;
+    border-radius:12px;
+    padding:15px 18px;
+    cursor:pointer;
+    border:1px solid #ccc;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+.human-box input{
+    display:none;
+}
+
+.custom-check{
+    width:28px;
+    height:28px;
+    border:2px solid #888;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    color:transparent;
+    transition:0.3s;
+    background:white;
+}
+
+.human-box input:checked + .custom-check{
+    background:#00c853;
+    border-color:#00c853;
+    color:white;
+}
+
+.human-text{
+    flex:1;
+    margin-left:15px;
+    font-size:16px;
+    font-weight:500;
+}
+
+.robot-side{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    font-size:14px;
+    color:#555;
+}
+
+.robot-side small{
+    font-size:10px;
+}
     
 </style>
 
@@ -310,7 +369,7 @@ input {
         </div>
 
         <div class="input-group full">
-            <label>Phone Number <span style="color:white">*</span></label>
+            <label>Phone Number </label>
             <input type="text" name="phone">
         </div>
 
@@ -337,6 +396,23 @@ input {
                 <div id="matchMsg"></div>
             </div>
         </div>
+
+        <div class="human-check">
+    <label class="human-box">
+        <input type="checkbox" id="humanCheck">
+        
+        <div class="custom-check">
+            ✓
+        </div>
+
+        <span class="human-text">I'm not a robot</span>
+
+        <div class="robot-side">
+            🤖
+            <small>Human Verify</small>
+        </div>
+    </label>
+</div>
 
         <button>Register</button>
     </form>
@@ -415,6 +491,13 @@ function validateForm(){
     if(password.value !== confirmPassword.value){
         matchMsg.textContent = "Fix errors before submitting!";
         return false;
+    }
+
+    const humanCheck = document.getElementById("humanCheck");
+
+    if(!humanCheck.checked){
+    alert("Please verify you are human!");
+    return false;
     }
 
     const btn = document.querySelector("button");
