@@ -128,6 +128,56 @@ button:disabled{
     transform:scale(1.05);
 }
 
+.qty-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:20px 0;
+}
+
+.qty-btn{
+    width:45px !important;
+    height:45px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:none;
+    border-radius:10px;
+
+    background:#00f0ff;
+    color:black;
+
+    font-size:22px;
+    font-weight:bold;
+    line-height:1;
+
+    cursor:pointer;
+    padding:0;
+}
+
+.qty-box input{
+    width:80px;
+    text-align:center;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    padding:10px;
+    background:rgba(255,255,255,0.15);
+    color:white;
+}
+
+.btn-group{
+    display:flex;
+    gap:15px;
+    margin-top:20px;
+}
+
+.buy-btn{
+    background: linear-gradient(90deg,#ff9800,#ff00ff);
+}
+
 </style>
 </head>
 
@@ -161,12 +211,32 @@ button:disabled{
         <div class="price">RM <?= $row['price'] ?></div>
         <div class="stock">Stock: <?= $row['stock'] ?></div>
 
-        <button 
-            onclick="add(<?= $row['product_id'] ?>)"
-            <?= ($row['stock'] <= 0) ? 'disabled' : '' ?>
-        >
-            <?= ($row['stock'] <= 0) ? 'Out of Stock' : 'Add to Cart' ?>
-        </button>
+<div class="qty-box">
+    <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+
+    <input type="number" id="qty" value="1" min="1" max="<?= $row['stock'] ?>">
+
+    <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+</div>
+
+<div class="btn-group">
+
+    <button 
+        onclick="add(<?= $row['product_id'] ?>)"
+        <?= ($row['stock'] <= 0) ? 'disabled' : '' ?>
+    >
+        <?= ($row['stock'] <= 0) ? 'Out of Stock' : 'Add to Cart' ?>
+    </button>
+
+    <button 
+        class="buy-btn"
+        onclick="buyNow(<?= $row['product_id'] ?>)"
+        <?= ($row['stock'] <= 0) ? 'disabled' : '' ?>
+    >
+        Buy Now
+    </button>
+
+</div>
     </div>
 
 </div>
@@ -185,11 +255,37 @@ particlesJS("particles-js",{
   }
 });
 
+function changeQty(amount){
+    let qty = document.getElementById("qty");
+    let current = parseInt(qty.value);
+
+    current += amount;
+
+    if(current < 1){
+        current = 1;
+    }
+
+    if(current > <?= $row['stock'] ?>){
+        current = <?= $row['stock'] ?>;
+    }
+
+    qty.value = current;
+}
+
 function add(id){
-    fetch("add_to_cart.php?id="+id)
-    .then(()=>{
+    let qty = document.getElementById("qty").value;
+
+    fetch("add_to_cart.php?id=" + id + "&qty=" + qty)
+    .then(() => {
         alert("✅ Added to cart!");
     });
+}
+
+function buyNow(id){
+    let qty = document.getElementById("qty").value;
+
+    window.location.href =
+        "checkout.php?id=" + id + "&qty=" + qty;
 }
 </script>
 
