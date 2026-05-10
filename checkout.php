@@ -260,6 +260,68 @@ form button:hover{
     color:#ff00ff;
 }
 
+.summary-box{
+    text-align:left;
+    margin-bottom:25px;
+
+    background:rgba(255,255,255,0.05);
+    border-radius:18px;
+    padding:20px;
+
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.summary-title{
+    margin-bottom:20px;
+    color:#00f0ff;
+    text-shadow:0 0 10px #00f0ff;
+}
+
+.summary-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:15px 0;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.summary-item:last-child{
+    border-bottom:none;
+}
+
+.summary-left{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.summary-left img{
+    width:70px;
+    height:70px;
+    object-fit:cover;
+    border-radius:12px;
+    box-shadow:0 0 12px rgba(0,240,255,0.3);
+}
+
+.product-name{
+    font-weight:600;
+    color:white;
+    margin-bottom:5px;
+}
+
+.product-qty{
+    font-size:14px;
+    color:#aaa;
+}
+
+.summary-price{
+    color:#ff00ff;
+    font-weight:700;
+    font-size:18px;
+    text-shadow:0 0 8px #ff00ff;
+}
+
 </style>
 </head>
 <body>
@@ -286,15 +348,37 @@ form button:hover{
 
 <?php else: ?>
 
-<div style="text-align:left; margin-bottom:20px;">
-<h3>Order Summary</h3>
+<div class="summary-box">
 
-<?php foreach($items as $row): ?>
-<p>
-<?= $row['product_name'] ?> x <?= $row['quantity'] ?>
-= RM <?= $row['price'] * $row['quantity'] ?>
-</p>
-<?php endforeach; ?>
+    <h3 class="summary-title">🛒 Order Summary</h3>
+
+    <?php foreach($items as $row): ?>
+
+        <div class="summary-item">
+
+            <div class="summary-left">
+
+                <img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/80' ?>">
+
+                <div>
+                    <div class="product-name">
+                        <?= $row['product_name'] ?>
+                    </div>
+
+                    <div class="product-qty">
+                        Quantity: <?= $row['quantity'] ?>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="summary-price">
+                RM <?= number_format($row['price'] * $row['quantity'],2) ?>
+            </div>
+
+        </div>
+
+    <?php endforeach; ?>
 
 </div>
 <div class="total">Total: RM <?= $total ?></div>
