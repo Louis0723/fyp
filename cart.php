@@ -300,7 +300,7 @@ $grand_total = $total + $tax + $delivery_fee;
 <span>RM <?= number_format($grand_total,2) ?></span>
 </div>
 
-<a href="#" class="checkout" onclick="goCheckout()">Proceed to Checkout</a>
+<a href="javascript:void(0)" class="checkout" onclick="goCheckout()">Proceed to Checkout</a>
 
 </div>
 
@@ -338,20 +338,31 @@ i.checked = this.checked;
 });
 });
 
-/* CHECKOUT SELECTED */
 function goCheckout(){
-let selected = [];
+    let selected = [];
 
-document.querySelectorAll(".select-item:checked").forEach(i=>{
-selected.push(i.dataset.id);
-});
+    document.querySelectorAll(".select-item:checked").forEach(i=>{
+        selected.push(i.dataset.id);
+    });
 
-if(selected.length === 0){
-alert("Please select at least one item");
-return;
-}
+    if(selected.length === 0){
+        alert("No items selected");
+        return;
+    }
 
-window.location.href = "checkout.php?items=" + selected.join(",");
+    fetch("set_checkout_session.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ items: selected })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            window.location.href = "checkout.php";
+        }
+    });
 }
 </script>
 

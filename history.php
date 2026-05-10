@@ -109,6 +109,10 @@ ORDER BY created_at DESC
 .pending{background:orange;color:black;}
 .shipped{background:#00f0ff;color:black;}
 .delivered{background:#00ff99;color:black;}
+.completed{
+    background:#22c55e; /* green */
+    color:white;
+}
     </style>
 </head>
 <body>
@@ -128,7 +132,13 @@ ORDER BY created_at DESC
 $status = trim($order['status'] ?? 'Pending');
 $statusLower = strtolower($status);
 
-// force valid class only
+$statusClass = match($statusLower) {
+    'pending' => 'pending',
+    'shipped' => 'shipped',
+    'delivered' => 'delivered',
+    'completed' => 'completed',
+    default => 'pending'
+};
 if ($statusLower !== 'pending' && $statusLower !== 'shipped' && $statusLower !== 'delivered') {
     $statusLower = 'pending';
 }
@@ -149,13 +159,12 @@ echo "<div style='margin-top:10px; display:flex; justify-content:space-between; 
 
 echo "<div>
         Status:
-        <span class='status $statusLower'>
+        <span class='status $statusClass'>
             " . htmlspecialchars($status) . "
         </span>
       </div>";
 
 echo "<div class='actions'>";
-
 
 echo "<a href='order_detail.php?id={$order['order_id']}' 
 style='padding:8px 12px;background:#00f0ff;color:#000;border-radius:8px;text-decoration:none;'>
@@ -167,28 +176,38 @@ style='padding:8px 12px;background:#ff00ff;color:white;border-radius:8px;text-de
 🧾 Invoice
 </a>";
 
-echo "</div>"; // actions
+if($status == "Delivered"){
 
-echo "</div>";
-        // Fetch order items
-        $items = mysqli_query($conn,"SELECT oi.*, p.product_name, p.price 
-                                     FROM order_items oi 
-                                     JOIN products p ON oi.product_id=p.product_id 
-                                     WHERE order_id={$order['order_id']}");
-
-while($item = mysqli_fetch_assoc($items)){
-    $subtotal = $item['price'] * $item['quantity'];
-
-    echo "<div class='order-item'>
-            <span>{$item['product_name']} x {$item['quantity']}</span>
-            <span>RM $subtotal</span>
-          </div>";
+echo "<a href='complete_order.php?id={$order['order_id']}'
+style='padding:8px 12px;background:#00ff99;color:black;border-radius:8px;text-decoration:none;font-weight:600;'>
+✅ Order Received
+</a>";
 }
 
-        echo "</div>"; // end order
-    }
-    ?>
-</div>
+if($status == "Completed" && $order['review_status'] == "not_reviewed"){
+
+echo "<a href='reviews.php?order_id={$order['order_id']}'
+style='padding:8px 12px;background:orange;color:black;border-radius:8px;text-decoration:none;font-weight:600;'>
+⭐ Review
+</a>";
+}
+
+if($order['review_status'] == "reviewed"){
+
+echo "<a href='view_review.php?order_id={$order['order_id']}' 
+style='padding:8px 12px;background:#00f0ff;color:black;border-radius:8px;text-decoration:none;font-weight:600;'>
+👁 View Review
+</a>";
+
+}
+
+echo "</div>"; // close actions
+
+echo "</div>"; // close flex wrapper
+
+echo "</div>"; // close order card
+}
+?>
 
 <script>
 particlesJS("particles-js",{

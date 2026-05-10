@@ -13,8 +13,11 @@ if (isset($_POST['update_status'])) {
     $status = $_POST['status'];
 
     $stmt = $conn->prepare("UPDATE orders SET status=? WHERE order_id=?");
-    $stmt->bind_param("si", $status, $order_id);
+    $stmt->bind_param("ss", $status, $order_id);
     $stmt->execute();
+
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 
 /* DELETE ORDER */
@@ -23,7 +26,6 @@ if(isset($_GET['delete'])){
     $conn->query("DELETE FROM orders WHERE order_id=$id");
 }
 
-/* GET ORDERS */
 $sql = "SELECT 
             o.order_id,
             u.name AS user_name,
@@ -34,11 +36,18 @@ $sql = "SELECT
             o.status
         FROM orders o
         JOIN users u ON o.user_id = u.user_id
-        JOIN order_items oi ON o.order_id = oi.order_id
-        GROUP BY o.order_id
-        ORDER BY o.order_id DESC";
+        LEFT JOIN order_items oi ON o.order_id = oi.order_id
+        GROUP BY 
+            o.order_id,
+            u.name,
+            u.email,
+            o.created_at,
+            o.total_price,
+            o.status
+        ORDER BY o.created_at DESC";
 
 $result = $conn->query($sql);
+
 ?>
 
 <!DOCTYPE html>
@@ -80,15 +89,16 @@ td{ padding:16px 14px; border-top:1px solid #eee; }
 
 tr:hover{ background:#f9fbff; }
 
-/* ===== ACTIONS ===== */
+.actions{
+    text-align:center;
+}
+
 .actions i{
     cursor:pointer;
-    margin-right:10px;
-    padding:6px;
+    padding:8px;
     border-radius:8px;
     transition:0.2s;
 }
-
 .actions i:hover{
     background:#eef2ff;
     transform:scale(1.2);
@@ -155,6 +165,56 @@ tr:hover{ background:#f9fbff; }
     color:#fff;
 }
 
+.refresh-btn{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+}
+
+.refresh-btn button{
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    
+    background: linear-gradient(135deg,#00f0ff,#ff00ff);
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,240,255,0.4);
+
+    transition: 0.3s ease;
+}
+
+.refresh-btn button:hover{
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 0 20px #00f0ff, 0 0 30px #ff00ff;
+}
+.refresh-btn-inline{
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+
+    background: linear-gradient(135deg,#00f0ff,#ff00ff);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,240,255,0.3);
+
+    transition: 0.3s ease;
+}
+
+.refresh-btn-inline:hover{
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 0 15px #00f0ff, 0 0 25px #ff00ff;
+}
+
 </style>
 
 </head>
@@ -166,7 +226,15 @@ tr:hover{ background:#f9fbff; }
 
 <div class="content-area">
 
-<h2>Orders</h2>
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+
+    <h2 style="margin:0;">Orders</h2>
+
+    <button class="refresh-btn-inline" onclick="window.location.href=window.location.href + '?t=' + Date.now()">
+        ⟳
+    </button>
+
+</div>
 
 <div class="table-card">
 
@@ -202,9 +270,57 @@ tr:hover{ background:#f9fbff; }
 
 <td>RM <?= number_format($row['total_price'],2) ?></td>
 
-<td><?= $row['status'] ?></td>
+<td>
 
-<td class="actions">
+<form method="POST" style="display:flex; gap:5px; align-items:center;">
+
+    <input type="hidden" name="order_id"
+           value="<?= $row['order_id'] ?>">
+
+    <select name="status" style="
+        padding:6px 10px;
+        border-radius:8px;
+        border:1px solid #ddd;
+    ">
+
+        <option value="Pending"
+        <?= $row['status'] == 'Pending' ? 'selected' : '' ?>>
+        Pending
+        </option>
+
+        <option value="Shipped"
+        <?= $row['status'] == 'Shipped' ? 'selected' : '' ?>>
+        Shipped
+        </option>
+
+        <option value="Delivered"
+        <?= $row['status'] == 'Delivered' ? 'selected' : '' ?>>
+        Delivered
+        </option>
+
+        <option value="Completed"
+        <?= $row['status'] == 'Completed' ? 'selected' : '' ?>>
+        Completed
+        </option>
+
+    </select>
+
+    <button type="submit" name="update_status" style="
+        padding:6px 10px;
+        border:none;
+        border-radius:8px;
+        background:#2563eb;
+        color:white;
+        cursor:pointer;
+    ">
+        Update
+    </button>
+
+</form>
+
+</td>
+
+<td class="actions" style="text-align:center;">
 
 <!-- ✅ VIEW BUTTON -->
 <i class="view"
@@ -219,8 +335,7 @@ tr:hover{ background:#f9fbff; }
    '<?= $row['status'] ?>'
    )"></i>
 
-<a href="?delete=<?= $row['order_id'] ?>" onclick="return confirm('Delete?')">
-<i class="delete" data-lucide="trash-2"></i>
+
 </a>
 
 </td>

@@ -16,12 +16,26 @@ $user_id = $_SESSION['user']['user_id'];
 $res_user = mysqli_query($conn, "SELECT * FROM users WHERE user_id = $user_id");
 $user = mysqli_fetch_assoc($res_user);
 
-$res = mysqli_query($conn, "
+
+
+$itemArray = $_SESSION['checkout_items'] ?? [];
+
+if (empty($itemArray)) {
+    header("Location: cart.php");
+    exit;
+}
+
+$itemList = implode(',', $itemArray);
+
+$res = mysqli_query($conn,"
 SELECT p.*, c.quantity
 FROM cart c
 JOIN products p ON c.product_id = p.product_id
 WHERE c.user_id = $user_id
+AND c.product_id IN ($itemList)
 ");
+
+
 
 $total = 0;
 $items = [];
@@ -31,25 +45,49 @@ while($row = mysqli_fetch_assoc($res)){
     $items[] = $row;
 }
 
+$year = date("y");
+    $day = date("d");
+    $month = date("m");
+
+    $prefix = $year . $day . $month;
+
 if(isset($_POST['pay'])){
 
     $address = mysqli_real_escape_string($conn, $_POST['address']);
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $method = mysqli_real_escape_string($conn, $_POST['method']);
+    
+$res = mysqli_query($conn,"
+SELECT order_id 
+FROM orders 
+WHERE order_id LIKE '$prefix%' 
+ORDER BY order_id DESC 
+LIMIT 1
+");
+
+
+    $row = mysqli_fetch_assoc($res);
+
+if ($row) {
+    $last = (int)substr($row['order_id'], 6);
+    $next = str_pad($last + 1, 4, "0", STR_PAD_LEFT);
+} else {
+    $next = "0001";
+}
+
+$order_id = $prefix . $next;
 
     mysqli_query($conn,"
-    INSERT INTO orders(user_id,total_price,address,phone,payment_method)
-    VALUES($user_id,$total,'$address','$phone','$method')
+    INSERT INTO orders(order_id,user_id,total_price,address,phone,payment_method)
+    VALUES('$order_id',$user_id,$total,'$address','$phone','$method')
     ");
-
-    $order_id = mysqli_insert_id($conn);
 
     foreach($items as $row){
 
         mysqli_query($conn,"
-        INSERT INTO order_items(order_id,product_id,quantity,price)
-        VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
-        ");
+INSERT INTO order_items(order_id, product_id, quantity, price)
+VALUES('$order_id', {$row['product_id']}, {$row['quantity']}, {$row['price']})
+");
 
         mysqli_query($conn,"
         UPDATE products
@@ -58,7 +96,9 @@ if(isset($_POST['pay'])){
         ");
     }
 
-    mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
+    mysqli_query($conn,"DELETE FROM cart 
+WHERE user_id=$user_id 
+AND product_id IN ($itemList)");
 
     $mail = new PHPMailer(true);
 
@@ -459,11 +499,11 @@ Total: RM <?= $total ?>
 
 <!-- USER INFO -->
 <div class="input-box">
-<input name="address" value="<?= htmlspecialchars($user['address']) ?>" required>
+<input name="address" placeholder="Address" value="<?= htmlspecialchars($user['address']) ?>" required>
 </div>
 
 <div class="input-box">
-<input name="phone" value="<?= $user['phone'] ?>" required>
+<input name="phone" placeholder="Phone Number" value="<?= $user['phone'] ?>" required>
 </div>
 
 <button name="pay">🔒 Place Order</button>
