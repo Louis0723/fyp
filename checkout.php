@@ -295,7 +295,7 @@ form button:hover{
     align-items:center;
     gap:15px;
 }
-
+//
 .summary-left img{
     width:70px;
     height:70px;
