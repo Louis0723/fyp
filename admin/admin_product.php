@@ -98,7 +98,7 @@ if(isset($_POST['update_product'])){
     move_uploaded_file(
         $_FILES['image']['tmp_name'],
         "../uploads/".$newImage
-    );
+    );//
 
     $imageQuery = ", image='$newImage'";
     }
