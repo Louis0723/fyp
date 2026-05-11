@@ -10,8 +10,14 @@ if(!isset($_SESSION['user'])){
 $user_id = $_SESSION['user']['user_id'];
 $order_id = $_GET['order_id'];
 
+
+
 $reviews = mysqli_query($conn,"
-SELECT r.*, p.product_name, p.image
+SELECT r.image AS review_image,
+       r.rating,
+       r.review_text,
+       p.image AS product_image,
+       p.product_name
 FROM reviews r
 LEFT JOIN products p ON r.product_id = p.product_id
 WHERE r.order_id='$order_id' AND r.user_id='$user_id'
@@ -41,14 +47,26 @@ body{
 
 /* back button */
 .back{
-    display:inline-block;
-    margin-bottom:20px;
-    background:linear-gradient(90deg,#ff00ff,#00f0ff);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:25px;
+
+    background:rgba(0,240,255,0.15);
+    border:1px solid #00f0ff;
     padding:10px 16px;
-    color:white;
+
+    color:#00f0ff;
     text-decoration:none;
-    border-radius:10px;
+    border-radius:12px;
     font-weight:600;
+    transition:0.3s;
+}
+
+.back:hover{
+    background:#00f0ff;
+    color:black;
+    transform:translateY(-2px);
 }
 
 /* title */
@@ -59,31 +77,32 @@ h1{
     text-shadow:0 0 10px #00f0ff;
 }
 
-/* review card */
+/* review card (modern glass style) */
 .card{
     display:flex;
-    gap:20px;
+    gap:18px;
     align-items:flex-start;
 
     background:rgba(255,255,255,0.06);
-    padding:20px;
-    border-radius:16px;
-    margin-bottom:18px;
+    border:1px solid rgba(255,255,255,0.08);
 
-    backdrop-filter:blur(10px);
-    box-shadow:0 10px 25px rgba(0,0,0,0.3);
-    transition:0.3s;
+    padding:18px;
+    border-radius:16px;
+    margin-bottom:16px;
+
+    backdrop-filter:blur(12px);
+    transition:0.25s;
 }
 
 .card:hover{
     transform:translateY(-3px);
-    box-shadow:0 15px 30px rgba(0,240,255,0.15);
+    box-shadow:0 10px 25px rgba(0,240,255,0.2);
 }
 
-/* image */
-.card img{
-    width:100px;
-    height:100px;
+/* review image */
+.review-img{
+    width:90px;
+    height:90px;
     object-fit:cover;
     border-radius:12px;
     border:2px solid rgba(0,240,255,0.3);
@@ -94,30 +113,37 @@ h1{
     flex:1;
 }
 
+/* product name */
 .product-name{
-    font-size:18px;
+    font-size:16px;
     font-weight:600;
-    color:#fff;
     margin-bottom:6px;
 }
 
+/* rating (better style) */
 .rating{
-    color:#ffd700;
-    font-size:16px;
+    display:flex;
+    gap:3px;
     margin-bottom:8px;
+    font-size:18px;
 }
 
+.rating span{
+    color:#ffd700;
+}
+
+/* review text */
 .review-text{
-    color:#ddd;
     font-size:14px;
+    color:#ddd;
     line-height:1.5;
 }
 
-/* empty state */
+/* empty */
 .empty{
     text-align:center;
-    color:#00f0ff;
     margin-top:40px;
+    color:#00f0ff;
     font-size:18px;
 }
 </style>
@@ -125,39 +151,50 @@ h1{
 
 <body>
 
-<a class="back" href="history.php">← Back</a>
+<div class="container">
 
-<h1>Your Review History (Order #<?= $order_id ?>)</h1>
+    <a class="back" href="history.php">← Back</a>
 
-<?php if($count == 0): ?>
-    <p style="color:#00f0ff;">No reviews found for this order.</p>
-<?php endif; ?>
+    <h1>Your Review History</h1>
 
-<?php while($row = mysqli_fetch_assoc($reviews)): ?>
+    <?php if($count == 0): ?>
+        <p>No reviews found.</p>
+    <?php endif; ?>
 
-<div class="card">
+    <?php while($row = mysqli_fetch_assoc($reviews)): ?>
 
-    <img src="<?= !empty($row['image']) ? './uploads/reviews/' . htmlspecialchars($row['image']) : 'https://via.placeholder.com/100' ?>">
+    <div class="card">
 
-    <div class="info">
+        <?php if(!empty($row['review_image'])): ?>
+            <img class="review-img"
+                 src="uploads/reviews/<?= htmlspecialchars($row['review_image']) ?>">
+        <?php endif; ?>
 
-        <div class="product-name">
-            <?= htmlspecialchars($row['product_name']) ?>
-        </div>
+        <div class="info">
 
-        <div class="rating">
-            <?= str_repeat("⭐", (int)$row['rating']) ?>
-        </div>
+            <div class="product-name">
+                <?= htmlspecialchars($row['product_name']) ?>
+            </div>
 
-        <div class="review-text">
-            <?= htmlspecialchars($row['review_text']) ?>
+            <div class="rating">
+                <?php for($i=1;$i<=5;$i++): ?>
+                    <span><?= $i <= $row['rating'] ? "★" : "☆" ?></span>
+                <?php endfor; ?>
+            </div>
+
+            <div class="review-text">
+                <?= htmlspecialchars($row['review_text']) ?>
+            </div>
+
         </div>
 
     </div>
 
-</div>
+    <?php endwhile; ?>
 
-<?php endwhile; ?>
+</div>  <!-- ONLY CLOSE HERE -->
+
+</body>
 
 </body>
 </html>
