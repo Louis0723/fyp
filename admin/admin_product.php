@@ -89,13 +89,28 @@ if(isset($_POST['update_product'])){
     $dpi=$_POST['dpi'] ?? '';
     $mouse_type=$_POST['mouse_type'] ?? '';
 
+    $imageQuery = "";
+
+    if(!empty($_FILES['image']['name'])){
+
+    $newImage = time()."_".$_FILES['image']['name'];
+
+    move_uploaded_file(
+        $_FILES['image']['tmp_name'],
+        "../uploads/".$newImage
+    );
+
+    $imageQuery = ", image='$newImage'";
+    }
+
     $stmt=$conn->prepare("
-        UPDATE products 
-        SET product_name=?, price=?, stock=?, category=?,
-            cpu=?, gpu=?, ram=?, storage=?, motherboard=?,
-            switch_type=?, keyboard_size=?, dpi=?, mouse_type=?
-        WHERE product_id=?
-    ");
+    UPDATE products 
+    SET product_name=?, price=?, stock=?, category=?,
+        cpu=?, gpu=?, ram=?, storage=?, motherboard=?,
+        switch_type=?, keyboard_size=?, dpi=?, mouse_type=?
+        $imageQuery
+    WHERE product_id=?
+");
 
     $stmt->bind_param(
         "sdissssssssssi",
@@ -538,30 +553,32 @@ border:1px solid #ddd;
 <div class="modal-box">
 <h3>Edit Product</h3>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 <input type="hidden" name="product_id" id="edit_id">
-<input id="edit_name" name="name">
-<input id="edit_price" name="price">
-<input id="edit_stock" name="stock">
+<input id="edit_name" name="name" placeholder="Product Name">
+<input id="edit_price" name="price" placeholder="Price">
+<input id="edit_stock" name="stock" placeholder="Stock">
+
+<input type="file" name="image">
 
 <input type="hidden" id="edit_category" name="category">
 
 <div id="edit_pcFields">
-    <input id="edit_cpu">
-    <input id="edit_gpu">
-    <input id="edit_ram">
-    <input id="edit_storage">
-    <input id="edit_motherboard">
+    <input id="edit_cpu" name="cpu" placeholder="CPU">
+    <input id="edit_gpu" name="gpu" placeholder="GPU">
+    <input id="edit_ram" name="ram" placeholder="RAM">
+    <input id="edit_storage" name="storage" placeholder="Storage">
+    <input id="edit_motherboard" name="motherboard" placeholder="Motherboard">
 </div>
 
 <div id="edit_keyboardFields">
-    <input id="edit_switch_type">
-    <input id="edit_keyboard_size">
+    <input id="edit_switch_type" name="switch_type" placeholder="Switch Type">
+    <input id="edit_keyboard_size" name="keyboard_size" placeholder="Keyboard Size">
 </div>
 
 <div id="edit_mouseFields">
-    <input id="edit_dpi">
-    <input id="edit_mouse_type">
+    <input id="edit_dpi" name="dpi" placeholder="DPI">
+    <input id="edit_mouse_type" name="mouse_type" placeholder="Mouse Type">
 </div>
 
 <div id="edit_laptopFields">
@@ -652,9 +669,9 @@ switch_type,keyboard_size,dpi,mouse_type
     openModal('editModal');
 
     edit_id.value = id;
-    edit_name.value = name;
-    edit_price.value = price;
-    edit_stock.value = stock;
+    edit_name.value = name || "";
+    edit_price.value = price || "";
+    edit_stock.value = stock || "";
 
     document.getElementById("edit_category").value = category;
 
@@ -667,25 +684,25 @@ switch_type,keyboard_size,dpi,mouse_type
     if(category === "PC"){
         document.getElementById("edit_pcFields").style.display = "block";
 
-        edit_cpu.value = cpu;
-        edit_gpu.value = gpu;
-        edit_ram.value = ram;
-        edit_storage.value = storage;
-        edit_motherboard.value = motherboard;
+        edit_cpu.value = cpu || "";
+        edit_gpu.value = gpu || "";
+        edit_ram.value = ram || "";
+        edit_storage.value = storage || "";
+        edit_motherboard.value = motherboard || "";
     }
 
     else if(category === "Keyboard"){
         document.getElementById("edit_keyboardFields").style.display = "block";
 
-        edit_switch_type.value = switch_type;
-        edit_keyboard_size.value = keyboard_size;
+        edit_switch_type.value = switch_type || "";
+        edit_keyboard_size.value = keyboard_size || "";
     }
 
     else if(category === "Mouse"){
         document.getElementById("edit_mouseFields").style.display = "block";
 
-        edit_dpi.value = dpi;
-        edit_mouse_type.value = mouse_type;
+        edit_dpi.value = dpi || "";
+        edit_mouse_type.value = mouse_type || "";
     }
 
     else if(category === "Laptop"){
