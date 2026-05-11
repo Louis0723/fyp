@@ -37,9 +37,28 @@ if(isset($_POST['pay'])){
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $method = mysqli_real_escape_string($conn, $_POST['method']);
 
+    // SIMPLE DUMMY TRANSACTION ID
+    $transaction_id = "TXN" . rand(100000,999999);
+
     mysqli_query($conn,"
-    INSERT INTO orders(user_id,total_price,address,phone,payment_method)
-    VALUES($user_id,$total,'$address','$phone','$method')
+    INSERT INTO orders(
+        user_id,
+        total_price,
+        address,
+        phone,
+        payment_method,
+        payment_status,
+        order_status
+    )
+    VALUES(
+        $user_id,
+        $total,
+        '$address',
+        '$phone',
+        '$method',
+        'Paid',
+        'Pending'
+    )
     ");
 
     $order_id = mysqli_insert_id($conn);
@@ -82,9 +101,17 @@ if(isset($_POST['pay'])){
 
         $mail->Body = "
         <h2>Thank you for your order 🎉</h2>
+
         <p><b>Order ID:</b> $order_id</p>
+
+        <p><b>Transaction ID:</b> $transaction_id</p>
+
         <p><b>Total:</b> RM $total</p>
+
         <p><b>Payment Method:</b> $method</p>
+
+        <p><b>Payment Status:</b> Paid</p>
+
         <p>Your order is now being prepared.</p>
         ";
 
@@ -168,7 +195,7 @@ h1{
     background:rgba(255,255,255,0.05);
 }
 
-/* NEW FORMAL TABLE nice STYLE */
+/* TABLE STYLE */
 .summary table{
     width:100%;
     border-collapse:collapse;
@@ -303,6 +330,7 @@ button:hover{
 <table>
 <tr>
 <th>Product</th>
+<th>Price</th>
 <th>Qty</th>
 <th>Total</th>
 </tr>
@@ -310,6 +338,7 @@ button:hover{
 <?php foreach($items as $row): ?>
 <tr>
 <td><?= $row['product_name'] ?></td>
+<td>RM <?= $row['price'] ?></td>
 <td><?= $row['quantity'] ?></td>
 <td>RM <?= $row['price'] * $row['quantity'] ?></td>
 </tr>
@@ -325,7 +354,6 @@ Total: RM <?= $total ?>
 
 <form method="post">
 
-<!-- PAYMENT METHODS -->
 <div class="payment-methods">
 
 <label>
@@ -350,7 +378,6 @@ Total: RM <?= $total ?>
 
 </div>
 
-<!-- CREDIT CARD -->
 <div id="credit-card-box" class="payment-box">
 <div class="input-box"><input placeholder="Cardholder Name"></div>
 <div class="input-box"><input placeholder="Card Number"></div>
@@ -358,14 +385,12 @@ Total: RM <?= $total ?>
 <div class="input-box"><input placeholder="CVV"></div>
 </div>
 
-<!-- TNG (UPGRADED) -->
 <div id="tng-box" class="payment-box hidden-box">
 <div class="input-box"><input name="tng_phone" placeholder="TNG Phone Number"></div>
 <div class="input-box"><input name="tng_name" placeholder="Account Name"></div>
 <div class="input-box"><input name="tng_ref" placeholder="Reference (Optional)"></div>
 </div>
 
-<!-- FPX (UPGRADED) -->
 <div id="fpx-box" class="payment-box hidden-box">
 
 <div class="input-box">
@@ -384,13 +409,11 @@ Total: RM <?= $total ?>
 
 </div>
 
-<!-- BOOST (UPGRADED) -->
 <div id="boost-box" class="payment-box hidden-box">
 <div class="input-box"><input name="boost_phone" placeholder="Boost Phone Number"></div>
 <div class="input-box"><input name="boost_ref" placeholder="Reference (Optional)"></div>
 </div>
 
-<!-- USER INFO -->
 <div class="input-box">
 <input name="address" value="<?= htmlspecialchars($user['address']) ?>" required>
 </div>
