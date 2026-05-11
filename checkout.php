@@ -54,60 +54,136 @@ if(isset($_POST['pay'])){
     $method = mysqli_real_escape_string($conn, $_POST['method']);
 
     $payment_success = false;
-    $error_msg = "";
+$error_msg = "";
 
-    // =========================
-    // DUMMY CREDIT CARD SYSTEM
-    // =========================
-    if($method == "Credit Card"){
+if ($method == "Credit Card") {
 
-        $card_name = mysqli_real_escape_string($conn, $_POST['card_name']);
-        $card_number = mysqli_real_escape_string($conn, $_POST['card_number']);
-        $expiry = mysqli_real_escape_string($conn, $_POST['expiry']);
-        $cvv = mysqli_real_escape_string($conn, $_POST['cvv']);
+    $card_name = mysqli_real_escape_string($conn, $_POST['card_name']);
+    $card_number = mysqli_real_escape_string($conn, $_POST['card_number']);
+    $expiry = mysqli_real_escape_string($conn, $_POST['expiry']);
+    $cvv = mysqli_real_escape_string($conn, $_POST['cvv']);
 
-        $check = mysqli_query($conn,"
+    $check = mysqli_query($conn, "
         SELECT * FROM dummy_cards
         WHERE card_name='$card_name'
         AND card_number='$card_number'
         AND expiry='$expiry'
         AND cvv='$cvv'
         LIMIT 1
-        ");
+    ");
 
-        if(mysqli_num_rows($check) == 0){
-            $error_msg = "Invalid card details!";
+    if (mysqli_num_rows($check) == 0) {
+        $error_msg = "Invalid card details!";
+    } else {
+
+        $card = mysqli_fetch_assoc($check);
+
+        if ($card['balance'] < $total) {
+            $error_msg = "Insufficient balance!";
         } else {
-
-            $card = mysqli_fetch_assoc($check);
-
-            if($card['balance'] < $total){
-                $error_msg = "Insufficient balance!";
-            } else {
-
-                mysqli_query($conn,"
+            mysqli_query($conn, "
                 UPDATE dummy_cards 
                 SET balance = balance - $total
                 WHERE id = {$card['id']}
-                ");
-
-                $payment_success = true;
-            }
+            ");
+            $payment_success = true;
         }
-
-    } else {
-        // OTHER METHODS ALWAYS SUCCESS (DUMMY)
-        $payment_success = true;
     }
+
+} elseif ($method == "Touch n Go") {
+
+    $tng_phone = mysqli_real_escape_string($conn, $_POST['tng_phone']);
+$tng_acc = mysqli_real_escape_string($conn, $_POST['tng_number']);
+
+$check = mysqli_query($conn, "
+    SELECT * FROM dummy_tng
+    WHERE phone='$tng_phone'
+    AND account_number='$tng_acc'
+    LIMIT 1
+");
+
+    if (mysqli_num_rows($check) == 0) {
+        $error_msg = "Invalid TNG account!";
+    } else {
+
+        $tng = mysqli_fetch_assoc($check);
+
+        if ($tng['balance'] < $total) {
+            $error_msg = "Insufficient TNG balance!";
+        } else {
+            mysqli_query($conn, "
+                UPDATE dummy_tng 
+                SET balance = balance - $total
+                WHERE id = {$tng['id']}
+            ");
+            $payment_success = true;
+        }
+    }
+
+} elseif ($method == "FPX") {
+
+    $bank = mysqli_real_escape_string($conn, $_POST['fpx_bank']);
+$bank_id = mysqli_real_escape_string($conn, $_POST['fpx_userid']);
+
+$check = mysqli_query($conn, "
+    SELECT * FROM dummy_fpx
+    WHERE bank_name='$bank'
+    AND bank_id='$bank_id'
+    LIMIT 1
+");
+
+    if (mysqli_num_rows($check) == 0) {
+        $error_msg = "Invalid FPX account!";
+    } else {
+
+        $fpx = mysqli_fetch_assoc($check);
+
+        if ($fpx['balance'] < $total) {
+            $error_msg = "Insufficient FPX balance!";
+        } else {
+            mysqli_query($conn, "
+                UPDATE dummy_fpx 
+                SET balance = balance - $total
+                WHERE id = {$fpx['id']}
+            ");
+            $payment_success = true;
+        }
+    }
+
+} elseif ($method == "Boost") {
+
+    $boost_acc = mysqli_real_escape_string($conn, $_POST['account_number']);
+
+$check = mysqli_query($conn, "
+    SELECT * FROM dummy_boost
+    WHERE account_number='$boost_acc'
+    LIMIT 1
+");
+
+    if (mysqli_num_rows($check) == 0) {
+        $error_msg = "Invalid Boost account!";
+    } else {
+
+        $boost = mysqli_fetch_assoc($check);
+
+        if ($boost['balance'] < $total) {
+            $error_msg = "Insufficient Boost balance!";
+        } else {
+            mysqli_query($conn, "
+                UPDATE dummy_boost 
+                SET balance = balance - $total
+                WHERE id = {$boost['id']}
+            ");
+            $payment_success = true;
+        }
+    }
+}
 
     if(!$payment_success){
         header("Location: checkout.php?error=1&msg=" . urlencode($error_msg));
         exit;
     }
 
-    // =========================
-    // ORDER ID GENERATION
-    // =========================
     $res = mysqli_query($conn,"
     SELECT order_id 
     FROM orders 
@@ -168,41 +244,6 @@ if(isset($_POST['pay'])){
     WHERE user_id=$user_id 
     AND product_id IN ($itemList)");
 
-    // EMAIL (UNCHANGED)
-    $mail = new PHPMailer(true);
-
-    try{
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-
-        $mail->Username = 'yourgmail@gmail.com';
-        $mail->Password = 'your_app_password';
-
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom('yourgmail@gmail.com', 'PC STORE');
-        $mail->addAddress($user['email']);
-
-        $mail->isHTML(true);
-        $mail->Subject = "Order Receipt - PC STORE";
-
-        $mail->Body = "
-        <h2>Thank you for your order 🎉</h2>
-        <p><b>Order ID:</b> $order_id</p>
-        <p><b>Transaction ID:</b> $transaction_id</p>
-        <p><b>Total:</b> RM $total</p>
-        <p><b>Payment Method:</b> $method</p>
-        <p><b>Payment Status:</b> Paid</p>
-        ";
-
-        $mail->send();
-
-    }catch(Exception $e){
-        error_log($mail->ErrorInfo);
-    }
-
     header("Location: checkout.php?success=1");
     exit;
 }
@@ -211,7 +252,6 @@ if(isset($_POST['pay'])){
 <!DOCTYPE html>
 <html>
 <head>
-
 <title>Checkout - PC Store</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -219,7 +259,7 @@ if(isset($_POST['pay'])){
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
 <style>
-/* YOUR ORIGINAL CSS UNCHANGED */
+/* YOUR DESIGN - 100% UNCHANGED */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:white;}
 #particles-js{position:fixed;width:100%;height:100%;z-index:-1;}
@@ -250,13 +290,10 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 <div class="container">
 
 <h1>Secure Checkout</h1>
-
 <a href="cart.php" class="back">← Back to Cart</a>
 
 <?php if(isset($_GET['success'])): ?>
-<div class="summary">
-<h2>✅ Payment Successful</h2>
-</div>
+<div class="summary"><h2>✅ Payment Successful</h2></div>
 <?php elseif(isset($_GET['error'])): ?>
 <div class="summary" style="border:1px solid red;">
 <h2>❌ Payment Failed</h2>
@@ -265,6 +302,7 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 <?php endif; ?>
 
 <?php if(empty($items)): ?>
+
 
 
 <?php else: ?>
@@ -311,12 +349,41 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 
 </div>
 
-<!-- FIXED CREDIT CARD INPUT -->
-<div class="payment-box">
+<!-- CREDIT CARD -->
+<div id="credit-card-box" class="payment-box">
 <div class="input-box"><input name="card_name" placeholder="Cardholder Name"></div>
 <div class="input-box"><input name="card_number" placeholder="Card Number"></div>
 <div class="input-box"><input name="expiry" placeholder="MM/YY"></div>
 <div class="input-box"><input name="cvv" placeholder="CVV"></div>
+</div>
+
+<!-- TNG -->
+<div id="tng-box" class="payment-box hidden-box">
+<div class="input-box"><input name="tng_phone" placeholder="TNG Phone Number"></div>
+<div class="input-box"><input name="tng_number" placeholder="Account Number"></div>
+<div class="input-box"><input name="tng_ref" placeholder="Reference (Optional)"></div>
+</div>
+
+<!-- FPX -->
+<div id="fpx-box" class="payment-box hidden-box">
+<div class="input-box">
+<select name="fpx_bank">
+<option value="">Select Bank</option>
+<option>Maybank</option>
+<option>CIMB</option>
+<option>Public Bank</option>
+<option>RHB</option>
+<option>Hong Leong</option>
+</select>
+</div>
+<div class="input-box"><input name="fpx_userid" placeholder="Bank ID"></div>
+<div class="input-box"><input name="fpx_ref" placeholder="Reference (Optional)"></div>
+</div>
+
+<!-- BOOST -->
+<div id="boost-box" class="payment-box hidden-box">
+<div class="input-box"><input name="account_number" placeholder="Account Number"></div>
+<div class="input-box"><input name="boost_ref" placeholder="Reference (Optional)"></div>
 </div>
 
 <div class="input-box">
@@ -334,6 +401,33 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 <?php endif; ?>
 
 </div>
+
+<script>
+const methods = document.querySelectorAll('input[name="method"]');
+
+const boxes = {
+"Credit Card": document.getElementById("credit-card-box"),
+"Touch n Go": document.getElementById("tng-box"),
+"FPX": document.getElementById("fpx-box"),
+"Boost": document.getElementById("boost-box")
+};
+
+function hideAll(){
+Object.values(boxes).forEach(b => b.classList.add("hidden-box"));
+}
+
+methods.forEach(m=>{
+m.addEventListener("change", ()=>{
+hideAll();
+boxes[m.value].classList.remove("hidden-box");
+});
+});
+
+window.onload = ()=>{
+hideAll();
+boxes["Credit Card"].classList.remove("hidden-box");
+};
+</script>
 
 </body>
 </html>
