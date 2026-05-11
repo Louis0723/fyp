@@ -9,36 +9,105 @@ if(!isset($_SESSION['admin'])){
 
 /* ADD */
 if(isset($_POST['add_product'])){
-    $name = $_POST['name'];
+    $name  = $_POST['name'];
     $price = $_POST['price'];
     $stock = $_POST['stock'];
+    $desc  = $_POST['description'];
+    $category = $_POST['category'];
+
+    $cpu = $_POST['cpu'] ?? '';
+    $gpu = $_POST['gpu'] ?? '';
+    $ram = $_POST['ram'] ?? '';
+    $storage = $_POST['storage'] ?? '';
+    $motherboard = $_POST['motherboard'] ?? '';
+    
+    $switch_type = $_POST['switch_type'] ?? '';
+    $keyboard_size = $_POST['keyboard_size'] ?? '';
+
+    $dpi = $_POST['dpi'] ?? '';
+    $mouse_type = $_POST['mouse_type'] ?? '';
 
     $imageName = "";
     if(!empty($_FILES['image']['name'])){
         $imageName = time()."_".$_FILES['image']['name'];
-        move_uploaded_file($_FILES['image']['tmp_name'], "../uploads/".$imageName);
+        if(!is_dir("../uploads")){
+    mkdir("../uploads",0777,true);
+}
+
+move_uploaded_file($_FILES['image']['tmp_name'], "../uploads/".$imageName);
     }
 
-    $stmt = $conn->prepare("INSERT INTO products (product_name, price, stock, image) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("sdis", $name, $price, $stock, $imageName);
+    $stmt = $conn->prepare("INSERT INTO products 
+(product_name, category, price, stock, description, image,
+cpu, gpu, ram, storage, motherboard,
+switch_type, keyboard_size, dpi, mouse_type)
+
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+$stmt->bind_param(
+    "ssdisssssssssss",
+    $name,
+    $category,
+    $price,
+    $stock,
+    $desc,
+    $imageName,
+    $cpu,
+    $gpu,
+    $ram,
+    $storage,
+    $motherboard,
+    $switch_type,
+    $keyboard_size,
+    $dpi,
+    $mouse_type
+);
     $stmt->execute();
 
-    header("Location: manage_products.php");
+    header("Location: " . $_SERVER['PHP_SELF']);
     exit();
 }
 
 /* UPDATE */
 if(isset($_POST['update_product'])){
+
     $id=$_POST['product_id'];
     $name=$_POST['name'];
     $price=$_POST['price'];
     $stock=$_POST['stock'];
+    $category=$_POST['category'];
 
-    $stmt=$conn->prepare("UPDATE products SET product_name=?,price=?,stock=? WHERE product_id=?");
-    $stmt->bind_param("sdii",$name,$price,$stock,$id);
+    $cpu=$_POST['cpu'] ?? '';
+    $gpu=$_POST['gpu'] ?? '';
+    $ram=$_POST['ram'] ?? '';
+    $storage=$_POST['storage'] ?? '';
+    $motherboard=$_POST['motherboard'] ?? '';
+
+    $switch_type=$_POST['switch_type'] ?? '';
+    $keyboard_size=$_POST['keyboard_size'] ?? '';
+
+    $dpi=$_POST['dpi'] ?? '';
+    $mouse_type=$_POST['mouse_type'] ?? '';
+
+    $stmt=$conn->prepare("
+        UPDATE products 
+        SET product_name=?, price=?, stock=?, category=?,
+            cpu=?, gpu=?, ram=?, storage=?, motherboard=?,
+            switch_type=?, keyboard_size=?, dpi=?, mouse_type=?
+        WHERE product_id=?
+    ");
+
+    $stmt->bind_param(
+        "sdissssssssssi",
+        $name,$price,$stock,$category,
+        $cpu,$gpu,$ram,$storage,$motherboard,
+        $switch_type,$keyboard_size,$dpi,$mouse_type,
+        $id
+    );
+
     $stmt->execute();
 
-    header("Location: manage_products.php");
+    header("Location: ".$_SERVER['PHP_SELF']);
     exit();
 }
 
@@ -209,6 +278,14 @@ tr:hover{background:#f9fbff;}
     object-fit:cover;
     display:none;
 }
+
+.form-control{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:8px;
+    border:1px solid #ddd;
+}
 </style>
 </head>
 
@@ -225,6 +302,7 @@ tr:hover{background:#f9fbff;}
 <button class="btn-add" onclick="openModal('addModal')">
 <i data-lucide="plus"></i> Add Product
 </button>
+
 </div>
 
 <div class="search-box">
@@ -238,6 +316,7 @@ tr:hover{background:#f9fbff;}
 <tr>
 <th>SKU</th>
 <th>Product</th>
+<th>Category</th>
 <th>Price</th>
 <th>Stock</th>
 <th>Status</th>
@@ -263,6 +342,7 @@ elseif($row['stock']<10){$status="low";$text="Low Stock";}
 <?= $row['product_name'] ?>
 </td>
 
+<td><?= $row['category'] ?></td>
 <td>RM <?= number_format($row['price'],2) ?></td>
 <td><?= $row['stock'] ?></td>
 
@@ -271,10 +351,41 @@ elseif($row['stock']<10){$status="low";$text="Low Stock";}
 <td class="actions">
 
 <i class="view" data-lucide="eye"
-onclick="viewProduct('<?= $row['product_name'] ?>','<?= $row['price'] ?>','<?= $row['stock'] ?>')"></i>
+onclick="viewProduct(
+'<?= $row['product_name'] ?>',
+'<?= $row['category'] ?>',
+'<?= $row['price'] ?>',
+'<?= $row['stock'] ?>',
+'<?= $row['cpu'] ?>',
+'<?= $row['gpu'] ?>',
+'<?= $row['ram'] ?>',
+'<?= $row['storage'] ?>',
+'<?= $row['motherboard'] ?>',
+'<?= $row['switch_type'] ?>',
+'<?= $row['keyboard_size'] ?>',
+'<?= $row['dpi'] ?>',
+'<?= $row['mouse_type'] ?>'
+)"
+></i>
 
 <i class="edit" data-lucide="pencil"
-onclick="editProduct('<?= $row['product_id'] ?>','<?= $row['product_name'] ?>','<?= $row['price'] ?>','<?= $row['stock'] ?>')"></i>
+onclick="editProduct(
+'<?= $row['product_id'] ?>',
+'<?= $row['product_name'] ?>',
+'<?= $row['price'] ?>',
+'<?= $row['stock'] ?>',
+'<?= $row['category'] ?>',
+'<?= $row['cpu'] ?>',
+'<?= $row['gpu'] ?>',
+'<?= $row['ram'] ?>',
+'<?= $row['storage'] ?>',
+'<?= $row['motherboard'] ?>',
+'<?= $row['switch_type'] ?>',
+'<?= $row['keyboard_size'] ?>',
+'<?= $row['dpi'] ?>',
+'<?= $row['mouse_type'] ?>'
+)"
+></i>
 
 </td>
 </tr>
@@ -292,8 +403,11 @@ onclick="editProduct('<?= $row['product_id'] ?>','<?= $row['product_name'] ?>','
 <div class="modal-box">
 <h3>Product Details</h3>
 <p id="v_name"></p>
+<p id="v_category"></p>
 <p id="v_price"></p>
 <p id="v_stock"></p>
+
+<div id="v_specs"></div>
 <button class="btn-cancel" onclick="closeModal('viewModal')">Close</button>
 </div>
 </div>
@@ -310,6 +424,95 @@ onclick="editProduct('<?= $row['product_id'] ?>','<?= $row['product_name'] ?>','
 <input name="name" placeholder="Name" required>
 <input name="price" placeholder="Price" required>
 <input name="stock" placeholder="Stock" required>
+
+<div class="mb-3">
+<select 
+    name="category" 
+    id="category"
+    onchange="toggleSpecs()"
+    style="
+        width:100%;
+        padding:10px;
+        border-radius:8px;
+        border:1px solid #ddd;
+    "
+    required
+>
+    <option value="">Select Category</option>
+    <option value="PC">PC</option>
+    <option value="Laptop">Laptop</option>
+    <option value="Keyboard">Keyboard</option>
+    <option value="Mouse">Mouse</option>
+</select>
+</div>
+
+<div id="pcFields" style="display:none; margin-top:10px;">
+
+    <div class="mb-3">
+        <input name="cpu" class="form-control" placeholder="CPU">
+    </div>
+
+    <div class="mb-3">
+        <input name="gpu" class="form-control" placeholder="GPU">
+    </div>
+
+    <div class="mb-3">
+        <input name="ram" class="form-control" placeholder="RAM">
+    </div>
+
+    <div class="mb-3">
+        <input name="storage" class="form-control" placeholder="Storage">
+    </div>
+
+    <div class="mb-3">
+        <input name="motherboard" class="form-control" placeholder="Motherboard">
+    </div>
+
+</div>
+
+
+
+<!-- KEYBOARD SPECS -->
+<div id="keyboardFields" style="display:none; margin-top:10px;">
+
+    <div class="mb-3">
+        <input name="switch_type" class="form-control" placeholder="Switch Type">
+    </div>
+
+    <div class="mb-3">
+        <input name="keyboard_size" class="form-control" placeholder="Keyboard Size">
+    </div>
+
+</div>
+
+<!-- MOUSE SPECS -->
+<div id="mouseFields" style="display:none; margin-top:10px;">
+
+    <div class="mb-3">
+        <input name="dpi" class="form-control" placeholder="DPI">
+    </div>
+
+    <div class="mb-3">
+        <input name="mouse_type" class="form-control" placeholder="Mouse Type">
+    </div>
+
+</div>
+
+<div id="laptopFields" style="display:none; margin-top:10px;">
+    <!-- laptop specs here -->
+</div>
+
+<textarea 
+name="description"
+placeholder="Description"
+style="
+width:100%;
+padding:10px;
+margin-bottom:12px;
+border-radius:8px;
+border:1px solid #ddd;
+"
+></textarea>
 
 <input type="file" name="image" onchange="previewImage(event)">
 
@@ -333,6 +536,30 @@ onclick="editProduct('<?= $row['product_id'] ?>','<?= $row['product_name'] ?>','
 <input id="edit_price" name="price">
 <input id="edit_stock" name="stock">
 
+<input type="hidden" id="edit_category" name="category">
+
+<div id="edit_pcFields">
+    <input id="edit_cpu">
+    <input id="edit_gpu">
+    <input id="edit_ram">
+    <input id="edit_storage">
+    <input id="edit_motherboard">
+</div>
+
+<div id="edit_keyboardFields">
+    <input id="edit_switch_type">
+    <input id="edit_keyboard_size">
+</div>
+
+<div id="edit_mouseFields">
+    <input id="edit_dpi">
+    <input id="edit_mouse_type">
+</div>
+
+<div id="edit_laptopFields">
+    <!-- laptop specs here -->
+</div>
+
 <div class="modal-footer">
 <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
 <button class="btn-primary" name="update_product">Save</button>
@@ -347,24 +574,115 @@ onclick="editProduct('<?= $row['product_id'] ?>','<?= $row['product_name'] ?>','
 lucide.createIcons();
 
 /* MODAL */
-function openModal(id){document.getElementById(id).style.display="flex";}
+function openModal(id){
+    document.getElementById(id).style.display="flex";
+
+    if(id === 'addModal'){
+        document.getElementById("category").value = "";
+        toggleSpecs(); // reset view
+    }
+}
 function closeModal(id){document.getElementById(id).style.display="none";}
 
 /* VIEW */
-function viewProduct(name,price,stock){
+function viewProduct(
+name,
+category,
+price,
+stock,
+cpu,
+gpu,
+ram,
+storage,
+motherboard,
+switch_type,
+keyboard_size,
+dpi,
+mouse_type
+){
+
 openModal('viewModal');
-v_name.innerText="Name: "+name;
-v_price.innerText="Price: RM "+price;
-v_stock.innerText="Stock: "+stock;
+
+document.getElementById("v_name").innerText = "Name: " + name;
+document.getElementById("v_category").innerText = "Category: " + category;
+document.getElementById("v_price").innerText = "Price: RM " + price;
+document.getElementById("v_stock").innerText = "Stock: " + stock;
+
+let specs = "";
+
+if(category === "PC"){
+
+    specs += "<p><b>CPU:</b> " + cpu + "</p>";
+    specs += "<p><b>GPU:</b> " + gpu + "</p>";
+    specs += "<p><b>RAM:</b> " + ram + "</p>";
+    specs += "<p><b>Storage:</b> " + storage + "</p>";
+    specs += "<p><b>Motherboard:</b> " + motherboard + "</p>";
+}
+
+else if(category === "Keyboard"){
+
+    specs += "<p><b>Switch Type:</b> " + switch_type + "</p>";
+    specs += "<p><b>Keyboard Size:</b> " + keyboard_size + "</p>";
+}
+
+else if(category === "Mouse"){
+
+    specs += "<p><b>DPI:</b> " + dpi + "</p>";
+    specs += "<p><b>Mouse Type:</b> " + mouse_type + "</p>";
+}
+
+document.getElementById("v_specs").innerHTML = specs;
+
 }
 
 /* EDIT */
-function editProduct(id,name,price,stock){
-openModal('editModal');
-edit_id.value=id;
-edit_name.value=name;
-edit_price.value=price;
-edit_stock.value=stock;
+function editProduct(
+id,name,price,stock,category,
+cpu,gpu,ram,storage,motherboard,
+switch_type,keyboard_size,dpi,mouse_type
+){
+    openModal('editModal');
+
+    edit_id.value = id;
+    edit_name.value = name;
+    edit_price.value = price;
+    edit_stock.value = stock;
+
+    document.getElementById("edit_category").value = category;
+
+    // hide all first
+    document.getElementById("edit_pcFields").style.display = "none";
+    document.getElementById("edit_keyboardFields").style.display = "none";
+    document.getElementById("edit_mouseFields").style.display = "none";
+    document.getElementById("edit_laptopFields").style.display = "none";
+
+    if(category === "PC"){
+        document.getElementById("edit_pcFields").style.display = "block";
+
+        edit_cpu.value = cpu;
+        edit_gpu.value = gpu;
+        edit_ram.value = ram;
+        edit_storage.value = storage;
+        edit_motherboard.value = motherboard;
+    }
+
+    else if(category === "Keyboard"){
+        document.getElementById("edit_keyboardFields").style.display = "block";
+
+        edit_switch_type.value = switch_type;
+        edit_keyboard_size.value = keyboard_size;
+    }
+
+    else if(category === "Mouse"){
+        document.getElementById("edit_mouseFields").style.display = "block";
+
+        edit_dpi.value = dpi;
+        edit_mouse_type.value = mouse_type;
+    }
+
+    else if(category === "Laptop"){
+        document.getElementById("edit_laptopFields").style.display = "block";
+    }
 }
 
 /* SEARCH */
@@ -384,6 +702,30 @@ img.src=reader.result;
 img.style.display="block";
 }
 reader.readAsDataURL(e.target.files[0]);
+}
+function toggleSpecs(){
+
+    let category = document.getElementById("category").value;
+
+    // hide all first
+    document.getElementById("pcFields").style.display = "none";
+    document.getElementById("keyboardFields").style.display = "none";
+    document.getElementById("mouseFields").style.display = "none";
+    document.getElementById("laptopFields").style.display = "none";
+
+    // show based on selection
+    if(category === "PC"){
+        document.getElementById("pcFields").style.display = "block";
+    }
+    else if(category === "Keyboard"){
+        document.getElementById("keyboardFields").style.display = "block";
+    }
+    else if(category === "Mouse"){
+        document.getElementById("mouseFields").style.display = "block";
+    }
+    else if(category === "Laptop"){
+        document.getElementById("laptopFields").style.display = "block";
+    }
 }
 </script>
 
