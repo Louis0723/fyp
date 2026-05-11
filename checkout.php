@@ -206,25 +206,23 @@ $check = mysqli_query($conn, "
     $transaction_id = "TXN" . rand(100000,999999);
 
     mysqli_query($conn,"
-    INSERT INTO orders(
-        user_id,
-        total_price,
-        address,
-        phone,
-        payment_method,
-        payment_status,
-        order_status
-    )
-    VALUES(
-        $user_id,
-        $total,
-        '$address',
-        '$phone',
-        '$method',
-        'Paid',
-        'Pending'
-    )
-    ");
+INSERT INTO orders(
+    order_id,
+    user_id,
+    total_price,
+    address,
+    phone,
+    payment_method
+)
+VALUES(
+    '$order_id',
+    $user_id,
+    $total,
+    '$address',
+    '$phone',
+    '$method'
+)
+");
 
     foreach($items as $row){
 
