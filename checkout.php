@@ -16,12 +16,26 @@ $user_id = $_SESSION['user']['user_id'];
 $res_user = mysqli_query($conn, "SELECT * FROM users WHERE user_id = $user_id");
 $user = mysqli_fetch_assoc($res_user);
 
-$res = mysqli_query($conn, "
+
+
+$itemArray = $_SESSION['checkout_items'] ?? [];
+
+if (empty($itemArray)) {
+    header("Location: cart.php");
+    exit;
+}
+
+$itemList = implode(',', $itemArray);
+
+$res = mysqli_query($conn,"
 SELECT p.*, c.quantity
 FROM cart c
 JOIN products p ON c.product_id = p.product_id
 WHERE c.user_id = $user_id
+AND c.product_id IN ($itemList)
 ");
+
+
 
 $total = 0;
 $items = [];
@@ -31,11 +45,37 @@ while($row = mysqli_fetch_assoc($res)){
     $items[] = $row;
 }
 
+$year = date("y");
+    $day = date("d");
+    $month = date("m");
+
+    $prefix = $year . $day . $month;
+
 if(isset($_POST['pay'])){
 
     $address = mysqli_real_escape_string($conn, $_POST['address']);
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $method = mysqli_real_escape_string($conn, $_POST['method']);
+    
+$res = mysqli_query($conn,"
+SELECT order_id 
+FROM orders 
+WHERE order_id LIKE '$prefix%' 
+ORDER BY order_id DESC 
+LIMIT 1
+");
+
+
+    $row = mysqli_fetch_assoc($res);
+
+if ($row) {
+    $last = (int)substr($row['order_id'], 6);
+    $next = str_pad($last + 1, 4, "0", STR_PAD_LEFT);
+} else {
+    $next = "0001";
+}
+
+$order_id = $prefix . $next;
 
     // SIMPLE DUMMY TRANSACTION ID
     $transaction_id = "TXN" . rand(100000,999999);
@@ -61,14 +101,12 @@ if(isset($_POST['pay'])){
     )
     ");
 
-    $order_id = mysqli_insert_id($conn);
-
     foreach($items as $row){
 
         mysqli_query($conn,"
-        INSERT INTO order_items(order_id,product_id,quantity,price)
-        VALUES($order_id,{$row['product_id']},{$row['quantity']},{$row['price']})
-        ");
+INSERT INTO order_items(order_id, product_id, quantity, price)
+VALUES('$order_id', {$row['product_id']}, {$row['quantity']}, {$row['price']})
+");
 
         mysqli_query($conn,"
         UPDATE products
@@ -77,7 +115,9 @@ if(isset($_POST['pay'])){
         ");
     }
 
-    mysqli_query($conn,"DELETE FROM cart WHERE user_id=$user_id");
+    mysqli_query($conn,"DELETE FROM cart 
+WHERE user_id=$user_id 
+AND product_id IN ($itemList)");
 
     $mail = new PHPMailer(true);
 
@@ -292,9 +332,76 @@ button{
     transition:0.3s;
 }
 
-button:hover{
-    transform:scale(1.03);
-    box-shadow:0 0 20px #00f0ff;
+.input-box input::placeholder{
+    color:rgba(0,240,255,0.6);
+}
+
+.input-box input:focus{
+    border-color:#ff00ff;
+    box-shadow: 0 0 15px #ff00ff;
+    color:#ff00ff;
+}
+
+.summary-box{
+    text-align:left;
+    margin-bottom:25px;
+
+    background:rgba(255,255,255,0.05);
+    border-radius:18px;
+    padding:20px;
+
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.summary-title{
+    margin-bottom:20px;
+    color:#00f0ff;
+    text-shadow:0 0 10px #00f0ff;
+}
+
+.summary-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:15px 0;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.summary-item:last-child{
+    border-bottom:none;
+}
+
+.summary-left{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.summary-left img{
+    width:70px;
+    height:70px;
+    object-fit:cover;
+    border-radius:12px;
+    box-shadow:0 0 12px rgba(0,240,255,0.3);
+}
+
+.product-name{
+    font-weight:600;
+    color:white;
+    margin-bottom:5px;
+}
+
+.product-qty{
+    font-size:14px;
+    color:#aaa;
+}
+
+.summary-price{
+    color:#ff00ff;
+    font-weight:700;
+    font-size:18px;
+    text-shadow:0 0 8px #ff00ff;
 }
 
 </style>
@@ -415,11 +522,11 @@ Total: RM <?= $total ?>
 </div>
 
 <div class="input-box">
-<input name="address" value="<?= htmlspecialchars($user['address']) ?>" required>
+<input name="address" placeholder="Address" value="<?= htmlspecialchars($user['address']) ?>" required>
 </div>
 
 <div class="input-box">
-<input name="phone" value="<?= $user['phone'] ?>" required>
+<input name="phone" placeholder="Phone Number" value="<?= $user['phone'] ?>" required>
 </div>
 
 <button name="pay">🔒 Place Order</button>

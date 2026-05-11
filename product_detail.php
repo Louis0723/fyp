@@ -2,9 +2,22 @@
 session_start();
 include "db.php";
 
-$id = intval($_GET['id']);
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
 $res = mysqli_query($conn,"SELECT * FROM products WHERE product_id=$id");
+
+if(!$res || mysqli_num_rows($res) == 0){
+    die("❌ Product not found.");
+}
+
 $row = mysqli_fetch_assoc($res);
+$reviews = mysqli_query($conn,"
+SELECT r.*, u.name
+FROM reviews r
+JOIN users u ON r.user_id = u.user_id
+WHERE r.product_id = $id
+ORDER BY r.created_at DESC
+");
 ?>
 
 <!DOCTYPE html>
@@ -178,6 +191,20 @@ button:disabled{
     background: linear-gradient(90deg,#ff9800,#ff00ff);
 }
 
+.reviews-box{
+    margin-top:40px;
+    background:rgba(255,255,255,0.05);
+    padding:25px;
+    border-radius:20px;
+}
+
+.review-item{
+    padding:20px;
+    margin-bottom:20px;
+    background:rgba(255,255,255,0.05);
+    border-radius:15px;
+}
+
 </style>
 </head>
 
@@ -188,6 +215,45 @@ button:disabled{
 <div class="container">
 
 <a href="product.php" class="back">⬅ Back to Products</a>
+
+<div class="reviews-box">
+
+<h2 style="margin-bottom:25px;">⭐ Customer Reviews</h2>
+
+<?php if(mysqli_num_rows($reviews) == 0): ?>
+    <p>No reviews yet.</p>
+<?php endif; ?>
+
+<?php while($r = mysqli_fetch_assoc($reviews)): ?>
+
+<div class="review-item">
+
+    <h3><?= htmlspecialchars($r['name']) ?></h3>
+
+    <div style="color:gold;font-size:20px;margin:8px 0;">
+        <?php
+        for($i=1;$i<=5;$i++){
+            echo ($i <= $r['rating']) ? "★" : "☆";
+        }
+        ?>
+    </div>
+
+    <p><?= htmlspecialchars($r['review_text']) ?></p>
+
+    <?php if(!empty($r['image'])): ?>
+        <img src="uploads/reviews/<?= htmlspecialchars($r['image']) ?>"
+             style="width:150px;margin-top:15px;border-radius:12px;">
+    <?php endif; ?>
+
+    <div style="margin-top:10px;font-size:13px;color:#aaa;">
+        <?= $r['created_at'] ?>
+    </div>
+
+</div>
+
+<?php endwhile; ?>
+
+</div>
 
 <div class="card">
 

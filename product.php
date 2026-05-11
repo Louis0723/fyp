@@ -227,7 +227,6 @@ transform:scale(1.05);
 <a href="about.php">About Us</a>
 <a href="cart.php">Cart 🛒 <span class="cart-badge"><?= $cart_count ?></span></a>
 <a href="history.php">Orders</a>
-<a href="reviews.php">⭐ Reviews</a>
 <a href="profile.php">👤 Profile</a>
 <a href="logout.php">Logout</a>
 </nav>
