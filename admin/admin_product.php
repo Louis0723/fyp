@@ -27,7 +27,7 @@ if(isset($_POST['add_product'])){
     $dpi = $_POST['dpi'] ?? '';
     $mouse_type = $_POST['mouse_type'] ?? '';
 
-    $imageName = "";
+    $imageName = NULL;
     if(!empty($_FILES['image']['name'])){
         $imageName = time()."_".$_FILES['image']['name'];
         if(!is_dir("../uploads")){
@@ -336,8 +336,16 @@ elseif($row['stock']<10){$status="low";$text="Low Stock";}
 <td>PRD-<?= $row['product_id'] ?></td>
 
 <td style="display:flex;gap:10px;align-items:center;">
-<?php if($row['image']): ?>
-<img src="../uploads/<?= $row['image'] ?>" class="product-img">
+<?php if(!empty($row['image'])): ?>
+    <img 
+        src="../uploads/<?= htmlspecialchars(basename($row['image'])) ?>" 
+        class="product-img"
+    >
+<?php else: ?>
+    <img 
+        src="https://via.placeholder.com/55" 
+        class="product-img"
+    >
 <?php endif; ?>
 <?= $row['product_name'] ?>
 </td>

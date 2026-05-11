@@ -184,7 +184,9 @@ style='padding:8px 12px;background:#00ff99;color:black;border-radius:8px;text-de
 </a>";
 }
 
-if($status == "Completed" && $order['review_status'] == "not_reviewed"){
+$review_status = $order['review_status'] ?? 'not_reviewed';
+
+if($status == "Completed" && $review_status == "not_reviewed"){
 
 echo "<a href='reviews.php?order_id={$order['order_id']}'
 style='padding:8px 12px;background:orange;color:black;border-radius:8px;text-decoration:none;font-weight:600;'>
@@ -192,7 +194,7 @@ style='padding:8px 12px;background:orange;color:black;border-radius:8px;text-dec
 </a>";
 }
 
-if($order['review_status'] == "reviewed"){
+if($review_status == "reviewed"){
 
 echo "<a href='view_review.php?order_id={$order['order_id']}' 
 style='padding:8px 12px;background:#00f0ff;color:black;border-radius:8px;text-decoration:none;font-weight:600;'>

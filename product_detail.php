@@ -216,45 +216,6 @@ button:disabled{
 
 <a href="product.php" class="back">⬅ Back to Products</a>
 
-<div class="reviews-box">
-
-<h2 style="margin-bottom:25px;">⭐ Customer Reviews</h2>
-
-<?php if(mysqli_num_rows($reviews) == 0): ?>
-    <p>No reviews yet.</p>
-<?php endif; ?>
-
-<?php while($r = mysqli_fetch_assoc($reviews)): ?>
-
-<div class="review-item">
-
-    <h3><?= htmlspecialchars($r['name']) ?></h3>
-
-    <div style="color:gold;font-size:20px;margin:8px 0;">
-        <?php
-        for($i=1;$i<=5;$i++){
-            echo ($i <= $r['rating']) ? "★" : "☆";
-        }
-        ?>
-    </div>
-
-    <p><?= htmlspecialchars($r['review_text']) ?></p>
-
-    <?php if(!empty($r['image'])): ?>
-        <img src="uploads/reviews/<?= htmlspecialchars($r['image']) ?>"
-             style="width:150px;margin-top:15px;border-radius:12px;">
-    <?php endif; ?>
-
-    <div style="margin-top:10px;font-size:13px;color:#aaa;">
-        <?= $r['created_at'] ?>
-    </div>
-
-</div>
-
-<?php endwhile; ?>
-
-</div>
-
 <div class="card">
 
     <div class="image">
@@ -306,6 +267,44 @@ button:disabled{
     </div>
 
 </div>
+<div class="reviews-box">
+
+<h2 style="margin-bottom:25px;">⭐ Customer Reviews</h2>
+
+<?php if(mysqli_num_rows($reviews) == 0): ?>
+    <p>No reviews yet.</p>
+<?php endif; ?>
+
+<?php while($r = mysqli_fetch_assoc($reviews)): ?>
+
+<div class="review-item">
+
+    <h3><?= htmlspecialchars($r['name']) ?></h3>
+
+    <div style="color:gold;font-size:20px;margin:8px 0;">
+        <?php
+        for($i=1;$i<=5;$i++){
+            echo ($i <= $r['rating']) ? "★" : "☆";
+        }
+        ?>
+    </div>
+
+    <p><?= htmlspecialchars($r['review_text']) ?></p>
+
+    <?php if(!empty($r['image'])): ?>
+        <?php if(!empty($r['image'])): ?>
+            <img src="uploads/reviews/<?= htmlspecialchars($r['image']) ?>" 
+            style="width:150px;margin-top:15px;border-radius:12px;object-fit:cover;">
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <div style="margin-top:10px;font-size:13px;color:#aaa;">
+        <?= $r['created_at'] ?>
+    </div>
+
+</div>
+
+<?php endwhile; ?>
 </div>
 
 <script>
