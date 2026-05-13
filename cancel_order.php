@@ -20,4 +20,4 @@ if(mysqli_num_rows($check) > 0){
 
 header("Location: history.php");
 exit;
-?>
+?>//
