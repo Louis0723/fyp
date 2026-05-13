@@ -307,7 +307,7 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 
 <div class="summary">
 <table>
-<tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th></tr>
+<tr><th>Product</th><th>Unit Price</th><th>Qty</th><th>Total</th></tr>
 <?php foreach($items as $row): ?>
 <tr>
 <td><?= $row['product_name'] ?></td>
@@ -359,7 +359,7 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 <div id="tng-box" class="payment-box hidden-box">
 <div class="input-box"><input name="tng_phone" placeholder="TNG Phone Number"></div>
 <div class="input-box"><input name="tng_number" placeholder="Account Number"></div>
-<div class="input-box"><input name="tng_ref" placeholder="Reference (Optional)"></div>
+
 </div>
 
 <!-- FPX -->
@@ -375,13 +375,13 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 </select>
 </div>
 <div class="input-box"><input name="fpx_userid" placeholder="Bank ID"></div>
-<div class="input-box"><input name="fpx_ref" placeholder="Reference (Optional)"></div>
+
 </div>
 
 <!-- BOOST -->
 <div id="boost-box" class="payment-box hidden-box">
 <div class="input-box"><input name="account_number" placeholder="Account Number"></div>
-<div class="input-box"><input name="boost_ref" placeholder="Reference (Optional)"></div>
+
 </div>
 
 <div class="input-box">
