@@ -2,7 +2,7 @@
 session_start();
 include "db.php";
 
-// Redirect if user is not logged in
+// Redirect if user is not logged in//
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
