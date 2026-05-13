@@ -29,7 +29,9 @@ if(isset($_POST['add_product'])){
 
     $imageName = NULL;
     if(!empty($_FILES['image']['name'])){
-        $imageName = time()."_".$_FILES['image']['name'];
+       $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+
+$imageName = time() . "_" . uniqid() . "." . $ext;
         if(!is_dir("../uploads")){
     mkdir("../uploads",0777,true);
 }
@@ -93,7 +95,9 @@ if(isset($_POST['update_product'])){
 
     if(!empty($_FILES['image']['name'])){
 
-    $newImage = time()."_".$_FILES['image']['name'];
+  $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+
+  $newImage = time() . "_" . uniqid() . "." . $ext;
 
     move_uploaded_file(
         $_FILES['image']['tmp_name'],
@@ -141,9 +145,16 @@ $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
 body{font-family:Segoe UI;background:#f5f7fb;}
 
 .content-area{
-    margin-left:260px;
+    margin-left:270px;
     margin-top:100px;
     padding:30px;
+    transition:.3s ease;
+}
+
+/* SIDEBAR COLLAPSE */
+
+.sidebar.collapsed ~ .content-area{
+    margin-left:95px;
 }
 
 /* HEADER */
@@ -193,8 +204,13 @@ th,td{padding:14px;text-align:left;}
 tr:hover{background:#f9fbff;}
 
 .product-img{
-    width:55px;height:55px;border-radius:10px;
+    width:55px;
+    height:55px;
+    border-radius:10px;
     object-fit:cover;
+    border:1px solid #ddd;
+    background:#fff;
+    display:block;
 }
 
 /* STATUS */
@@ -306,7 +322,13 @@ tr:hover{background:#f9fbff;}
 
 <body>
 
-<?php include "admin_sidebar.php"; ?>
+<?php
+if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
+    include "sadmin_sidebar.php";
+}else{
+    include "admin_sidebar.php";
+}
+?>
 <?php include "admin_header.php"; ?>
 
 <div class="content-area">
@@ -329,7 +351,7 @@ tr:hover{background:#f9fbff;}
 <table>
 <thead>
 <tr>
-<th>SKU</th>
+<th>Product ID</th>
 <th>Product</th>
 <th>Category</th>
 <th>Price</th>
@@ -348,21 +370,35 @@ elseif($row['stock']<10){$status="low";$text="Low Stock";}
 ?>
 
 <tr class="product-row">
-<td>PRD-<?= $row['product_id'] ?></td>
+<td>Product #<?= $row['product_id'] ?></td>
 
 <td style="display:flex;gap:10px;align-items:center;">
-<?php if(!empty($row['image'])): ?>
-    <img 
-        src="../uploads/<?= htmlspecialchars(basename($row['image'])) ?>" 
-        class="product-img"
-    >
-<?php else: ?>
-    <img 
-        src="https://via.placeholder.com/55" 
-        class="product-img"
-    >
-<?php endif; ?>
-<?= $row['product_name'] ?>
+
+<?php
+
+$image = trim($row['image']);
+
+?>
+
+<?php if(!empty($image)){ ?>
+
+<img 
+    src="../uploads/<?= rawurlencode($image) ?>"
+    class="product-img"
+    onerror="this.src='https://via.placeholder.com/55';"
+>
+
+<?php } else { ?>
+
+<img 
+    src="https://via.placeholder.com/55"
+    class="product-img"
+>
+
+<?php } ?>
+
+<?= htmlspecialchars($row['product_name']) ?>
+
 </td>
 
 <td><?= $row['category'] ?></td>

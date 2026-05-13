@@ -5,27 +5,58 @@ session_start();
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
     $username = trim($_POST["username"]);
     $password = $_POST["password"];
 
-    $stmt = $conn->prepare("SELECT * FROM admins WHERE username=? LIMIT 1");
+    $stmt = $conn->prepare("
+        SELECT * FROM admins 
+        WHERE username=? 
+        LIMIT 1
+    ");
+
     $stmt->bind_param("s", $username);
     $stmt->execute();
+
     $query = $stmt->get_result();
 
     if ($query->num_rows == 1) {
+
         $admin = $query->fetch_assoc();
 
         if (password_verify($password, $admin['password'])) {
+
+            // SAVE SESSION
             $_SESSION["admin"] = $admin['username'];
-            header("Location: admin_dashboard.php");
+            $_SESSION["role"] = $admin['role'];
+            $_SESSION["admin_id"] = $admin['admin_id'];
+
+            // SUPER ADMIN
+            if($admin['role'] == "super_admin"){
+
+                header("Location: super_admin.php");
+
+            }else{
+
+                // NORMAL ADMIN
+                header("Location: admin_dashboard.php");
+
+            }
+
             exit();
+
         } else {
+
             $message = "❌ Invalid password!";
+
         }
+
     } else {
+
         $message = "❌ Username not found!";
+
     }
+
 }
 ?>
 
