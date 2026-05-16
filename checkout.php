@@ -16,30 +16,72 @@ $user_id = $_SESSION['user']['user_id'];
 $res_user = mysqli_query($conn, "SELECT * FROM users WHERE user_id = $user_id");
 $user = mysqli_fetch_assoc($res_user);
 
-$itemArray = $_SESSION['checkout_items'] ?? [];
-
-if (empty($itemArray)) {
-    header("Location: cart.php");
-    exit;
-}
-
-$itemList = implode(',', $itemArray);
-
-$res = mysqli_query($conn,"
-SELECT p.*, c.quantity
-FROM cart c
-JOIN products p ON c.product_id = p.product_id
-WHERE c.user_id = $user_id
-AND c.product_id IN ($itemList)
-");
-
-$total = 0;
 $items = [];
+$total = 0;
 
-while($row = mysqli_fetch_assoc($res)){
-    $total += $row['price'] * $row['quantity'];
-    $items[] = $row;
+if(isset($_GET['id']) && isset($_GET['qty'])){
+
+    $product_id = intval($_GET['id']);
+    $quantity = intval($_GET['qty']);
+
+    $res = mysqli_query($conn,"
+    SELECT *
+    FROM products
+    WHERE product_id = $product_id
+    ");
+
+    if(mysqli_num_rows($res) == 0){
+        die("Product not found.");
+    }
+
+    $row = mysqli_fetch_assoc($res);
+
+    if($quantity > $row['stock']){
+    die("Not enough stock available.");
 }
+
+if($quantity < 1){
+    die("Invalid quantity.");
+}
+
+    $row['quantity'] = $quantity;
+
+    $items[] = $row;
+
+    $total = $row['price'] * $quantity;
+
+    $buy_now = true;
+
+}else{
+
+    $itemArray = $_SESSION['checkout_items'] ?? [];
+
+    if (empty($itemArray)) {
+        header("Location: cart.php");
+        exit;
+    }
+
+    $itemList = implode(',', $itemArray);
+
+    $res = mysqli_query($conn,"
+    SELECT p.*, c.quantity
+    FROM cart c
+    JOIN products p ON c.product_id = p.product_id
+    WHERE c.user_id = $user_id
+    AND c.product_id IN ($itemList)
+    ");
+
+    while($row = mysqli_fetch_assoc($res)){
+        if($row['quantity'] > $row['stock']){
+    die("Product stock is insufficient: " . $row['product_name']);
+}
+        $total += $row['price'] * $row['quantity'];
+        $items[] = $row;
+    }
+
+    $buy_now = false;
+}
+
 
 $year = date("y");
 $day = date("d");
@@ -236,13 +278,19 @@ VALUES(
         SET stock = stock - {$row['quantity']}
         WHERE product_id = {$row['product_id']}
         ");
+
+        if(!$buy_now){
+
+    mysqli_query($conn,"
+    DELETE FROM cart
+    WHERE user_id=$user_id
+    AND product_id={$row['product_id']}
+    ");
+
+}
     }
 
-    mysqli_query($conn,"DELETE FROM cart 
-    WHERE user_id=$user_id 
-    AND product_id IN ($itemList)");
-
-    header("Location: checkout.php?success=1");
+    header("Location: order_detail.php?id=$order_id");
     exit;
 }
 ?>
@@ -288,7 +336,7 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 <div class="container">
 
 <h1>Secure Checkout</h1>
-<a href="cart.php" class="back">← Back to Cart</a>
+<a href="javascript:history.back()" class="back">← Go Back</a>
 
 <?php if(isset($_GET['success'])): ?>
 <div class="summary"><h2>✅ Payment Successful</h2></div>

@@ -216,7 +216,7 @@ Total: RM <?= $total ?>
     </a>
 
     <button onclick="window.print()" class="btn print">
-        🖨 Print Invoice
+        🖨 Print Receipt
     </button>
 
 </div>

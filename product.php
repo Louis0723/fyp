@@ -245,15 +245,25 @@ placeholder="Search product..."
 value="<?= htmlspecialchars($search) ?>"
 style="padding:10px;width:250px;border-radius:10px;">
 
-<!-- CATEGORY -->
 <select name="category" style="padding:10px;border-radius:10px;">
 <option value="">Category</option>
-<option value="CPU" <?= $category=='CPU'?'selected':'' ?>>CPU</option>
-<option value="GPU" <?= $category=='GPU'?'selected':'' ?>>GPU</option>
-<option value="RAM" <?= $category=='RAM'?'selected':'' ?>>RAM</option>
-<option value="Storage" <?= $category=='Storage'?'selected':'' ?>>Storage</option>
-<option value="Motherboard" <?= $category=='Motherboard'?'selected':'' ?>>Motherboard</option>
-<option value="Mouse" <?= $category=='Mouse'?'selected':'' ?>>Mouse</option>
+
+<option value="PC" <?= $category=='PC'?'selected':'' ?>>
+PC
+</option>
+
+<option value="Laptop" <?= $category=='Laptop'?'selected':'' ?>>
+Laptop
+</option>
+
+<option value="Keyboard" <?= $category=='Keyboard'?'selected':'' ?>>
+Keyboard
+</option>
+
+<option value="Mouse" <?= $category=='Mouse'?'selected':'' ?>>
+Mouse
+</option>
+
 </select>
 
 <!-- SORT -->
@@ -278,11 +288,25 @@ style="padding:10px;width:250px;border-radius:10px;">
 
 <h3><?= $row['product_name'] ?></h3>
 
+<?php if($row['category'] == "PC" || $row['category'] == "Laptop"): ?>
+
 <div class="spec">CPU: <?= $row['cpu'] ?></div>
 <div class="spec">GPU: <?= $row['gpu'] ?></div>
 <div class="spec">RAM: <?= $row['ram'] ?></div>
 <div class="spec">Storage: <?= $row['storage'] ?></div>
 <div class="spec">Motherboard: <?= $row['motherboard'] ?></div>
+
+<?php elseif($row['category'] == "Keyboard"): ?>
+
+<div class="spec">Switch Type: <?= $row['switch_type'] ?></div>
+<div class="spec">Keyboard Size: <?= $row['keyboard_size'] ?></div>
+
+<?php elseif($row['category'] == "Mouse"): ?>
+
+<div class="spec">DPI: <?= $row['dpi'] ?></div>
+<div class="spec">Mouse Type: <?= $row['mouse_type'] ?></div>
+
+<?php endif; ?>
 
 <div class="price">RM <?= $row['price'] ?></div>
 <div class="stock">Stock: <?= $row['stock'] ?></div>

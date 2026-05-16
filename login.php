@@ -233,6 +233,7 @@ button:disabled{
         cursor:pointer;
         ">👁️</span>
         </div>
+        <div style="text-align:right;margin-top:8px;"> <a href="forgot_password.php" style="color:#00f0ff;text-decoration:none;font-size:14px;"> Forgot Password? </a> </div>
         <button>Login</button>
     </form>
 
