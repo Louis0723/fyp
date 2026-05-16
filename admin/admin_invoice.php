@@ -69,8 +69,12 @@ while($row = $result->fetch_assoc()){
 ========================= */
 
 $subtotal = $first['total_price'];
-$tax = $subtotal * 0.08;
-$total = $subtotal + $tax;
+
+$tax = $subtotal * 0.06; // SST 6%
+
+$shipping = 5.00; // Shipping fee RM5
+
+$total = $subtotal + $tax + $shipping;
 
 ?>
 
@@ -532,13 +536,12 @@ td:nth-child(4){
         </div>
 
         <div class="summary-row">
-            <span>SST (8%)</span>
+            <span>SST (6%)</span>
             <span>RM <?= number_format($tax,2) ?></span>
         </div>
-
         <div class="summary-row">
-            <span>Shipping</span>
-            <span>FREE</span>
+             <span>Shipping</span>
+               <span>RM <?= number_format($shipping,2) ?></span>
         </div>
 
         <div class="summary-total">
