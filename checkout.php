@@ -91,207 +91,385 @@ $prefix = $year . $day . $month;
 
 if(isset($_POST['pay'])){
 
-    $address = mysqli_real_escape_string($conn, $_POST['address']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $method = mysqli_real_escape_string($conn, $_POST['method']);
+$address=mysqli_real_escape_string(
+$conn,
+$_POST['address']
+);
 
-    $payment_success = false;
-$error_msg = "";
+$phone=mysqli_real_escape_string(
+$conn,
+$_POST['phone']
+);
 
-if ($method == "Credit Card") {
+$method=mysqli_real_escape_string(
+$conn,
+$_POST['method']
+);
 
-    $card_name = mysqli_real_escape_string($conn, $_POST['card_name']);
-    $card_number = mysqli_real_escape_string($conn, $_POST['card_number']);
-    $expiry = mysqli_real_escape_string($conn, $_POST['expiry']);
-    $cvv = mysqli_real_escape_string($conn, $_POST['cvv']);
+$payment_success=false;
+$error_msg="";
+$account_used="";
 
-    $check = mysqli_query($conn, "
-        SELECT * FROM dummy_cards
-        WHERE card_name='$card_name'
-        AND card_number='$card_number'
-        AND expiry='$expiry'
-        AND cvv='$cvv'
-        LIMIT 1
-    ");
+if($method=="Credit Card"){
 
-    if (mysqli_num_rows($check) == 0) {
-        $error_msg = "Invalid card details!";
-    } else {
+$card_name=mysqli_real_escape_string(
+$conn,
+$_POST['card_name']
+);
 
-        $card = mysqli_fetch_assoc($check);
+$card_number=mysqli_real_escape_string(
+$conn,
+$_POST['card_number']
+);
 
-        if ($card['balance'] < $total) {
-            $error_msg = "Insufficient balance!";
-        } else {
-            mysqli_query($conn, "
-                UPDATE dummy_cards 
-                SET balance = balance - $total
-                WHERE id = {$card['id']}
-            ");
-            $payment_success = true;
-        }
-    }
+$expiry=mysqli_real_escape_string(
+$conn,
+$_POST['expiry']
+);
 
-} elseif ($method == "Touch n Go") {
+$cvv=mysqli_real_escape_string(
+$conn,
+$_POST['cvv']
+);
 
-    $tng_phone = mysqli_real_escape_string($conn, $_POST['tng_phone']);
-$tng_acc = mysqli_real_escape_string($conn, $_POST['tng_number']);
-
-$check = mysqli_query($conn, "
-    SELECT * FROM dummy_tng
-    WHERE phone='$tng_phone'
-    AND account_number='$tng_acc'
-    LIMIT 1
+$check=mysqli_query($conn,"
+SELECT *
+FROM dummy_cards
+WHERE card_name='$card_name'
+AND card_number='$card_number'
+AND expiry='$expiry'
+AND cvv='$cvv'
+LIMIT 1
 ");
 
-    if (mysqli_num_rows($check) == 0) {
-        $error_msg = "Invalid TNG account!";
-    } else {
+if(mysqli_num_rows($check)==0){
 
-        $tng = mysqli_fetch_assoc($check);
+$error_msg="Invalid card details!";
 
-        if ($tng['balance'] < $total) {
-            $error_msg = "Insufficient TNG balance!";
-        } else {
-            mysqli_query($conn, "
-                UPDATE dummy_tng 
-                SET balance = balance - $total
-                WHERE id = {$tng['id']}
-            ");
-            $payment_success = true;
-        }
-    }
+}else{
 
-} elseif ($method == "FPX") {
+$card=mysqli_fetch_assoc($check);
 
-    $bank = mysqli_real_escape_string($conn, $_POST['fpx_bank']);
-$bank_id = mysqli_real_escape_string($conn, $_POST['fpx_userid']);
+if($card['balance']<$total){
 
-$check = mysqli_query($conn, "
-    SELECT * FROM dummy_fpx
-    WHERE bank_name='$bank'
-    AND bank_id='$bank_id'
-    LIMIT 1
+$error_msg="Insufficient balance!";
+
+}else{
+
+sleep(2);
+
+mysqli_query($conn,"
+UPDATE dummy_cards
+SET balance=balance-$total
+WHERE id={$card['id']}
 ");
 
-    if (mysqli_num_rows($check) == 0) {
-        $error_msg = "Invalid FPX account!";
-    } else {
+$payment_success=true;
 
-        $fpx = mysqli_fetch_assoc($check);
+$account_used=$card_number;
 
-        if ($fpx['balance'] < $total) {
-            $error_msg = "Insufficient FPX balance!";
-        } else {
-            mysqli_query($conn, "
-                UPDATE dummy_fpx 
-                SET balance = balance - $total
-                WHERE id = {$fpx['id']}
-            ");
-            $payment_success = true;
-        }
-    }
-
-} elseif ($method == "Boost") {
-
-    $boost_acc = mysqli_real_escape_string($conn, $_POST['account_number']);
-
-$check = mysqli_query($conn, "
-    SELECT * FROM dummy_boost
-    WHERE account_number='$boost_acc'
-    LIMIT 1
-");
-
-    if (mysqli_num_rows($check) == 0) {
-        $error_msg = "Invalid Boost account!";
-    } else {
-
-        $boost = mysqli_fetch_assoc($check);
-
-        if ($boost['balance'] < $total) {
-            $error_msg = "Insufficient Boost balance!";
-        } else {
-            mysqli_query($conn, "
-                UPDATE dummy_boost 
-                SET balance = balance - $total
-                WHERE id = {$boost['id']}
-            ");
-            $payment_success = true;
-        }
-    }
 }
 
-    if(!$payment_success){
-        header("Location: checkout.php?error=1&msg=" . urlencode($error_msg));
-        exit;
-    }
+}
 
-    $res = mysqli_query($conn,"
-    SELECT order_id 
-    FROM orders 
-    WHERE order_id LIKE '$prefix%' 
-    ORDER BY order_id DESC 
-    LIMIT 1
-    ");
+}
 
-    $row = mysqli_fetch_assoc($res);
+elseif($method=="Touch n Go"){
 
-    if ($row) {
-        $last = (int)substr($row['order_id'], 6);
-        $next = str_pad($last + 1, 4, "0", STR_PAD_LEFT);
-    } else {
-        $next = "0001";
-    }
+$tng_acc=mysqli_real_escape_string(
+$conn,
+$_POST['tng_number']
+);
 
-    $order_id = $prefix . $next;
+$tng_pin=mysqli_real_escape_string(
+$conn,
+$_POST['tng_pin']
+);
 
-    $transaction_id = "TXN" . rand(100000,999999);
+$check=mysqli_query($conn,"
+SELECT *
+FROM dummy_tng
+WHERE account_number='$tng_acc'
+AND pin='$tng_pin'
+LIMIT 1
+");
 
-    mysqli_query($conn,"
-INSERT INTO orders(
-    order_id,
-    user_id,
-    total_price,
-    address,
-    phone,
-    payment_method
+if(mysqli_num_rows($check)==0){
+
+$error_msg="Invalid TNG account!";
+
+}else{
+
+$tng=mysqli_fetch_assoc($check);
+
+if($tng['balance']<$total){
+
+$error_msg="Insufficient TNG balance!";
+
+}else{
+
+sleep(2);
+
+mysqli_query($conn,"
+UPDATE dummy_tng
+SET balance=balance-$total
+WHERE id={$tng['id']}
+");
+
+$payment_success=true;
+
+$account_used=$tng_acc;
+
+}
+
+}
+
+}
+
+elseif($method=="FPX"){
+
+$bank=mysqli_real_escape_string(
+$conn,
+$_POST['fpx_bank']
+);
+
+$bank_id=mysqli_real_escape_string(
+$conn,
+$_POST['fpx_userid']
+);
+
+$password=mysqli_real_escape_string(
+$conn,
+$_POST['fpx_password']
+);
+
+$check=mysqli_query($conn,"
+SELECT *
+FROM dummy_fpx
+WHERE bank_name='$bank'
+AND bank_id='$bank_id'
+AND password='$password'
+LIMIT 1
+");
+
+if(mysqli_num_rows($check)==0){
+
+$error_msg="Invalid FPX login!";
+
+}else{
+
+$fpx=mysqli_fetch_assoc($check);
+
+if($fpx['balance']<$total){
+
+$error_msg="Insufficient FPX balance!";
+
+}else{
+
+sleep(2);
+
+mysqli_query($conn,"
+UPDATE dummy_fpx
+SET balance=balance-$total
+WHERE id={$fpx['id']}
+");
+
+$payment_success=true;
+
+$account_used=$bank_id;
+
+}
+
+}
+
+}
+
+elseif($method=="Boost"){
+
+$boost_acc=mysqli_real_escape_string(
+$conn,
+$_POST['account_number']
+);
+
+$boost_pin=mysqli_real_escape_string(
+$conn,
+$_POST['boost_pin']
+);
+
+$check=mysqli_query($conn,"
+SELECT *
+FROM dummy_boost
+WHERE account_number='$boost_acc'
+AND pin='$boost_pin'
+LIMIT 1
+");
+
+if(mysqli_num_rows($check)==0){
+
+$error_msg="Invalid Boost account!";
+
+}else{
+
+$boost=mysqli_fetch_assoc($check);
+
+if($boost['balance']<$total){
+
+$error_msg="Insufficient Boost balance!";
+
+}else{
+
+sleep(2);
+
+mysqli_query($conn,"
+UPDATE dummy_boost
+SET balance=balance-$total
+WHERE id={$boost['id']}
+");
+
+$payment_success=true;
+
+$account_used=$boost_acc;
+
+}
+
+}
+
+}
+
+
+if(!$payment_success){
+
+header(
+"Location: checkout.php?error=1&msg="
+.urlencode($error_msg)
+);
+
+exit;
+
+}
+
+
+$res=mysqli_query($conn,"
+SELECT order_id
+FROM orders
+WHERE order_id LIKE '$prefix%'
+ORDER BY order_id DESC
+LIMIT 1
+");
+
+$row=mysqli_fetch_assoc($res);
+
+if($row){
+
+$last=(int)substr(
+$row['order_id'],
+6
+);
+
+$next=str_pad(
+$last+1,
+4,
+"0",
+STR_PAD_LEFT
+);
+
+}else{
+
+$next="0001";
+
+}
+
+$order_id=$prefix.$next;
+
+$transaction_id=
+"TXN".rand(100000,999999);
+
+mysqli_query($conn,"
+INSERT INTO payment_transactions
+(
+transaction_id,
+payment_method,
+account_used,
+amount,
+status
 )
-VALUES(
-    '$order_id',
-    $user_id,
-    $total,
-    '$address',
-    '$phone',
-    '$method'
+VALUES
+(
+'$transaction_id',
+'$method',
+'$account_used',
+$total,
+'Success'
 )
 ");
 
-    foreach($items as $row){
 
-        mysqli_query($conn,"
-        INSERT INTO order_items(order_id, product_id, quantity, price)
-        VALUES('$order_id', {$row['product_id']}, {$row['quantity']}, {$row['price']})
-        ");
+mysqli_query($conn,"
+INSERT INTO orders
+(
+order_id,
+user_id,
+total_price,
+address,
+phone,
+payment_method
+)
+VALUES
+(
+'$order_id',
+$user_id,
+$total,
+'$address',
+'$phone',
+'$method'
+)
+");
 
-        mysqli_query($conn,"
-        UPDATE products
-        SET stock = stock - {$row['quantity']}
-        WHERE product_id = {$row['product_id']}
-        ");
 
-        if(!$buy_now){
+foreach($items as $row){
 
-    mysqli_query($conn,"
-    DELETE FROM cart
-    WHERE user_id=$user_id
-    AND product_id={$row['product_id']}
-    ");
+mysqli_query($conn,"
+INSERT INTO order_items
+(
+order_id,
+product_id,
+quantity,
+price
+)
+VALUES
+(
+'$order_id',
+{$row['product_id']},
+{$row['quantity']},
+{$row['price']}
+)
+");
+
+mysqli_query($conn,"
+UPDATE products
+SET stock=stock-{$row['quantity']}
+WHERE product_id={$row['product_id']}
+");
+
+
+if(!$buy_now){
+
+mysqli_query($conn,"
+DELETE FROM cart
+WHERE user_id=$user_id
+AND product_id={$row['product_id']}
+");
 
 }
-    }
 
-    header("Location: order_detail.php?id=$order_id");
-    exit;
+}
+
+header(
+"Location: checkout.php?success=1"
+);
+
+exit;
+
 }
 ?>
 
@@ -305,7 +483,7 @@ VALUES(
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
 <style>
-/* YOUR DESIGN - 100% UNCHANGED */
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:white;}
 #particles-js{position:fixed;width:100%;height:100%;z-index:-1;}
@@ -323,9 +501,38 @@ h1{text-align:center;margin-bottom:25px;color:#00f0ff;text-shadow:0 0 15px #00f0
 .payment-card{padding:20px;border-radius:20px;background:rgba(255,255,255,0.06);border:2px solid transparent;text-align:center;transition:0.3s;font-weight:600;}
 .payment-methods input:checked + .payment-card{border-color:#00f0ff;box-shadow:0 0 20px #00f0ff;}
 .input-box{margin-bottom:15px;}
-.input-box input,select{width:100%;padding:14px;border-radius:12px;border:2px solid #00f0ff;background:rgba(255,255,255,0.05);color:white;outline:none;font-size:15px;}
+
+.input-box input,
+.input-box select{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:2px solid #00f0ff;
+background:rgba(255,255,255,0.05);
+color:white;
+outline:none;
+font-size:15px;
+}
+
+.input-box select option{
+background:#24243e;
+color:white;
+}
+
 .hidden-box{display:none;}
-button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(90deg,#00f0ff,#ff00ff);color:white;font-size:16px;font-weight:700;cursor:pointer;}
+
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:14px;
+background:linear-gradient(90deg,#00f0ff,#ff00ff);
+color:white;
+font-size:16px;
+font-weight:700;
+cursor:pointer;
+}
+
 </style>
 </head>
 
@@ -336,7 +543,11 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 <div class="container">
 
 <h1>Secure Checkout</h1>
+<?php if(isset($_GET['success'])): ?>
+<a href="product.php" class="back">← Back to Products</a>
+<?php else: ?>
 <a href="javascript:history.back()" class="back">← Go Back</a>
+<?php endif; ?>
 
 <?php if(isset($_GET['success'])): ?>
 <div class="summary"><h2>✅ Payment Successful</h2></div>
@@ -405,13 +616,20 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 
 <!-- TNG -->
 <div id="tng-box" class="payment-box hidden-box">
-<div class="input-box"><input name="tng_phone" placeholder="TNG Phone Number"></div>
-<div class="input-box"><input name="tng_number" placeholder="Account Number"></div>
+
+<div class="input-box">
+<input name="tng_number" placeholder="Account Number">
+</div>
+
+<div class="input-box">
+<input name="tng_pin" placeholder="6-digit PIN">
+</div>
 
 </div>
 
 <!-- FPX -->
 <div id="fpx-box" class="payment-box hidden-box">
+
 <div class="input-box">
 <select name="fpx_bank">
 <option value="">Select Bank</option>
@@ -422,23 +640,35 @@ button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-
 <option>Hong Leong</option>
 </select>
 </div>
-<div class="input-box"><input name="fpx_userid" placeholder="Bank ID"></div>
+
+<div class="input-box">
+<input name="fpx_userid" placeholder="Bank ID">
+</div>
+
+<div class="input-box">
+<input type="password" name="fpx_password" placeholder="Password">
+</div>
 
 </div>
 
 <!-- BOOST -->
 <div id="boost-box" class="payment-box hidden-box">
-<div class="input-box"><input name="account_number" placeholder="Account Number"></div>
 
+<div class="input-box">
+<input name="account_number" placeholder="Account Number">
 </div>
 
 <div class="input-box">
-<input name="address" placeholder="Address" value="<?= htmlspecialchars($user['address']) ?>" required>
+<input name="boost_pin" placeholder="6-digit PIN">
+</div>
+
+</div>
+<div class="input-box">
+<input name="address" placeholder="Address" value="<?= htmlspecialchars($user['address']) ?>" required> 
 </div>
 
 <div class="input-box">
-<input name="phone" placeholder="Phone Number" value="<?= $user['phone'] ?>" required>
-</div>
+<input name="phone" placeholder="Phone Number" value="<?= $user['phone'] ?>" required> </div>
 
 <button name="pay">🔒 Place Order</button>
 
