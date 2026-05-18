@@ -331,7 +331,7 @@ fetch("remove_cart.php?id="+id)
 .then(()=>location.reload());
 }
 
-/* SELECT ALL */
+/* SELECT ALL Nice*/
 document.getElementById("selectAll").addEventListener("change",function(){
 document.querySelectorAll(".select-item").forEach(i=>{
 i.checked = this.checked;
