@@ -19,35 +19,24 @@ if(mysqli_num_rows($checkOrder) == 0){
     die("Invalid order.");
 }
 
-$product = mysqli_query($conn,"
-SELECT oi.product_id, p.product_name, p.image
+$productQuery = mysqli_query($conn,"
+SELECT 
+    oi.product_id,
+    oi.review_status,
+    p.product_name,
+    p.image
 FROM order_items oi
-JOIN products p ON oi.product_id = p.product_id
+JOIN products p 
+ON oi.product_id = p.product_id
 WHERE oi.order_id = '$order_id'
-LIMIT 1
 ");
-
-$p = mysqli_fetch_assoc($product);
-
-if(!$p){
-    die("No product found in this order.");
-}
-
-$product_id = $p['product_id'];
-$prodRes = mysqli_query($conn,"
-SELECT * FROM products WHERE product_id=$product_id
-");
-$row = mysqli_fetch_assoc($prodRes);
-
-if(!$row){
-    die("Product not found.");
-}
 
 /* SUBMIT REVIEW */
 if(isset($_POST['submit'])){
 
     $rating = intval($_POST['rating']);
     $review = mysqli_real_escape_string($conn,$_POST['review']);
+    $product_id = intval($_POST['product_id']);
 
     $imageName = "";
 
@@ -79,12 +68,12 @@ VALUES
 ('$order_id', {$product_id}, $user_id, $rating, '$review', '$imageName')
 ");
 
-    /* mark order reviewed */
-    mysqli_query($conn,"
-        UPDATE orders 
-        SET review_status='reviewed'
-        WHERE order_id='$order_id'
-    ");
+mysqli_query($conn,"
+UPDATE order_items
+SET review_status='reviewed'
+WHERE order_id='$order_id'
+AND product_id=$product_id
+");
 
     header("Location: history.php");
     exit;
@@ -276,35 +265,50 @@ button{
 
 <div class="card">
 
+<?php while($row = mysqli_fetch_assoc($productQuery)): ?>
+
+<?php if($row['review_status'] == 'reviewed') continue; ?>
+
+<div style="margin-bottom:40px;padding-bottom:30px;border-bottom:1px solid rgba(255,255,255,0.2);">
+
 <img src="<?= $row['image'] ?>">
 <h2><?= $row['product_name'] ?></h2>
+
 <form method="POST" enctype="multipart/form-data" class="review-form">
 
-    <select name="rating" required>
-        <option value="">⭐ Select Rating</option>
-        <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
-        <option value="4">⭐⭐⭐⭐ Good</option>
-        <option value="3">⭐⭐⭐ Average</option>
-        <option value="2">⭐⭐ Poor</option>
-        <option value="1">⭐ Bad</option>
-    </select>
+<input type="hidden" 
+name="product_id" 
+value="<?= $row['product_id'] ?>">
 
-    <textarea name="review" placeholder="Write your review..." required></textarea>
+<select name="rating" required>
+    <option value="">⭐ Select Rating</option>
+    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+    <option value="4">⭐⭐⭐⭐ Good</option>
+    <option value="3">⭐⭐⭐ Average</option>
+    <option value="2">⭐⭐ Poor</option>
+    <option value="1">⭐ Bad</option>
+</select>
 
-    <div class="file-box">
-    <input type="file" name="image" id="imageInput" accept="image/*">
+<textarea 
+name="review" 
+placeholder="Write your review..." 
+required></textarea>
+
+<div class="file-box">
+<input type="file" 
+name="image" 
+accept="image/*">
 </div>
 
-<!-- preview image -->
-<div style="margin-top:15px;">
-    <img id="preview" style="display:none; width:150px; height:150px; object-fit:cover; border-radius:12px; border:2px solid #00f0ff;">
-</div>
-
-    <button name="submit">Submit Review</button>
+<button name="submit">
+Submit Review
+</button>
 
 </form>
 
 </div>
+
+<?php endwhile; ?>
 
 <script>
 document.getElementById("imageInput").addEventListener("change", function(event){

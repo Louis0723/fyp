@@ -58,9 +58,6 @@ if ($type === 'register') {
     }
 }
 
-    // =====================================================
-    // PASSWORD CHANGE OTP FLOW
-    // =====================================================
     else if ($type === 'password_change') {
 
     if (!isset($_SESSION['user'])) {
@@ -93,6 +90,38 @@ if ($type === 'register') {
         unset($_SESSION['otp_type']);
 
         header("Location: profile.php?success=1");
+        exit;
+
+    } else {
+        $message = "Invalid or expired OTP!";
+    }
+
+    
+}
+else if ($type === 'forgot_password') {
+
+    if (!isset($_SESSION['reset_user_id'])) {
+        die("Session expired.");
+    }
+
+    $user_id = (int) $_SESSION['reset_user_id'];
+
+    $res = mysqli_query($conn,"
+        SELECT * FROM users
+        WHERE user_id=$user_id
+    ");
+
+    $user = mysqli_fetch_assoc($res);
+
+    if (
+        $user &&
+        $user['otp_code'] == $otp &&
+        strtotime($user['otp_expiry']) > time()
+    ) {
+
+        $_SESSION['verified_reset'] = true;
+
+        header("Location: reset_password.php");
         exit;
 
     } else {
