@@ -144,7 +144,7 @@ $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
 <style>
 body{font-family:Segoe UI;background:#f5f7fb;}
 
-.content-area{
+.main-content{
     margin-left:270px;
     margin-top:100px;
     padding:30px;
@@ -153,7 +153,7 @@ body{font-family:Segoe UI;background:#f5f7fb;}
 
 /* SIDEBAR COLLAPSE */
 
-.sidebar.collapsed ~ .content-area{
+.sidebar.collapsed ~ .main-content{
     margin-left:95px;
 }
 
@@ -177,7 +177,7 @@ body{font-family:Segoe UI;background:#f5f7fb;}
 }
 
 /* SEARCH */
-.search-box{
+.product-search-box{
     margin:20px 0;
     background:#fff;
     padding:12px 16px;
@@ -185,7 +185,7 @@ body{font-family:Segoe UI;background:#f5f7fb;}
     box-shadow:0 5px 15px rgba(0,0,0,0.05);
 }
 
-.search-box input{
+.product-search-box input{
     border:none;
     outline:none;
     width:100%;
@@ -233,7 +233,10 @@ tr:hover{background:#f9fbff;}
     padding:3px 6px;
     border-radius:50%;
 }
-.active{background:#2563eb;color:#fff;}
+.stock-active{
+    background:#2563eb;
+    color:#fff;
+}
 .low{background:#facc15;}
 .out{background:#ef4444;color:#fff;}
 
@@ -251,62 +254,187 @@ tr:hover{background:#f9fbff;}
 .view{color:#111;}
 .edit{color:#2563eb;}
 
-/* MODAL */
+/* =========================
+   REPLACE YOUR OLD MODAL CSS
+========================= */
+
 .modal{
     display:none;
     position:fixed;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.6);
-    top:0;left:0;
+    inset:0;
+    background:rgba(15,23,42,.65);
+    backdrop-filter:blur(4px);
     justify-content:center;
     align-items:center;
+    z-index:9999;
+    padding:20px;
 }
 
 .modal-box{
-    background:#fff;
-    padding:25px;
-    border-radius:16px;
-    width:420px;
-    box-shadow:0 15px 40px rgba(0,0,0,0.2);
+    width:100%;
+    max-width:720px;
+    background:#ffffff;
+    border-radius:28px;
+    padding:34px;
+    box-shadow:0 25px 60px rgba(0,0,0,.25);
+    animation:modalFade .25s ease;
+    max-height:90vh;
+    overflow-y:auto;
 }
 
-.modal-box h3{margin-bottom:15px;}
+@keyframes modalFade{
+    from{
+        opacity:0;
+        transform:translateY(20px) scale(.98);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
 
-.modal-box input{
-    width:100%;
-    padding:10px;
-    margin-bottom:12px;
-    border-radius:8px;
-    border:1px solid #ddd;
+.modal-box h3{
+    font-size:38px;
+    font-weight:800;
+    color:#0f172a;
+    margin-bottom:10px;
+}
+
+.modal-subtitle{
+    color:#64748b;
+    font-size:15px;
+    margin-bottom:28px;
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-bottom:25px;
+}
+
+.detail-card{
+    background:#f8fafc;
+    border-radius:18px;
+    padding:20px;
+}
+
+.detail-label{
+    font-size:13px;
+    color:#64748b;
+    margin-bottom:8px;
+}
+
+.detail-value{
+    font-size:18px;
+    font-weight:700;
+    color:#0f172a;
+}
+
+.spec-box{
+    background:#f8fafc;
+    border-radius:18px;
+    padding:24px;
+    margin-top:10px;
+}
+
+.spec-title{
+    font-size:28px;
+    font-weight:800;
+    margin-bottom:18px;
+    color:#0f172a;
+}
+
+.spec-item{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid #e2e8f0;
+}
+
+.spec-item:last-child{
+    border-bottom:none;
+}
+
+.spec-name{
+    color:#64748b;
+    font-weight:600;
+}
+
+.spec-value{
+    color:#0f172a;
+    font-weight:700;
 }
 
 .modal-footer{
+    margin-top:25px;
     display:flex;
     justify-content:flex-end;
-    gap:10px;
+    gap:12px;
 }
 
 .btn-primary{
     background:#2563eb;
     color:#fff;
     border:none;
-    padding:8px 14px;
-    border-radius:8px;
+    padding:12px 22px;
+    border-radius:14px;
+    cursor:pointer;
+    font-weight:700;
+    transition:.2s;
+}
+
+.btn-primary:hover{
+    background:#1d4ed8;
 }
 
 .btn-cancel{
-    background:#ccc;
+    background:#e2e8f0;
+    color:#0f172a;
     border:none;
-    padding:8px 14px;
-    border-radius:8px;
+    padding:12px 22px;
+    border-radius:14px;
+    cursor:pointer;
+    font-weight:700;
 }
 
-/* IMAGE PREVIEW */
+.modal-box input,
+.modal-box textarea,
+.modal-box select{
+    width:100%;
+    background:#f8fafc;
+    border:1px solid #dbe2ea;
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    font-size:15px;
+    outline:none;
+}
+
+.modal-box input:focus,
+.modal-box textarea:focus,
+.modal-box select:focus{
+    border-color:#2563eb;
+    background:#fff;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.form-full{
+    grid-column:1 / -1;
+}
+
 .preview{
-    width:80px;height:80px;
-    border-radius:10px;
-    margin-bottom:10px;
+    width:110px;
+    height:110px;
+    border-radius:18px;
     object-fit:cover;
+    border:2px solid #dbeafe;
+    margin-bottom:18px;
     display:none;
 }
 
@@ -331,18 +459,16 @@ if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
 ?>
 <?php include "admin_header.php"; ?>
 
-<div class="content-area">
+<div class="main-content">
 
 <div class="page-header">
 <h2>Products</h2>
 
-<button class="btn-add" onclick="openModal('addModal')">
-<i data-lucide="plus"></i> Add Product
-</button>
+
 
 </div>
 
-<div class="search-box">
+<div class="product-search-box">
 <input id="searchInput" placeholder="Search products...">
 </div>
 
@@ -405,7 +531,11 @@ $image = trim($row['image']);
 <td>RM <?= number_format($row['price'],2) ?></td>
 <td><?= $row['stock'] ?></td>
 
-<td><span class="badge <?= $status ?>"><?= $text ?></span></td>
+<td>
+    <span class="badge <?= $status == 'active' ? 'stock-active' : $status ?>">
+        <?= $text ?>
+    </span>
+</td>
 
 <td class="actions">
 
@@ -457,17 +587,63 @@ onclick="editProduct(
 </div>
 </div>
 
-<!-- VIEW -->
+<!-- =========================
+VIEW MODAL REPLACE FULL
+========================= -->
+
 <div class="modal" id="viewModal">
+
 <div class="modal-box">
+
 <h3>Product Details</h3>
-<p id="v_name"></p>
-<p id="v_category"></p>
-<p id="v_price"></p>
-<p id="v_stock"></p>
+
+<div class="modal-subtitle">
+View complete product information
+</div>
+
+<div class="detail-grid">
+
+<div class="detail-card">
+<div class="detail-label">Product Name</div>
+<div class="detail-value" id="v_name"></div>
+</div>
+
+<div class="detail-card">
+<div class="detail-label">Category</div>
+<div class="detail-value" id="v_category"></div>
+</div>
+
+<div class="detail-card">
+<div class="detail-label">Price</div>
+<div class="detail-value" id="v_price"></div>
+</div>
+
+<div class="detail-card">
+<div class="detail-label">Stock</div>
+<div class="detail-value" id="v_stock"></div>
+</div>
+
+</div>
+
+<div class="spec-box">
+
+<div class="spec-title">
+Specifications
+</div>
 
 <div id="v_specs"></div>
-<button class="btn-cancel" onclick="closeModal('viewModal')">Close</button>
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn-cancel"
+onclick="closeModal('viewModal')">
+Close
+</button>
+
+</div>
+
 </div>
 </div>
 
@@ -584,49 +760,221 @@ border:1px solid #ddd;
 </div>
 </div>
 
-<!-- EDIT -->
+<!-- =========================
+EDIT PRODUCT MODAL
+========================= -->
+
 <div class="modal" id="editModal">
+
 <div class="modal-box">
+
 <h3>Edit Product</h3>
 
+<div class="modal-subtitle">
+Update product information
+</div>
+
 <form method="POST" enctype="multipart/form-data">
+
 <input type="hidden" name="product_id" id="edit_id">
-<input id="edit_name" name="name" placeholder="Product Name">
-<input id="edit_price" name="price" placeholder="Price">
-<input id="edit_stock" name="stock" placeholder="Stock">
+
+<!-- TOP INFO -->
+<div class="form-grid">
+
+<div>
+<label class="detail-label">Product Name</label>
+
+<input
+id="edit_name"
+name="name"
+placeholder="Product Name"
+required>
+</div>
+
+<div>
+<label class="detail-label">Category</label>
+
+<select
+id="edit_category"
+name="category"
+onchange="toggleEditSpecs()"
+required>
+
+<option value="PC">PC</option>
+<option value="Laptop">Laptop</option>
+<option value="Keyboard">Keyboard</option>
+<option value="Mouse">Mouse</option>
+
+</select>
+</div>
+
+<div>
+<label class="detail-label">Price (RM)</label>
+
+<input
+id="edit_price"
+name="price"
+type="number"
+step="0.01"
+placeholder="0.00"
+required>
+</div>
+
+<div>
+<label class="detail-label">Stock Quantity</label>
+
+<input
+id="edit_stock"
+name="stock"
+type="number"
+placeholder="0"
+required>
+</div>
+
+<div class="form-full">
+<label class="detail-label">Product Image</label>
 
 <input type="file" name="image">
-
-<input type="hidden" id="edit_category" name="category">
-
-<div id="edit_pcFields">
-    <input id="edit_cpu" name="cpu" placeholder="CPU">
-    <input id="edit_gpu" name="gpu" placeholder="GPU">
-    <input id="edit_ram" name="ram" placeholder="RAM">
-    <input id="edit_storage" name="storage" placeholder="Storage">
-    <input id="edit_motherboard" name="motherboard" placeholder="Motherboard">
 </div>
 
-<div id="edit_keyboardFields">
-    <input id="edit_switch_type" name="switch_type" placeholder="Switch Type">
-    <input id="edit_keyboard_size" name="keyboard_size" placeholder="Keyboard Size">
 </div>
 
-<div id="edit_mouseFields">
-    <input id="edit_dpi" name="dpi" placeholder="DPI">
-    <input id="edit_mouse_type" name="mouse_type" placeholder="Mouse Type">
+<!-- PC -->
+<div id="edit_pcFields" class="spec-box">
+
+<div class="spec-title">
+PC Specifications
 </div>
 
-<div id="edit_laptopFields">
-    <!-- laptop specs here -->
+<div class="form-grid">
+
+<div>
+<label class="detail-label">CPU</label>
+<input id="edit_cpu" name="cpu" placeholder="CPU">
+</div>
+
+<div>
+<label class="detail-label">GPU</label>
+<input id="edit_gpu" name="gpu" placeholder="GPU">
+</div>
+
+<div>
+<label class="detail-label">RAM</label>
+<input id="edit_ram" name="ram" placeholder="RAM">
+</div>
+
+<div>
+<label class="detail-label">Storage</label>
+<input id="edit_storage" name="storage" placeholder="Storage">
+</div>
+
+<div class="form-full">
+<label class="detail-label">Motherboard</label>
+<input id="edit_motherboard" name="motherboard" placeholder="Motherboard">
+</div>
+
+</div>
+
+</div>
+
+<!-- KEYBOARD -->
+<div id="edit_keyboardFields" class="spec-box">
+
+<div class="spec-title">
+Keyboard Specifications
+</div>
+
+<div class="form-grid">
+
+<div>
+<label class="detail-label">Switch Type</label>
+<input id="edit_switch_type" name="switch_type" placeholder="Switch Type">
+</div>
+
+<div>
+<label class="detail-label">Keyboard Size</label>
+<input id="edit_keyboard_size" name="keyboard_size" placeholder="Keyboard Size">
+</div>
+
+</div>
+
+</div>
+
+<!-- MOUSE -->
+<div id="edit_mouseFields" class="spec-box">
+
+<div class="spec-title">
+Mouse Specifications
+</div>
+
+<div class="form-grid">
+
+<div>
+<label class="detail-label">DPI</label>
+<input id="edit_dpi" name="dpi" placeholder="DPI">
+</div>
+
+<div>
+<label class="detail-label">Mouse Type</label>
+<input id="edit_mouse_type" name="mouse_type" placeholder="Mouse Type">
+</div>
+
+</div>
+
+</div>
+
+<!-- LAPTOP -->
+<div id="edit_laptopFields" class="spec-box">
+
+<div class="spec-title">
+Laptop Specifications
+</div>
+
+<div class="form-grid">
+
+<div>
+<label class="detail-label">CPU</label>
+<input name="cpu" placeholder="CPU">
+</div>
+
+<div>
+<label class="detail-label">GPU</label>
+<input name="gpu" placeholder="GPU">
+</div>
+
+<div>
+<label class="detail-label">RAM</label>
+<input name="ram" placeholder="RAM">
+</div>
+
+<div>
+<label class="detail-label">Storage</label>
+<input name="storage" placeholder="Storage">
+</div>
+
+</div>
+
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
-<button class="btn-primary" name="update_product">Save</button>
+
+<button
+type="button"
+class="btn-cancel"
+onclick="closeModal('editModal')">
+Cancel
+</button>
+
+<button
+class="btn-primary"
+name="update_product">
+Save Changes
+</button>
+
 </div>
 
 </form>
+
 </div>
 </div>
 
@@ -645,7 +993,10 @@ function openModal(id){
 }
 function closeModal(id){document.getElementById(id).style.display="none";}
 
-/* VIEW */
+/* =========================
+REPLACE viewProduct()
+========================= */
+
 function viewProduct(
 name,
 category,
@@ -664,86 +1015,155 @@ mouse_type
 
 openModal('viewModal');
 
-document.getElementById("v_name").innerText = "Name: " + name;
-document.getElementById("v_category").innerText = "Category: " + category;
-document.getElementById("v_price").innerText = "Price: RM " + price;
-document.getElementById("v_stock").innerText = "Stock: " + stock;
+document.getElementById("v_name").innerHTML = name;
+document.getElementById("v_category").innerHTML = category;
+document.getElementById("v_price").innerHTML = "RM " + parseFloat(price).toLocaleString();
+document.getElementById("v_stock").innerHTML = stock;
 
 let specs = "";
 
 if(category === "PC"){
 
-    specs += "<p><b>CPU:</b> " + cpu + "</p>";
-    specs += "<p><b>GPU:</b> " + gpu + "</p>";
-    specs += "<p><b>RAM:</b> " + ram + "</p>";
-    specs += "<p><b>Storage:</b> " + storage + "</p>";
-    specs += "<p><b>Motherboard:</b> " + motherboard + "</p>";
+specs += `
+<div class="spec-item">
+<div class="spec-name">CPU</div>
+<div class="spec-value">${cpu}</div>
+</div>
+
+<div class="spec-item">
+<div class="spec-name">GPU</div>
+<div class="spec-value">${gpu}</div>
+</div>
+
+<div class="spec-item">
+<div class="spec-name">RAM</div>
+<div class="spec-value">${ram}</div>
+</div>
+
+<div class="spec-item">
+<div class="spec-name">Storage</div>
+<div class="spec-value">${storage}</div>
+</div>
+
+<div class="spec-item">
+<div class="spec-name">Motherboard</div>
+<div class="spec-value">${motherboard}</div>
+</div>
+`;
+
 }
 
 else if(category === "Keyboard"){
 
-    specs += "<p><b>Switch Type:</b> " + switch_type + "</p>";
-    specs += "<p><b>Keyboard Size:</b> " + keyboard_size + "</p>";
+specs += `
+<div class="spec-item">
+<div class="spec-name">Switch Type</div>
+<div class="spec-value">${switch_type}</div>
+</div>
+
+<div class="spec-item">
+<div class="spec-name">Keyboard Size</div>
+<div class="spec-value">${keyboard_size}</div>
+</div>
+`;
+
 }
 
 else if(category === "Mouse"){
 
-    specs += "<p><b>DPI:</b> " + dpi + "</p>";
-    specs += "<p><b>Mouse Type:</b> " + mouse_type + "</p>";
+specs += `
+<div class="spec-item">
+<div class="spec-name">DPI</div>
+<div class="spec-value">${dpi}</div>
+</div>
+
+<div class="spec-item">
+<div class="spec-name">Mouse Type</div>
+<div class="spec-value">${mouse_type}</div>
+</div>
+`;
+
 }
 
 document.getElementById("v_specs").innerHTML = specs;
 
 }
 
-/* EDIT */
+/* =========================
+EDIT PRODUCT
+========================= */
+
 function editProduct(
 id,name,price,stock,category,
 cpu,gpu,ram,storage,motherboard,
 switch_type,keyboard_size,dpi,mouse_type
 ){
-    openModal('editModal');
 
-    edit_id.value = id;
-    edit_name.value = name || "";
-    edit_price.value = price || "";
-    edit_stock.value = stock || "";
+openModal('editModal');
 
-    document.getElementById("edit_category").value = category;
+document.getElementById("edit_id").value = id;
+document.getElementById("edit_name").value = name || "";
+document.getElementById("edit_price").value = price || "";
+document.getElementById("edit_stock").value = stock || "";
 
-    // hide all first
-    document.getElementById("edit_pcFields").style.display = "none";
-    document.getElementById("edit_keyboardFields").style.display = "none";
-    document.getElementById("edit_mouseFields").style.display = "none";
-    document.getElementById("edit_laptopFields").style.display = "none";
+document.getElementById("edit_category").value = category || "";
 
-    if(category === "PC"){
-        document.getElementById("edit_pcFields").style.display = "block";
+document.getElementById("edit_cpu").value = cpu || "";
+document.getElementById("edit_gpu").value = gpu || "";
+document.getElementById("edit_ram").value = ram || "";
+document.getElementById("edit_storage").value = storage || "";
+document.getElementById("edit_motherboard").value = motherboard || "";
 
-        edit_cpu.value = cpu || "";
-        edit_gpu.value = gpu || "";
-        edit_ram.value = ram || "";
-        edit_storage.value = storage || "";
-        edit_motherboard.value = motherboard || "";
-    }
+document.getElementById("edit_switch_type").value = switch_type || "";
+document.getElementById("edit_keyboard_size").value = keyboard_size || "";
 
-    else if(category === "Keyboard"){
-        document.getElementById("edit_keyboardFields").style.display = "block";
+document.getElementById("edit_dpi").value = dpi || "";
+document.getElementById("edit_mouse_type").value = mouse_type || "";
 
-        edit_switch_type.value = switch_type || "";
-        edit_keyboard_size.value = keyboard_size || "";
-    }
+toggleEditSpecs();
 
-    else if(category === "Mouse"){
-        document.getElementById("edit_mouseFields").style.display = "block";
+}
 
-        edit_dpi.value = dpi || "";
-        edit_mouse_type.value = mouse_type || "";
-    }
+/* =========================
+TOGGLE EDIT CATEGORY SPECS
+========================= */
 
-    else if(category === "Laptop"){
-        document.getElementById("edit_laptopFields").style.display = "block";
-    }
+function toggleEditSpecs(){
+
+let category =
+document.getElementById("edit_category").value;
+
+/* HIDE ALL */
+document.getElementById("edit_pcFields").style.display = "none";
+document.getElementById("edit_keyboardFields").style.display = "none";
+document.getElementById("edit_mouseFields").style.display = "none";
+document.getElementById("edit_laptopFields").style.display = "none";
+
+/* SHOW SELECTED */
+if(category === "PC"){
+
+document.getElementById("edit_pcFields").style.display = "block";
+
+}
+
+else if(category === "Keyboard"){
+
+document.getElementById("edit_keyboardFields").style.display = "block";
+
+}
+
+else if(category === "Mouse"){
+
+document.getElementById("edit_mouseFields").style.display = "block";
+
+}
+
+else if(category === "Laptop"){
+
+document.getElementById("edit_laptopFields").style.display = "block";
+
+}
+
 }
 
 /* SEARCH */
@@ -789,6 +1209,12 @@ function toggleSpecs(){
     }
 }
 </script>
+<script src="https://unpkg.com/lucide@latest"></script>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="bootstrap.bundle.js"></script>
+
+<script src="admin.js"></script>
 </body>
 </html>
