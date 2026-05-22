@@ -12,7 +12,7 @@ $res = $conn->query("SELECT order_id,total_price FROM orders ORDER BY order_id D
 
     <div class="header-left">
 
-        <button id="toggleSidebar" class="toggle-btn">
+  <button class="toggle-btn" id="toggleSidebar">
             <i data-lucide="panel-left"></i>
         </button>
 

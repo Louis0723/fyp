@@ -93,6 +93,12 @@ new Chart(document.getElementById("barChart"), {
 
 
 </script>
+<script src="https://unpkg.com/lucide@latest"></script>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="bootstrap.bundle.js"></script>
+
+<script src="admin.js"></script>
 </body>
 </html>

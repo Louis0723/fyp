@@ -1,5 +1,7 @@
 <?php $current = basename($_SERVER['PHP_SELF']); ?>
 
+<link rel="stylesheet" href="style.css?v=200">
+
 <div class="sidebar" id="sidebar">
 
     <!-- BRAND -->
@@ -8,82 +10,263 @@
         <img src="../storelogo.jpeg" class="logo-img">
 
         <div class="brand-text">
-            <div class="store-name">LOZ PC Store</div>
-            <div class="store-sub">Super Admin</div>
+
+            <div class="store-name">
+                LOZ PC Store
+            </div>
+
+            <div class="store-sub">
+                Super Admin
+            </div>
+
         </div>
 
     </div>
 
-    <!-- DASHBOARD -->
-    <a href=" super_admin.php"
-       class="<?= $current=='super_admin.php'?'active':'' ?>">
+    <!-- OVERVIEW -->
+    <a href="super_admin.php"
+       class="menu-item <?= $current=='super_admin.php' ? 'active' : '' ?>">
 
-        <i data-lucide="layout-dashboard"></i>
+        <div class="menu-left">
 
-        <span class="text">
-            Overview
-        </span>
+            <i data-lucide="layout-dashboard"></i>
+
+            <span class="text">
+                Overview
+            </span>
+
+        </div>
 
     </a>
 
     <!-- ADMIN MANAGEMENT -->
-    <a href="admin_management.php"
-       class="<?= $current=='admin_management.php'?'active':'' ?>">
+    <div class="dropdown-wrapper">
 
-        <i data-lucide="shield"></i>
+        <button type="button"
+                class="dropdown-btn <?= in_array($current,
+                ['admin_management.php','add_admin.php'])
+                ? 'active open' : '' ?>">
 
-        <span class="text">
-            Admin Management
-        </span>
+            <div class="menu-left">
 
-    </a>
+                <i data-lucide="shield-check"></i>
+
+                <span class="text">
+                    Admin Management
+                </span>
+
+            </div>
+
+            <i data-lucide="chevron-down" class="arrow"></i>
+
+        </button>
+
+        <!-- SUBMENU -->
+        <div class="dropdown-menu <?= in_array($current,
+        ['admin_management.php','add_admin.php'])
+        ? 'show' : '' ?>">
+
+            <a href="add_admin.php"
+               class="submenu <?= $current=='add_admin.php'
+               ? 'active-sub' : '' ?>">
+
+                Add Admin
+
+            </a>
+
+            <a href="admin_management.php"
+               class="submenu <?= $current=='admin_management.php'
+               ? 'active-sub' : '' ?>">
+
+                View Admin
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- CATEGORY -->
+    <div class="dropdown-wrapper">
+
+        <button type="button"
+                class="dropdown-btn <?= in_array($current,
+                ['add_category.php','view_category.php'])
+                ? 'active open' : '' ?>">
+
+            <div class="menu-left">
+
+                <i data-lucide="layers-3"></i>
+
+                <span class="text">
+                    Category
+                </span>
+
+            </div>
+
+            <i data-lucide="chevron-down" class="arrow"></i>
+
+        </button>
+
+        <!-- SUBMENU -->
+        <div class="dropdown-menu <?= in_array($current,
+        ['add_category.php','view_category.php'])
+        ? 'show' : '' ?>">
+
+            <a href="add_category.php"
+               class="submenu <?= $current=='add_category.php'
+               ? 'active-sub' : '' ?>">
+
+                Add Category
+
+            </a>
+
+            <a href="view_category.php"
+               class="submenu <?= $current=='view_category.php'
+               ? 'active-sub' : '' ?>">
+
+                View Category
+
+            </a>
+
+        </div>
+
+    </div>
 
     <!-- PRODUCTS -->
-    <a href="admin_product.php"
-       class="<?= $current=='admin_product.php'?'active':'' ?>">
+    <div class="dropdown-wrapper">
 
-        <i data-lucide="box"></i>
+        <button type="button"
+                class="dropdown-btn <?= in_array($current,
+                ['add_product.php','admin_product.php','product_review.php'])
+                ? 'active open' : '' ?>">
 
-        <span class="text">
-            Products
-        </span>
+            <div class="menu-left">
 
-    </a>
+                <i data-lucide="monitor-smartphone"></i>
+
+                <span class="text">
+                    Products
+                </span>
+
+            </div>
+
+            <i data-lucide="chevron-down" class="arrow"></i>
+
+        </button>
+
+        <!-- SUBMENU -->
+        <div class="dropdown-menu <?= in_array($current,
+        ['add_product.php','admin_product.php','product_review.php'])
+        ? 'show' : '' ?>">
+
+            <a href="add_product.php"
+               class="submenu <?= $current=='add_product.php'
+               ? 'active-sub' : '' ?>">
+
+                Add Product
+
+            </a>
+
+            <a href="admin_product.php"
+               class="submenu <?= $current=='admin_product.php'
+               ? 'active-sub' : '' ?>">
+
+                View Product
+
+            </a>
+
+            <a href="product_review.php"
+               class="submenu <?= $current=='product_review.php'
+               ? 'active-sub' : '' ?>">
+
+                Product Review
+
+            </a>
+
+        </div>
+
+    </div>
 
     <!-- ORDERS -->
     <a href="admin_orders.php"
-       class="<?= $current=='admin_orders.php'?'active':'' ?>">
+       class="menu-item <?= $current=='admin_orders.php' ? 'active' : '' ?>">
 
-        <i data-lucide="file-text"></i>
+        <div class="menu-left">
 
-        <span class="text">
-            Orders
-        </span>
+            <i data-lucide="shopping-cart"></i>
+
+            <span class="text">
+                Orders
+            </span>
+
+        </div>
 
     </a>
 
     <!-- CUSTOMERS -->
     <a href="admin_customer.php"
-       class="<?= $current=='admin_customer.php'?'active':'' ?>">
+       class="menu-item <?= $current=='admin_customer.php' ? 'active' : '' ?>">
 
-        <i data-lucide="users"></i>
+        <div class="menu-left">
 
-        <span class="text">
-            Customers
-        </span>
+            <i data-lucide="users"></i>
+
+            <span class="text">
+                Customers
+            </span>
+
+        </div>
 
     </a>
 
     <!-- LOGOUT -->
     <a href="admin_logout.php"
+       class="menu-item"
        onclick="return confirm('Logout from Super Admin panel?')">
 
-        <i data-lucide="log-out"></i>
+        <div class="menu-left">
 
-        <span class="text">
-            Logout
-        </span>
+            <i data-lucide="log-out"></i>
+
+            <span class="text">
+                Logout
+            </span>
+
+        </div>
 
     </a>
 
 </div>
+
+<!-- LUCIDE -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- SIDEBAR FUNCTION -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    lucide.createIcons();
+
+    const dropdownBtns =
+    document.querySelectorAll(".dropdown-btn");
+
+    dropdownBtns.forEach(btn => {
+
+        btn.addEventListener("click", function () {
+
+            this.classList.toggle("open");
+
+            const menu =
+            this.nextElementSibling;
+
+            menu.classList.toggle("show");
+
+        });
+
+    });
+
+});
+
+</script>
