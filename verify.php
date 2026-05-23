@@ -7,7 +7,7 @@ $message = "";
 if (!isset($_SESSION['otp_type'])) {
     header("Location: login.php");
     exit;
-}
+}//
 
 $type = $_SESSION['otp_type'];
 

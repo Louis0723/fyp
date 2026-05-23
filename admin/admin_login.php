@@ -195,8 +195,29 @@ body::before{
 
 <div class="input-group">
 <span>🔒</span>
-<input type="password" name="password" id="password" placeholder="Password" required>
-<span class="eye" onclick="togglePassword()">👁</span>
+
+<input 
+type="password" 
+name="password" 
+id="password" 
+placeholder="Password" 
+required
+autocomplete="current-password"
+>
+
+<span class="eye" onclick="togglePass(this)">👁️</span>
+</div>
+
+<div style="text-align:right;margin-top:-8px;margin-bottom:15px;">
+<a href="forgot_password_admin.php" 
+style="
+color:#0072ff;
+text-decoration:none;
+font-size:14px;
+font-weight:600;
+">
+Forgot Password?
+</a>
 </div>
 
 <button class="btn">Login</button>
@@ -205,9 +226,22 @@ body::before{
 </div>
 
 <script>
-function togglePassword(){
-    let p = document.getElementById("password");
-    p.type = (p.type === "password") ? "text" : "password";
+function togglePass(icon){
+
+    const p = document.getElementById("password");
+
+    if(p.type === "password"){
+
+        p.type = "text";
+        icon.textContent = "🙈";
+
+    }else{
+
+        p.type = "password";
+        icon.textContent = "👁️";
+
+    }
+
 }
 </script>
 

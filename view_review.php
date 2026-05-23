@@ -192,7 +192,7 @@ h1{
 
     <?php endwhile; ?>
 
-</div>  <!-- ONLY CLOSE HERE -->
+</div>
 
 </body>
 
