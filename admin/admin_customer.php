@@ -8,7 +8,7 @@ if(!isset($_SESSION['admin'])){
 }
 
 /* =========================
-   AUTO CREATE STATUS COLUMN
+AUTO CREATE STATUS COLUMN
 ========================= */
 
 $checkColumn = $conn->query("
@@ -26,7 +26,7 @@ if($checkColumn->num_rows == 0){
 }
 
 /* =========================
-   UPDATE STATUS
+UPDATE STATUS
 ========================= */
 
 if(isset($_POST['update_status'])){
@@ -48,7 +48,7 @@ if(isset($_POST['update_status'])){
 }
 
 /* =========================
-   USERS + STATS
+USERS + STATS
 ========================= */
 
 $users = $conn->query("
@@ -103,6 +103,10 @@ body{
     margin-top:95px;
     padding:28px;
     transition:.3s ease;
+}
+
+.main.expanded{
+    margin-left:95px;
 }
 
 /* SIDEBAR COLLAPSE */
@@ -285,25 +289,29 @@ body{
     color:#ef4444;
 }
 
-/* MODAL */
+/* MODAL FIX */
 
 .customer-modal{
     position:fixed;
     inset:0;
     background:rgba(15,23,42,.65);
     display:none;
-    align-items:center;
+    align-items:flex-start;
     justify-content:center;
-    z-index:9999;
+    overflow-y:auto;
+    padding:120px 20px 40px;
+    z-index:99999;
     backdrop-filter:blur(5px);
 }
 
 .customer-modal-box{
     width:520px;
+    max-width:100%;
     background:#fff;
     border-radius:24px;
     padding:28px;
     position:relative;
+    margin:auto;
 }
 
 .modal-close{
@@ -440,8 +448,6 @@ if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
 
 </div>
 
-<!-- CUSTOMER TABLE -->
-
 <div class="customer-table-wrapper">
 
 <table class="customer-table">
@@ -555,12 +561,6 @@ onclick="openCustomerModal(
 )">
 
 <i data-lucide="eye"></i>
-
-</div>
-
-<div class="action-btn delete">
-
-<i data-lucide="trash-2"></i>
 
 </div>
 
@@ -712,31 +712,9 @@ onclick="openCustomerModal(
 
 </div>
 
-<script src="admin.js"></script>
-
 <script>
 
 lucide.createIcons();
-
-/* SEARCH */
-
-document.getElementById("searchInput").addEventListener("keyup", function(){
-
-let value = this.value.toLowerCase();
-
-document.querySelectorAll(".customer-item").forEach(card=>{
-
-    if(card.innerText.toLowerCase().includes(value)){
-        card.style.display = "";
-    }else{
-        card.style.display = "none";
-    }
-
-});
-
-});
-
-/* OPEN MODAL */
 
 function openCustomerModal(
 id,
@@ -770,31 +748,25 @@ document.getElementById("form_status").value = status;
 
 }
 
-/* CLOSE */
-
 function closeCustomerModal(){
 
-document.getElementById("customerModal").style.display =
-"none";
+document.getElementById("customerModal").style.display = "none";
 
 }
 
-window.onclick = function(e){
+document.getElementById("customerModal").addEventListener("click", function(e){
 
-let modal = document.getElementById("customerModal");
+if(e.target === this){
 
-if(e.target == modal){
-    modal.style.display = "none";
-}
+    closeCustomerModal();
 
 }
+
+});
+
 </script>
-<script src="https://unpkg.com/lucide@latest"></script>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script src="bootstrap.bundle.js"></script>
 
-<script src="admin.js"></script>
 </body>
 </html>

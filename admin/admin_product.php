@@ -150,7 +150,10 @@ body{font-family:Segoe UI;background:#f5f7fb;}
     padding:30px;
     transition:.3s ease;
 }
-
+.top-header{
+    position:relative;
+    z-index:1000;
+}
 /* SIDEBAR COLLAPSE */
 
 .sidebar.collapsed ~ .main-content{
@@ -215,30 +218,86 @@ tr:hover{background:#f9fbff;}
 
 /* STATUS */
 /* NORMAL BADGE (for table only) */
-.badge{
-    position:static;   /* 🔥 THIS FIXES YOUR BUG */
-    padding:6px 12px;
-    border-radius:12px;
+.table-card .badge{
+    position:relative !important;
+    top:auto !important;
+    right:auto !important;
+    left:auto !important;
+    bottom:auto !important;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    min-width:120px;
+
+    padding:10px 16px;
+
+    border-radius:999px;
+
     font-size:12px;
+    font-weight:700;
+
+    line-height:1;
+
+    text-align:center;
+}
+/* NOTIFICATION BADGE ONLY */
+/* =========================
+NOTIFICATION BADGE ONLY
+========================= */
+
+.notification-btn,
+.notif{
+    position:relative;
 }
 
-/* NOTIFICATION BADGE ONLY */
+.notification-btn .badge,
 .notif .badge{
-    position:absolute;
-    top:-5px;
-    right:-5px;
-    background:red;
-    color:#fff;
-    font-size:10px;
-    padding:3px 6px;
-    border-radius:50%;
+    position:absolute !important;
+
+    top:-8px !important;
+    right:-8px !important;
+
+    min-width:auto !important;
+    width:20px !important;
+    height:20px !important;
+
+    padding:0 !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    border-radius:50% !important;
+
+    background:#ef233c !important;
+    color:#fff !important;
+
+    font-size:10px !important;
+    font-weight:700 !important;
+
+    line-height:1 !important;
+
+    z-index:99999 !important;
 }
+/* ACTIVE */
 .stock-active{
-    background:#2563eb;
-    color:#fff;
+    background:#22c55e !important;
+    color:#ffffff !important;
 }
-.low{background:#facc15;}
-.out{background:#ef4444;color:#fff;}
+
+/* LOW STOCK */
+.low{
+    background:#facc15 !important;
+    color:#111827 !important;
+}
+
+/* OUT OF STOCK */
+.out{
+    background:#ef233c !important;
+    color:#ffffff !important;
+}
 
 /* ICON */
 .actions i{
@@ -261,13 +320,22 @@ tr:hover{background:#f9fbff;}
 .modal{
     display:none;
     position:fixed;
-    inset:0;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+
     background:rgba(15,23,42,.65);
-    backdrop-filter:blur(4px);
+    backdrop-filter:blur(5px);
+
     justify-content:center;
     align-items:center;
-    z-index:9999;
+
+    z-index:999999;
+
     padding:20px;
+
+    overflow-y:auto;
 }
 
 .modal-box{
@@ -457,7 +525,9 @@ if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
     include "admin_sidebar.php";
 }
 ?>
+<div class="top-header">
 <?php include "admin_header.php"; ?>
+</div>
 
 <div class="main-content">
 
@@ -984,14 +1054,41 @@ lucide.createIcons();
 
 /* MODAL */
 function openModal(id){
-    document.getElementById(id).style.display="flex";
+
+    let modal = document.getElementById(id);
+
+    modal.style.display = "flex";
+
+    document.body.style.overflow = "hidden";
+
+    /* HIDE HEADER */
+    let header = document.querySelector(".top-header");
+
+    if(header){
+        header.style.zIndex = "1";
+    }
 
     if(id === 'addModal'){
         document.getElementById("category").value = "";
-        toggleSpecs(); // reset view
+        toggleSpecs();
     }
 }
-function closeModal(id){document.getElementById(id).style.display="none";}
+
+function closeModal(id){
+
+    let modal = document.getElementById(id);
+
+    modal.style.display = "none";
+
+    document.body.style.overflow = "auto";
+
+    /* RESTORE HEADER */
+    let header = document.querySelector(".top-header");
+
+    if(header){
+        header.style.zIndex = "1000";
+    }
+}
 
 /* =========================
 REPLACE viewProduct()
@@ -1215,6 +1312,5 @@ function toggleSpecs(){
 
 <script src="bootstrap.bundle.js"></script>
 
-<script src="admin.js"></script>
 </body>
 </html>
