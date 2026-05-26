@@ -18,7 +18,7 @@ if(isset($_POST['save_category'])){
     if($category_name != ""){
 
         $check = $conn->prepare("
-            SELECT * FROM categories
+            SELECT * FROM category
             WHERE category_name=?
         ");
 
@@ -38,7 +38,7 @@ if(isset($_POST['save_category'])){
         }else{
 
             $stmt = $conn->prepare("
-                INSERT INTO categories(category_name)
+                INSERT INTO category(category_name)
                 VALUES (?)
             ");
 
