@@ -8,61 +8,127 @@ if(!isset($_SESSION['admin'])){
 }
 
 /* =========================
-DAILY SALES
+DATE FILTER
 ========================= */
 
 $selected_date = isset($_GET['date'])
-    ? $_GET['date']
-    : date('Y-m-d');
+? $_GET['date']
+: date('Y-m-d');
 
-$daily_total = 0;
+/* =========================
+MAIN STATS
+========================= */
 
-$daily_query = mysqli_query($conn,"
-SELECT 
-    o.order_id,
-    o.total_price,
-    o.created_at,
-    u.name
-FROM orders o
-LEFT JOIN users u ON o.user_id = u.user_id
-WHERE DATE(o.created_at) = '$selected_date'
-ORDER BY o.created_at DESC
+// Revenue
+$revenue_query = mysqli_query($conn,"
+SELECT SUM(total_price) as revenue
+FROM orders
+WHERE DATE(created_at) = '$selected_date'
 ");
 
-while($row = mysqli_fetch_assoc($daily_query)){
-    $daily_total += $row['total_price'];
+$revenue = mysqli_fetch_assoc($revenue_query)['revenue'] ?? 0;
+
+// Orders
+$order_query = mysqli_query($conn,"
+SELECT COUNT(*) as total
+FROM orders
+WHERE DATE(created_at) = '$selected_date'
+");
+
+$total_orders = mysqli_fetch_assoc($order_query)['total'] ?? 0;
+
+// Customers
+$customer_query = mysqli_query($conn,"
+SELECT COUNT(DISTINCT user_id) as total
+FROM orders
+WHERE DATE(created_at) = '$selected_date'
+");
+
+$total_customers = mysqli_fetch_assoc($customer_query)['total'] ?? 0;
+
+// Products
+$product_query = mysqli_query($conn,"
+SELECT COUNT(*) as total
+FROM products
+");
+
+$total_products = mysqli_fetch_assoc($product_query)['total'] ?? 0;
+
+// Average Order
+$avg_order = $total_orders > 0
+? $revenue / $total_orders
+: 0;
+
+/* =========================
+ORDER STATUS
+========================= */
+
+$status_result = mysqli_query($conn,"
+SELECT status, COUNT(*) as total
+FROM orders
+WHERE DATE(created_at) = '$selected_date'
+GROUP BY status
+");
+
+$status_data = [];
+
+while($row = mysqli_fetch_assoc($status_result)){
+    $status_data[$row['status']] = $row['total'];
 }
 
 /* =========================
-MONTHLY SALES
+INVENTORY
 ========================= */
 
-$current_month = date('Y-m', strtotime($selected_date));
-
-$monthly_total = 0;
-
-$monthly_query = mysqli_query($conn,"
+$inventory_query = mysqli_query($conn,"
 SELECT 
-    o.order_id,
-    o.total_price,
-    o.created_at,
-    u.name
-FROM orders o
-LEFT JOIN users u ON o.user_id = u.user_id
-WHERE DATE_FORMAT(o.created_at,'%Y-%m') = '$current_month'
-ORDER BY o.created_at DESC
+    category,
+    SUM(stock) as units,
+    SUM(price * stock) as value
+FROM products
+GROUP BY category
 ");
 
-while($mrow = mysqli_fetch_assoc($monthly_query)){
-    $monthly_total += $mrow['total_price'];
-}
+/* =========================
+TOP CUSTOMERS
+========================= */
+
+$customer_top_query = mysqli_query($conn,"
+SELECT 
+    u.name,
+    COUNT(o.order_id) as orders_count,
+    SUM(o.total_price) as spent
+FROM orders o
+LEFT JOIN users u ON o.user_id = u.user_id
+GROUP BY o.user_id
+ORDER BY spent DESC
+LIMIT 5
+");
+
+/* =========================
+LOW STOCK
+========================= */
+
+$low_stock = mysqli_fetch_assoc(mysqli_query($conn,"
+SELECT COUNT(*) as total
+FROM products
+WHERE stock <= 5
+"))['total'];
+
+$out_stock = mysqli_fetch_assoc(mysqli_query($conn,"
+SELECT COUNT(*) as total
+FROM products
+WHERE stock = 0
+"))['total'];
+
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
 
-<title>View Report</title>
+<title>Business Report</title>
 
 <link rel="stylesheet" href="style.css?v=100">
 
@@ -76,9 +142,10 @@ body{
 }
 
 /* MAIN */
+
 .main-content{
     margin-left:270px;
-    margin-top:100px;
+    margin-top:95px;
     padding:30px;
     transition:.3s;
 }
@@ -88,17 +155,19 @@ body{
 }
 
 /* TITLE */
-.report-title{
-    font-size:48px;
+
+.page-title{
+    font-size:42px;
     font-weight:800;
-    color:#0f172a;
-    margin-bottom:30px;
+    color:#111827;
+    margin-bottom:25px;
 }
 
 /* FILTER */
+
 .filter-box{
     display:flex;
-    gap:12px;
+    gap:14px;
     align-items:center;
     margin-bottom:30px;
 }
@@ -109,142 +178,218 @@ body{
     border:none;
     border-radius:14px;
     background:#fff;
-    box-shadow:0 5px 15px rgba(0,0,0,.06);
+    font-size:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,.06);
+}
+
+.btn-report{
+    height:52px;
+    border:none;
+    padding:0 24px;
+    border-radius:14px;
+    background:#2563eb;
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
     font-size:15px;
 }
 
-.btn-primary{
-    height:52px;
-    padding:0 24px;
-    border:none;
-    border-radius:14px;
-    background:#4f46e5;
-    color:#fff;
-    font-weight:700;
-    cursor:pointer;
+.btn-report:hover{
+    background:#1d4ed8;
 }
 
-.btn-primary:hover{
-    background:#4338ca;
-}
+/* REPORT */
 
-/* GRID */
-.report-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:28px;
-    margin-top:10px;
-}
-
-/* CARD */
-.report-card{
+.report-box{
     background:#fff;
-    border-radius:20px;
-    overflow:hidden;
-    box-shadow:0 10px 30px rgba(0,0,0,.06);
+    border-radius:24px;
+    padding:40px;
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
-/* CARD HEADER */
-.card-header{
-    padding:20px 24px;
-    border-bottom:1px solid #e5e7eb;
-    font-size:22px;
-    font-weight:700;
+/* HEADER */
+
+.report-header{
+    margin-bottom:35px;
+}
+
+.report-header h2{
+    font-size:52px;
+    font-weight:800;
+    margin-bottom:8px;
     color:#0f172a;
 }
 
-/* CARD BODY */
-.card-body{
-    padding:24px;
-    min-height:350px;
+.report-header p{
+    color:#6b7280;
+    font-size:17px;
 }
 
-/* TOTAL */
-.total-box{
-    background:#f8fafc;
-    border-radius:16px;
-    padding:24px;
-    margin-bottom:20px;
+/* STATS */
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    margin-bottom:45px;
 }
 
-.total-label{
-    color:#64748b;
+.stat-card{
+    border:1px solid #e5e7eb;
+    border-radius:18px;
+    padding:24px;
+    min-height:140px;
+    break-inside:avoid;
+}
+
+.stat-label{
     font-size:14px;
-    margin-bottom:8px;
+    text-transform:uppercase;
+    color:#6b7280;
+    margin-bottom:12px;
 }
 
-.total-value{
-    font-size:40px;
+.stat-value{
+    font-size:46px;
     font-weight:800;
-    color:#2563eb;
+    color:#0f172a;
 }
 
-/* SALES TABLE */
-.sales-table{
+/* SECTION */
+
+.section-title{
+    font-size:30px;
+    font-weight:800;
+    margin-bottom:18px;
+    color:#111827;
+    page-break-after:avoid;
+}
+
+/* STATUS */
+
+.status-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:40px;
+}
+
+.status-badge{
+    background:#f3f4f6;
+    border-radius:999px;
+    padding:12px 18px;
+    font-weight:700;
+    color:#374151;
+}
+
+/* TABLE */
+
+.report-table{
     width:100%;
     border-collapse:collapse;
+    margin-bottom:45px;
+    page-break-inside:auto;
 }
 
-.sales-table th{
+.report-table th{
     text-align:left;
-    padding:12px;
+    padding:15px;
     background:#f8fafc;
     color:#64748b;
-    font-size:14px;
+    border-bottom:1px solid #e5e7eb;
+    font-size:15px;
 }
 
-.sales-table td{
-    padding:14px 12px;
+.report-table td{
+    padding:16px 15px;
     border-bottom:1px solid #f1f5f9;
+    font-size:16px;
 }
 
-.sales-table tr:hover{
+.report-table tr{
+    page-break-inside:avoid;
+}
+
+.report-table tr:hover{
     background:#f8fbff;
 }
 
+/* ALERT */
+
+.stock-alert{
+    font-size:18px;
+    color:#374151;
+    margin-bottom:35px;
+}
+
 /* BUTTONS */
-.bottom-actions{
+
+.action-buttons{
     display:flex;
-    justify-content:center;
-    gap:16px;
-    margin-top:40px;
+    justify-content:flex-end;
+    gap:14px;
+    margin-top:30px;
+}
+
+.btn-print,
+.btn-pdf{
+    border:none;
+    border-radius:14px;
+    padding:14px 26px;
+    font-weight:700;
+    cursor:pointer;
+    font-size:15px;
 }
 
 .btn-print{
-    background:#2563eb;
+    background:#111827;
     color:#fff;
-    border:none;
-    border-radius:14px;
-    padding:14px 28px;
-    font-weight:700;
-    cursor:pointer;
 }
 
 .btn-pdf{
-    background:#0f172a;
+    background:#2563eb;
     color:#fff;
-    border:none;
-    border-radius:14px;
-    padding:14px 28px;
-    font-weight:700;
-    cursor:pointer;
 }
 
-/* RESPONSIVE */
-@media(max-width:1100px){
+/* PDF FIX */
 
-.report-grid{
+#reportArea{
+    width:100%;
+}
+
+.stats-grid,
+.report-table,
+.section-title,
+.status-list,
+.stock-alert{
+    page-break-inside:avoid;
+    break-inside:avoid;
+}
+
+@media(max-width:1000px){
+
+.stats-grid{
+    grid-template-columns:1fr 1fr;
+}
+
+}
+
+@media(max-width:700px){
+
+.stats-grid{
     grid-template-columns:1fr;
 }
 
 }
+
+/* PRINT */
 
 @media print{
 
 .sidebar,
 .top-header,
 .filter-box,
-.bottom-actions{
+.action-buttons{
     display:none !important;
 }
 
@@ -257,11 +402,18 @@ body{
     background:#fff;
 }
 
-.report-card{
+.report-box{
     box-shadow:none;
+    border-radius:0;
+    padding:25px;
+}
+
+.stats-grid{
+    grid-template-columns:repeat(2,1fr);
 }
 
 }
+
 </style>
 
 </head>
@@ -276,148 +428,194 @@ body{
 
 <div class="main-content">
 
-<div class="report-title">
+<div class="page-title">
 View Report
 </div>
 
 <form method="GET" class="filter-box">
 
-<input 
+<input
 type="date"
 name="date"
 value="<?= $selected_date ?>"
 required>
 
-<button class="btn-primary">
+<button class="btn-report">
 Get Report
 </button>
 
 </form>
 
-<div id="reportArea">
+<div class="report-box" id="reportArea">
 
-<div class="report-grid">
+<!-- HEADER -->
 
-    <!-- DAILY -->
-    <div class="report-card">
+<div class="report-header">
 
-        <div class="card-header">
-            Daily Sales
-        </div>
+<h2>Business Performance Report</h2>
 
-        <div class="card-body">
-
-            <div class="total-box">
-
-                <div class="total-label">
-                    Total Daily Sales
-                </div>
-
-                <div class="total-value">
-                    RM <?= number_format($daily_total,2) ?>
-                </div>
-
-            </div>
-
-            <table class="sales-table">
-
-                <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Total</th>
-                </tr>
-                </thead>
-
-                <tbody>
-
-                <?php
-                mysqli_data_seek($daily_query,0);
-
-                while($row = mysqli_fetch_assoc($daily_query)):
-                ?>
-
-                <tr>
-                    <td>#<?= $row['order_id'] ?></td>
-                    <td><?= htmlspecialchars($row['name']) ?></td>
-                    <td>
-                        RM <?= number_format($row['total_price'],2) ?>
-                    </td>
-                </tr>
-
-                <?php endwhile; ?>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-    <!-- MONTHLY -->
-    <div class="report-card">
-
-        <div class="card-header">
-            Monthly Sales
-        </div>
-
-        <div class="card-body">
-
-            <div class="total-box">
-
-                <div class="total-label">
-                    Total Monthly Sales
-                </div>
-
-                <div class="total-value">
-                    RM <?= number_format($monthly_total,2) ?>
-                </div>
-
-            </div>
-
-            <table class="sales-table">
-
-                <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Total</th>
-                </tr>
-                </thead>
-
-                <tbody>
-
-                <?php
-                mysqli_data_seek($monthly_query,0);
-
-                while($mrow = mysqli_fetch_assoc($monthly_query)):
-                ?>
-
-                <tr>
-                    <td>#<?= $mrow['order_id'] ?></td>
-                    <td><?= htmlspecialchars($mrow['name']) ?></td>
-                    <td>
-                        RM <?= number_format($mrow['total_price'],2) ?>
-                    </td>
-                </tr>
-
-                <?php endwhile; ?>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
+<p>
+Generated <?= date("m/d/Y, h:i:s A") ?>
+• snapshot of current store state
+</p>
 
 </div>
 
+<!-- STATS -->
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<div class="stat-label">Revenue</div>
+<div class="stat-value">
+RM <?= number_format($revenue,0) ?>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-label">Orders</div>
+<div class="stat-value">
+<?= $total_orders ?>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-label">Avg. Order</div>
+<div class="stat-value">
+RM <?= number_format($avg_order,0) ?>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-label">Customers</div>
+<div class="stat-value">
+<?= $total_customers ?>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-label">Products</div>
+<div class="stat-value">
+<?= $total_products ?>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-label">Avg. Rating</div>
+<div class="stat-value">
+4.5 / 5
+</div>
+</div>
+
+</div>
+
+<!-- STATUS -->
+
+<div class="section-title">
+Order Status
+</div>
+
+<div class="status-list">
+
+<?php
+$statuses = ['Pending','Processing','Shipped','Delivered','Cancelled'];
+
+foreach($statuses as $status):
+
+$count = $status_data[$status] ?? 0;
+?>
+
+<div class="status-badge">
+<?= $status ?>: <?= $count ?>
+</div>
+
+<?php endforeach; ?>
+
+</div>
+
+<!-- INVENTORY -->
+
+<div class="section-title">
+Inventory by Category
+</div>
+
+<table class="report-table">
+
+<thead>
+<tr>
+<th>Category</th>
+<th>Units</th>
+<th>Value</th>
+</tr>
+</thead>
+
+<tbody>
+
+<?php while($inv = mysqli_fetch_assoc($inventory_query)): ?>
+
+<tr>
+<td><?= htmlspecialchars($inv['category']) ?></td>
+<td><?= $inv['units'] ?></td>
+<td>RM <?= number_format($inv['value'],2) ?></td>
+</tr>
+
+<?php endwhile; ?>
+
+</tbody>
+
+</table>
+
+<!-- CUSTOMERS -->
+
+<div class="section-title">
+Top Customers
+</div>
+
+<table class="report-table">
+
+<thead>
+<tr>
+<th>Customer</th>
+<th>Orders</th>
+<th>Spent</th>
+</tr>
+</thead>
+
+<tbody>
+
+<?php while($top = mysqli_fetch_assoc($customer_top_query)): ?>
+
+<tr>
+<td><?= htmlspecialchars($top['name']) ?></td>
+<td><?= $top['orders_count'] ?></td>
+<td>RM <?= number_format($top['spent'],2) ?></td>
+</tr>
+
+<?php endwhile; ?>
+
+</tbody>
+
+</table>
+
+<!-- STOCK -->
+
+<div class="section-title">
+Stock Alerts
+</div>
+
+<div class="stock-alert">
+Low stock:
+<b><?= $low_stock ?></b>
+
+•
+
+Out of stock:
+<b><?= $out_stock ?></b>
 </div>
 
 <!-- BUTTONS -->
-<div class="bottom-actions">
+
+<div class="action-buttons">
 
 <button class="btn-print" onclick="printReport()">
 Print
@@ -431,50 +629,296 @@ Download PDF
 
 </div>
 
-<!-- html2pdf -->
+</div>
+
+<!-- PDF -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
+
 lucide.createIcons();
 
 /* PRINT */
+
 function printReport(){
     window.print();
 }
 
 /* PDF */
+
 function downloadPDF(){
 
-    const element =
-    document.getElementById("reportArea");
+    const revenue =
+    document.querySelectorAll('.stat-value')[0].innerText;
 
-    const opt = {
+    const orders =
+    document.querySelectorAll('.stat-value')[1].innerText;
 
-        margin:0.5,
+    const avgOrder =
+    document.querySelectorAll('.stat-value')[2].innerText;
 
-        filename:
-        'sales-report.pdf',
+    const customers =
+    document.querySelectorAll('.stat-value')[3].innerText;
 
-        image:{
-            type:'jpeg',
-            quality:1
-        },
+    const products =
+    document.querySelectorAll('.stat-value')[4].innerText;
 
-        html2canvas:{
-            scale:2
-        },
+    const rating =
+    document.querySelectorAll('.stat-value')[5].innerText;
 
-        jsPDF:{
-            unit:'in',
-            format:'a4',
-            orientation:'landscape'
-        }
-    };
+    /* CREATE CLEAN PDF */
 
-    html2pdf()
-    .set(opt)
-    .from(element)
-    .save();
+    let pdfContent = `
+
+    <div style="
+        font-family:Arial;
+        padding:40px;
+        color:#111827;
+        width:1000px;
+        background:white;
+    ">
+
+        <!-- HEADER -->
+
+        <div style="
+            background:#0f172a;
+            color:white;
+            padding:30px;
+            margin-bottom:30px;
+        ">
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+            ">
+
+                <div>
+                    <div style="
+                        font-size:42px;
+                        font-weight:800;
+                        margin-bottom:10px;
+                    ">
+                        LOZ PC STORE
+                    </div>
+
+                    <div style="font-size:22px;">
+                        Business Performance Report
+                    </div>
+
+                    <div style="
+                        margin-top:10px;
+                        opacity:.8;
+                    ">
+                        Generated:
+                        ${new Date().toLocaleString()}
+                    </div>
+                </div>
+
+                <div style="text-align:right;">
+
+                    <div style="
+                        font-size:48px;
+                        font-weight:800;
+                    ">
+                        REPORT
+                    </div>
+
+                    <div style="
+                        margin-top:10px;
+                        font-size:20px;
+                    ">
+                        Daily Store Analytics
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- STATS -->
+
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:20px;
+            margin-bottom:40px;
+        ">
+
+            ${createCard("TOTAL REVENUE", revenue)}
+            ${createCard("ORDERS", orders)}
+            ${createCard("AVG. ORDER", avgOrder)}
+            ${createCard("CUSTOMERS", customers)}
+            ${createCard("PRODUCTS", products)}
+            ${createCard("AVG. RATING", rating)}
+
+        </div>
+
+        <!-- ORDER STATUS -->
+
+        <h2 style="
+            font-size:32px;
+            margin-bottom:15px;
+        ">
+            Order Status Breakdown
+        </h2>
+
+        ${generateTable(
+            ["Status","Orders"],
+            document.querySelectorAll('.status-badge')
+        )}
+
+        <!-- INVENTORY -->
+
+        <h2 style="
+            font-size:32px;
+            margin:40px 0 15px;
+        ">
+            Inventory by Category
+        </h2>
+
+        ${document.querySelectorAll('.report-table')[0].outerHTML}
+
+        <!-- CUSTOMERS -->
+
+        <h2 style="
+            font-size:32px;
+            margin:40px 0 15px;
+        ">
+            Top Customers by Spend
+        </h2>
+
+        ${document.querySelectorAll('.report-table')[1].outerHTML}
+
+    </div>
+    `;
+
+    /* OPEN TEMP WINDOW */
+
+    const printWindow =
+    window.open('', '_blank');
+
+    printWindow.document.write(`
+    <html>
+    <head>
+
+    <title>LOZ Report</title>
+
+    <style>
+
+    body{
+        background:white;
+        margin:0;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:20px;
+        margin-bottom:30px;
+        font-size:18px;
+    }
+
+    th{
+        background:#0f172a;
+        color:white;
+        padding:14px;
+        text-align:left;
+    }
+
+    td{
+        padding:14px;
+        border-bottom:1px solid #e5e7eb;
+    }
+
+    tr:nth-child(even){
+        background:#f8fafc;
+    }
+
+    </style>
+
+    </head>
+
+    <body>
+
+    ${pdfContent}
+
+    </body>
+    </html>
+    `);
+
+    printWindow.document.close();
+
+    setTimeout(() => {
+
+        printWindow.print();
+
+    }, 500);
+
+}
+
+/* CARD */
+
+function createCard(label, value){
+
+    return `
+    <div style="
+        border:1px solid #e5e7eb;
+        padding:25px;
+        border-radius:16px;
+        min-height:130px;
+    ">
+
+        <div style="
+            color:#64748b;
+            font-size:15px;
+            margin-bottom:14px;
+        ">
+            ${label}
+        </div>
+
+        <div style="
+            font-size:52px;
+            font-weight:800;
+            color:#0f172a;
+        ">
+            ${value}
+        </div>
+
+    </div>
+    `;
+}
+
+/* STATUS TABLE */
+
+function generateTable(headers, rows){
+
+    let html = `
+    <table>
+
+        <tr>
+            <th>${headers[0]}</th>
+            <th>${headers[1]}</th>
+        </tr>
+    `;
+
+    rows.forEach(row => {
+
+        const text = row.innerText.split(':');
+
+        html += `
+        <tr>
+            <td>${text[0]}</td>
+            <td>${text[1]}</td>
+        </tr>
+        `;
+    });
+
+    html += `</table>`;
+
+    return html;
 }
 </script>
 
