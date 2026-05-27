@@ -243,9 +243,9 @@ transform:scale(1.05);
 <input type="text" name="search"
 placeholder="Search product..."
 value="<?= htmlspecialchars($search) ?>"
-style="padding:10px;width:250px;border-radius:10px;">
+style="padding:10px;width:250px;border-radius:15px;">
 
-<select name="category" style="padding:10px;border-radius:10px;">
+<select name="category" style="padding:10px;border-radius:15px;">
 <option value="">Category</option>
 
 <option value="PC" <?= $category=='PC'?'selected':'' ?>>
@@ -267,13 +267,13 @@ Mouse
 </select>
 
 <!-- SORT -->
-<select name="sort" style="padding:10px;border-radius:10px;">
+<select name="sort" style="padding:10px;border-radius:15px;">
 <option value="">Sort By</option>
 <option value="low" <?= $sort=='low'?'selected':'' ?>>Price Low → High</option>
 <option value="high" <?= $sort=='high'?'selected':'' ?>>Price High → Low</option>
 </select>
 
-<button type="submit">Search</button>
+<button type="submit" style="padding:10px;border-radius:15px;">Search</button>
 
 </div>
 </form>
