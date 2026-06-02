@@ -266,7 +266,6 @@ Mouse
 
 </select>
 
-<!-- SORT -->
 <select name="sort" style="padding:10px;border-radius:10px;">
 <option value="">Sort By</option>
 <option value="low" <?= $sort=='low'?'selected':'' ?>>Price Low → High</option>
