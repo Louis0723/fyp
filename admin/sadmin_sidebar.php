@@ -220,22 +220,21 @@
 
     </a>
 
-    <!-- LOGOUT -->
-    <a href="admin_logout.php"
-       class="menu-item"
-       onclick="return confirm('Logout from Super Admin panel?')">
+   <!-- VIEW REPORT -->
+<a href="view_report.php"
+   class="menu-item <?= $current=='view_report.php' ? 'active' : '' ?>">
 
-        <div class="menu-left">
+    <div class="menu-left">
 
-            <i data-lucide="log-out"></i>
+        <i data-lucide="bar-chart-3"></i>
 
-            <span class="text">
-                Logout
-            </span>
+        <span class="text">
+            View Report
+        </span>
 
-        </div>
+    </div>
 
-    </a>
+</a>
 
 </div>
 

@@ -1,3 +1,4 @@
+
 <?php
 include "../db.php";
 session_start();
@@ -13,105 +14,40 @@ if($_SESSION['role'] != "super_admin"){
 }
 
 /* =========================
-   ADD STATUS COLUMN
-========================= */
-
-$check = $conn->query("
-    SHOW COLUMNS FROM admins LIKE 'status'
-");
-
-if($check->num_rows == 0){
-
-    $conn->query("
-        ALTER TABLE admins
-        ADD status VARCHAR(30)
-        NOT NULL DEFAULT 'Active'
-    ");
-
-}
-
-/* =========================
-   ADD ADMIN
-========================= */
-
-if(isset($_POST['add_admin'])){
-
-    $username  = trim($_POST['username']);
-    $email     = trim($_POST['email']);
-    $password  = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role      = $_POST['role'];
-    $status    = $_POST['status'];
-
-    $stmt = $conn->prepare("
-        INSERT INTO admins
-        (username,email,password,role,status,created_at)
-        VALUES (?,?,?,?,?,NOW())
-    ");
-
-    $stmt->bind_param(
-        "sssss",
-        $username,
-        $email,
-        $password,
-        $role,
-        $status
-    );
-
-    $stmt->execute();
-
-    header("Location: admin_management.php");
-    exit();
-}
-
-/* =========================
    UPDATE ADMIN
 ========================= */
 
 if(isset($_POST['update_admin'])){
 
-    $id     = $_POST['admin_id'];
-    $name   = $_POST['username'];
-    $email  = $_POST['email'];
-    $role   = $_POST['role'];
-    $status = $_POST['status'];
+    $id      = $_POST['admin_id'];
+    $name    = trim($_POST['username']);
+    $email   = trim($_POST['email']);
+    $phone   = trim($_POST['phone']);
+    $role    = $_POST['role'];
+    $status  = $_POST['status'];
 
     $stmt = $conn->prepare("
         UPDATE admins
         SET
         username=?,
         email=?,
+        phone=?,
         role=?,
         status=?
         WHERE admin_id=?
     ");
 
     $stmt->bind_param(
-        "ssssi",
+        "sssssi",
         $name,
         $email,
+        $phone,
         $role,
         $status,
         $id
     );
 
     $stmt->execute();
-
-    header("Location: admin_management.php");
-    exit();
-}
-
-/* =========================
-   DELETE ADMIN
-========================= */
-
-if(isset($_GET['delete'])){
-
-    $id = intval($_GET['delete']);
-
-    $conn->query("
-        DELETE FROM admins
-        WHERE admin_id='$id'
-    ");
 
     header("Location: admin_management.php");
     exit();
@@ -126,7 +62,6 @@ $admins = $conn->query("
     FROM admins
     ORDER BY admin_id ASC
 ");
-
 ?>
 
 <!DOCTYPE html>
@@ -136,69 +71,77 @@ $admins = $conn->query("
 <meta charset="UTF-8">
 <title>Admin Management</title>
 
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=999">
+
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
 body{
-    background:#f3f7fb;
+    background:#eef3f8;
     font-family:'Inter',sans-serif;
+    color:#0f172a;
 }
 
 /* MAIN */
 
 .main-content{
     margin-left:270px;
-    margin-top:95px;
-    padding:28px;
-    transition:.3s ease;
-}
-
-.sidebar.collapsed ~ .main-content{
-    margin-left:95px;
+    margin-top:100px;
+    padding:34px;
 }
 
 /* TITLE */
 
 .page-title{
-    font-size:42px;
-    font-weight:800;
+    font-size:58px;
+    font-weight:900;
     color:#0f172a;
 }
 
 .subtitle{
-    margin-top:5px;
+    margin-top:10px;
     color:#64748b;
-    font-size:15px;
+    font-size:16px;
 }
 
 /* TOP */
 
 .top-bar{
-    margin-top:25px;
+    margin-top:28px;
 
     display:flex;
     justify-content:space-between;
     align-items:center;
+    gap:20px;
 }
 
 /* SEARCH */
 
 .search-box{
-    width:390px;
-    height:48px;
+    width:420px;
+    height:58px;
 
     background:#fff;
 
-    border-radius:14px;
-    border:1px solid #dbe2ea;
+    border-radius:18px;
+
+    border:1px solid #dbe4ee;
 
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:12px;
 
-    padding:0 16px;
+    padding:0 18px;
+
+    box-shadow:
+    0 4px 18px rgba(0,0,0,.03);
 }
 
 .search-box input{
@@ -206,51 +149,52 @@ body{
     border:none;
     outline:none;
     background:none;
-    font-size:14px;
+    font-size:15px;
+}
+
+.search-box i{
+    color:#64748b;
 }
 
 /* BUTTON */
 
 .add-btn{
-    border:none;
+    height:58px;
+
+    padding:0 28px;
+
+    border-radius:18px;
+
     background:#2563eb;
     color:#fff;
 
-    height:48px;
-    padding:0 24px;
-
-    border-radius:14px;
-
-    font-weight:700;
-    font-size:14px;
-
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:10px;
 
-    cursor:pointer;
+    text-decoration:none;
 
-    transition:.2s;
-}
+    font-weight:800;
 
-.add-btn:hover{
-    transform:translateY(-2px);
+    box-shadow:
+    0 12px 24px rgba(37,99,235,.22);
 }
 
 /* TABLE */
 
 .table-card{
-    margin-top:20px;
+    margin-top:24px;
 
     background:#fff;
 
-    border-radius:18px;
+    border-radius:30px;
 
     overflow:hidden;
 
-    border:1px solid #e5e7eb;
+    border:1px solid #e5edf5;
 
-    box-shadow:0 4px 18px rgba(0,0,0,.05);
+    box-shadow:
+    0 10px 40px rgba(15,23,42,.05);
 }
 
 table{
@@ -259,32 +203,41 @@ table{
 }
 
 th{
-    background:#f8fafc;
+    background:#f8fbff;
+
     color:#64748b;
 
     text-align:left;
 
     font-size:13px;
-    font-weight:700;
+    font-weight:800;
 
-    padding:18px;
+    padding:22px;
+
+    border-bottom:1px solid #edf2f7;
 }
 
 td{
-    padding:18px;
-    border-top:1px solid #eef2f7;
+    padding:22px;
+
+    border-bottom:1px solid #f1f5f9;
+
+    font-size:15px;
 }
 
-/* ROLE */
+tr:hover{
+    background:#f8fbff;
+}
+
+/* BADGES */
 
 .role-badge{
-    padding:7px 14px;
+    padding:8px 15px;
+
     border-radius:999px;
 
     font-size:12px;
-    font-weight:700;
-
-    display:inline-block;
+    font-weight:800;
 }
 
 .super{
@@ -293,54 +246,45 @@ td{
 }
 
 .admin{
-    background:#eef2f7;
-    color:#334155;
+    background:#eef2ff;
+    color:#4f46e5;
 }
 
-/* STATUS */
-
 .status{
-    padding:7px 14px;
+    padding:8px 15px;
+
     border-radius:999px;
 
     font-size:12px;
-    font-weight:700;
-
-    display:inline-block;
+    font-weight:800;
 }
 
 .active{
     background:#dcfce7;
-    color:#166534;
+    color:#15803d;
 }
 
 .suspended{
     background:#fee2e2;
-    color:#991b1b;
+    color:#dc2626;
 }
 
 /* ACTION */
 
 .action-icons{
     display:flex;
-    gap:14px;
+    align-items:center;
+    gap:18px;
 }
 
 .action-icons i{
+    width:22px;
+    height:22px;
     cursor:pointer;
-    transition:.2s;
-}
-
-.action-icons i:hover{
-    transform:scale(1.15);
 }
 
 .edit{
     color:#2563eb;
-}
-
-.delete{
-    color:#ef4444;
 }
 
 /* MODAL */
@@ -349,114 +293,197 @@ td{
     position:fixed;
     inset:0;
 
-    background:rgba(15,23,42,.6);
+    background:rgba(15,23,42,.45);
 
     display:none;
     align-items:center;
     justify-content:center;
 
-    z-index:9999;
+    z-index:99999;
 
-    backdrop-filter:blur(4px);
+    backdrop-filter:blur(8px);
 }
 
-.modal-box{
-    width:520px;
+.modern-modal{
+    width:560px;
 
     background:#fff;
 
-    border-radius:24px;
+    border-radius:34px;
 
     padding:28px;
 
     position:relative;
+
+    box-shadow:
+    0 30px 80px rgba(15,23,42,.18);
 }
 
-.modal-close{
+.modern-close{
     position:absolute;
+    top:20px;
     right:20px;
-    top:18px;
+
+    width:46px;
+    height:46px;
+
+    border-radius:50%;
+
+    background:#f1f5f9;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
 
     cursor:pointer;
 
-    font-size:22px;
+    font-size:30px;
 }
 
-.modal-title{
-    font-size:28px;
+.modern-title{
+    font-size:34px;
+    font-weight:900;
+
+    margin-bottom:24px;
+}
+
+/* AVATAR */
+
+.admin-avatar-wrap{
+    display:flex;
+    justify-content:center;
+
+    margin-bottom:28px;
+}
+
+.admin-avatar{
+    width:120px;
+    height:120px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+    object-position:center;
+
+    border:5px solid #dbeafe;
+
+    background:#f8fafc;
+
+    display:block;
+}
+
+/* SECTION */
+
+.section-title{
+    color:#ef4444;
+
+    font-size:18px;
     font-weight:800;
 
-    margin-bottom:22px;
-}
-
-/* FORM */
-
-.form-group{
+    margin-top:18px;
     margin-bottom:16px;
 }
 
-.form-group label{
+/* INPUT */
+
+.edit-field{
+    margin-bottom:18px;
+}
+
+.edit-field label{
     display:block;
-    margin-bottom:8px;
 
-    font-size:14px;
+    margin-bottom:10px;
+
+    font-size:15px;
     font-weight:700;
+
+    color:#64748b;
 }
 
-.form-control{
+.modern-input-box{
     width:100%;
-    height:48px;
+    height:56px;
 
-    border-radius:12px;
-    border:1px solid #dbe2ea;
+    border-radius:16px;
 
-    padding:0 14px;
+    border:1px solid #dbe4ee;
 
-    font-size:14px;
+    padding:0 18px;
+
+    font-size:16px;
+    font-weight:700;
+
+    outline:none;
 }
+
+.modern-input-box:focus{
+    border-color:#2563eb;
+
+    box-shadow:
+    0 0 0 4px rgba(37,99,235,.10);
+}
+
+/* SELECT */
 
 .form-row{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:14px;
+    gap:16px;
 }
 
-/* FOOTER */
+.form-group label{
+    display:block;
 
-.modal-footer{
-    margin-top:24px;
+    margin-bottom:10px;
 
-    display:flex;
-    justify-content:flex-end;
-    gap:12px;
+    font-size:14px;
+    font-weight:800;
 }
 
-.cancel-btn{
-    border:none;
-    background:#e2e8f0;
+.modern-select{
+    width:100%;
+    height:56px;
 
-    padding:12px 20px;
-    border-radius:12px;
+    border-radius:16px;
 
+    border:1px solid #dbe4ee;
+
+    padding:0 16px;
+
+    font-size:15px;
     font-weight:700;
 
-    cursor:pointer;
+    outline:none;
 }
 
-.save-btn{
+/* BUTTON */
+
+.update-btn{
+    width:100%;
+    height:58px;
+
     border:none;
+
     background:#2563eb;
     color:#fff;
 
-    padding:12px 22px;
-    border-radius:12px;
+    border-radius:18px;
 
-    font-weight:700;
+    font-size:17px;
+    font-weight:800;
 
     cursor:pointer;
+
+    margin-top:28px;
+}
+
+.update-btn:hover{
+    background:#1d4ed8;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -481,22 +508,20 @@ td{
         <i data-lucide="search"></i>
 
         <input
-            type="text"
-            id="searchInput"
-            placeholder="Search admins..."
+        type="text"
+        id="searchInput"
+        placeholder="Search admins..."
         >
 
     </div>
 
-    <button
-        class="add-btn"
-        onclick="openAddModal()"
-    >
+    <a href="add_admin.php" class="add-btn">
 
         <i data-lucide="plus"></i>
+
         Add Admin
 
-    </button>
+    </a>
 
 </div>
 
@@ -509,13 +534,13 @@ td{
 <thead>
 
 <tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Email</th>
-    <th>Role</th>
-    <th>Status</th>
-    <th>Created</th>
-    <th>Actions</th>
+<th>ID</th>
+<th>Name</th>
+<th>Email</th>
+<th>Role</th>
+<th>Status</th>
+<th>Created</th>
+<th>Actions</th>
 </tr>
 
 </thead>
@@ -527,29 +552,28 @@ td{
 <tr class="admin-row">
 
 <td>
-    A-<?= str_pad($a['admin_id'],3,'0',STR_PAD_LEFT) ?>
+A-<?= str_pad($a['admin_id'],3,'0',STR_PAD_LEFT) ?>
 </td>
 
 <td>
-    <?= htmlspecialchars($a['username']) ?>
+<?= htmlspecialchars($a['username']) ?>
 </td>
 
 <td>
-    <?= htmlspecialchars($a['email']) ?>
+<?= htmlspecialchars($a['email']) ?>
 </td>
 
 <td>
 
 <?php
-$roleClass = "admin";
-
-if($a['role']=="super_admin"){
-    $roleClass = "super";
-}
+$roleClass =
+$a['role']=="super_admin"
+? "super"
+: "admin";
 ?>
 
 <span class="role-badge <?= $roleClass ?>">
-    <?= ucfirst(str_replace('_',' ',$a['role'])) ?>
+<?= ucfirst(str_replace('_',' ',$a['role'])) ?>
 </span>
 
 </td>
@@ -557,21 +581,20 @@ if($a['role']=="super_admin"){
 <td>
 
 <?php
-$statusClass = "active";
-
-if($a['status']=="Suspended"){
-    $statusClass = "suspended";
-}
+$statusClass =
+$a['status']=="Suspended"
+? "suspended"
+: "active";
 ?>
 
 <span class="status <?= $statusClass ?>">
-    <?= $a['status'] ?>
+<?= $a['status'] ?>
 </span>
 
 </td>
 
 <td>
-    <?= date('Y-m-d', strtotime($a['created_at'])) ?>
+<?= date('Y-m-d', strtotime($a['created_at'])) ?>
 </td>
 
 <td>
@@ -580,24 +603,19 @@ if($a['status']=="Suspended"){
 
 <i
 class="edit"
-data-lucide="pencil"
+data-lucide="square-pen"
 
 onclick="openEditModal(
 '<?= $a['admin_id'] ?>',
-'<?= addslashes($a['username']) ?>',
-'<?= addslashes($a['email']) ?>',
+'<?= htmlspecialchars(addslashes($a['username'])) ?>',
+'<?= htmlspecialchars(addslashes($a['email'])) ?>',
+'<?= htmlspecialchars(addslashes($a['phone'] ?? '')) ?>',
 '<?= $a['role'] ?>',
-'<?= $a['status'] ?>'
+'<?= $a['status'] ?>',
+'<?= trim($a['avatar'] ?? '') ?>'
 )"
 
 ></i>
-
-<a href="?delete=<?= $a['admin_id'] ?>"
-onclick="return confirm('Delete this admin?')">
-
-<i class="delete" data-lucide="trash-2"></i>
-
-</a>
 
 </div>
 
@@ -615,137 +633,21 @@ onclick="return confirm('Delete this admin?')">
 
 </div>
 
-<!-- ADD MODAL -->
-
-<div class="modal" id="addModal">
-
-<div class="modal-box">
-
-<div class="modal-close" onclick="closeModal('addModal')">
-×
-</div>
-
-<div class="modal-title">
-    Add Admin
-</div>
-
-<form method="POST">
-
-<div class="form-group">
-<label>Username</label>
-<input
-type="text"
-name="username"
-class="form-control"
-required
->
-</div>
-
-<div class="form-group">
-<label>Email</label>
-<input
-type="email"
-name="email"
-class="form-control"
-required
->
-</div>
-
-<div class="form-group">
-<label>Password</label>
-<input
-type="password"
-name="password"
-class="form-control"
-required
->
-</div>
-
-<div class="form-row">
-
-<div class="form-group">
-
-<label>Role</label>
-
-<select
-name="role"
-class="form-control"
->
-
-<option value="admin">
-    Admin
-</option>
-
-<option value="super_admin">
-    Super Admin
-</option>
-
-</select>
-
-</div>
-
-<div class="form-group">
-
-<label>Status</label>
-
-<select
-name="status"
-class="form-control"
->
-
-<option value="Active">
-    Active
-</option>
-
-<option value="Suspended">
-    Suspended
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-<div class="modal-footer">
-
-<button
-type="button"
-class="cancel-btn"
-onclick="closeModal('addModal')"
->
-Cancel
-</button>
-
-<button
-type="submit"
-name="add_admin"
-class="save-btn"
->
-Add Admin
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-<!-- EDIT MODAL -->
+<!-- MODAL -->
 
 <div class="modal" id="editModal">
 
-<div class="modal-box">
+<div class="modern-modal">
 
-<div class="modal-close"
-onclick="closeModal('editModal')">
+<div
+class="modern-close"
+onclick="closeModal('editModal')"
+>
 ×
 </div>
 
-<div class="modal-title">
-    Edit Admin
+<div class="modern-title">
+Admin Details
 </div>
 
 <form method="POST">
@@ -756,7 +658,25 @@ name="admin_id"
 id="edit_id"
 >
 
-<div class="form-group">
+<!-- AVATAR -->
+
+<div class="admin-avatar-wrap">
+
+<img
+id="edit_avatar"
+src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+class="admin-avatar"
+>
+
+</div>
+
+<!-- PERSONAL -->
+
+<div class="section-title">
+Personal Information
+</div>
+
+<div class="edit-field">
 
 <label>Name</label>
 
@@ -764,13 +684,13 @@ id="edit_id"
 type="text"
 name="username"
 id="edit_name"
-class="form-control"
+class="modern-input-box"
 required
 >
 
 </div>
 
-<div class="form-group">
+<div class="edit-field">
 
 <label>Email</label>
 
@@ -778,10 +698,29 @@ required
 type="email"
 name="email"
 id="edit_email"
-class="form-control"
+class="modern-input-box"
 required
 >
 
+</div>
+
+<div class="edit-field">
+
+<label>Phone</label>
+
+<input
+type="text"
+name="phone"
+id="edit_phone"
+class="modern-input-box"
+>
+
+</div>
+
+<!-- ACCOUNT -->
+
+<div class="section-title">
+Account Information
 </div>
 
 <div class="form-row">
@@ -793,15 +732,15 @@ required
 <select
 name="role"
 id="edit_role"
-class="form-control"
+class="modern-select"
 >
 
 <option value="admin">
-    Admin
+Admin
 </option>
 
 <option value="super_admin">
-    Super Admin
+Super Admin
 </option>
 
 </select>
@@ -815,15 +754,15 @@ class="form-control"
 <select
 name="status"
 id="edit_status"
-class="form-control"
+class="modern-select"
 >
 
 <option value="Active">
-    Active
+Active
 </option>
 
 <option value="Suspended">
-    Suspended
+Suspended
 </option>
 
 </select>
@@ -832,25 +771,13 @@ class="form-control"
 
 </div>
 
-<div class="modal-footer">
-
-<button
-type="button"
-class="cancel-btn"
-onclick="closeModal('editModal')"
->
-Cancel
-</button>
-
 <button
 type="submit"
 name="update_admin"
-class="save-btn"
+class="update-btn"
 >
-Save changes
+Update Information
 </button>
-
-</div>
 
 </form>
 
@@ -864,63 +791,178 @@ Save changes
 
 lucide.createIcons();
 
-/* SEARCH */
+/* =========================
+   SEARCH ADMIN
+========================= */
 
-document.getElementById("searchInput")
-.addEventListener("keyup",function(){
+document
+.getElementById("searchInput")
+.addEventListener("keyup", function(){
 
-let value = this.value.toLowerCase();
+    let value =
+    this.value.toLowerCase();
 
-document.querySelectorAll(".admin-row")
-.forEach(row=>{
+    document
+    .querySelectorAll(".admin-row")
+    .forEach(row => {
 
-    row.style.display =
-    row.innerText.toLowerCase().includes(value)
-    ? ""
-    : "none";
+        row.style.display =
+        row.innerText
+        .toLowerCase()
+        .includes(value)
+        ? ""
+        : "none";
+
+    });
 
 });
 
-});
-
-/* MODAL */
-
-function openAddModal(){
-
-    document.getElementById("addModal")
-    .style.display = "flex";
-
-}
+/* =========================
+   OPEN EDIT MODAL
+========================= */
 
 function openEditModal(
 id,
 name,
 email,
+phone,
 role,
-status
+status,
+avatar
 ){
 
-    document.getElementById("editModal")
+    /* SHOW MODAL */
+
+    document
+    .getElementById("editModal")
     .style.display = "flex";
 
-    document.getElementById("edit_id").value = id;
-    document.getElementById("edit_name").value = name;
-    document.getElementById("edit_email").value = email;
-    document.getElementById("edit_role").value = role;
-    document.getElementById("edit_status").value = status;
+    /* SET FORM VALUES */
+
+    document
+    .getElementById("edit_id")
+    .value = id;
+
+    document
+    .getElementById("edit_name")
+    .value = name;
+
+    document
+    .getElementById("edit_email")
+    .value = email;
+
+    document
+    .getElementById("edit_phone")
+    .value = phone;
+
+    document
+    .getElementById("edit_role")
+    .value = role;
+
+    document
+    .getElementById("edit_status")
+    .value = status;
+
+    /* =========================
+       AVATAR SYSTEM
+    ========================= */
+
+    let avatarImg =
+    document.getElementById("edit_avatar");
+
+    /* DEFAULT IMAGE */
+
+    let defaultAvatar =
+    "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+    /* RESET */
+
+    avatarImg.onerror = null;
+
+    /* IF DATABASE HAS AVATAR */
+
+    if(
+        avatar &&
+        avatar !== "NULL" &&
+        avatar !== "null" &&
+        avatar.trim() !== ""
+    ){
+
+        /* TRY uploads FOLDER */
+
+        let uploadPath =
+        "../uploads/" + avatar;
+
+        /* TRY uploaded_img FOLDER */
+
+        let uploadedImgPath =
+        "../uploaded_img/" + avatar;
+
+        /* FIRST TRY */
+
+        avatarImg.src =
+        uploadPath +
+        "?v=" +
+        new Date().getTime();
+
+        /* IF FAIL */
+
+        avatarImg.onerror = function(){
+
+            this.onerror = null;
+
+            /* SECOND TRY */
+
+            this.src =
+            uploadedImgPath +
+            "?v=" +
+            new Date().getTime();
+
+            /* IF FAIL AGAIN */
+
+            this.onerror = function(){
+
+                this.onerror = null;
+
+                /* DEFAULT IMAGE */
+
+                this.src = defaultAvatar;
+
+            };
+
+        };
+
+    }else{
+
+        /* NO DATABASE AVATAR */
+
+        avatarImg.src = defaultAvatar;
+
+    }
 
 }
 
+/* =========================
+   CLOSE MODAL
+========================= */
+
 function closeModal(id){
 
-    document.getElementById(id)
+    document
+    .getElementById(id)
     .style.display = "none";
 
 }
 
+/* =========================
+   CLOSE WHEN CLICK OUTSIDE
+========================= */
+
 window.onclick = function(e){
 
-    if(e.target.classList.contains("modal")){
+    if(
+        e.target.classList.contains("modal")
+    ){
 
         e.target.style.display = "none";
 
@@ -932,3 +974,4 @@ window.onclick = function(e){
 
 </body>
 </html>
+
