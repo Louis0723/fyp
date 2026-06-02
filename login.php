@@ -202,7 +202,7 @@ button:disabled{
         <h2>LOZ PC STORE</h2>
     </div>
     <nav>
-        <a href="about.php">About Us</a>
+        
         <a href="login.php">Login</a>
         <a href="register.php">Register</a>
     </nav>

@@ -37,7 +37,6 @@
 
             <div class="menu-left">
 
-                <!-- DIFFERENT ICON -->
                 <i data-lucide="layers-3"></i>
 
                 <span class="text">Category</span>
@@ -79,7 +78,6 @@
 
             <div class="menu-left">
 
-                <!-- DIFFERENT ICON -->
                 <i data-lucide="monitor-smartphone"></i>
 
                 <span class="text">Products</span>
@@ -139,14 +137,13 @@
 
     </a>
 
-    <!-- LOGOUT -->
-    <a href="admin_logout.php"
-       class="menu-item"
-       onclick="return confirm('Logout from admin panel?')">
+    <!-- VIEW REPORT -->
+    <a href="view_report.php"
+       class="menu-item <?= $current=='view_report.php' ? 'active' : '' ?>">
 
         <div class="menu-left">
-            <i data-lucide="log-out"></i>
-            <span class="text">Logout</span>
+            <i data-lucide="bar-chart-3"></i>
+            <span class="text">View Report</span>
         </div>
 
     </a>

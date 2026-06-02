@@ -827,187 +827,235 @@ View
      ORDER DETAIL MODAL
 ========================= -->
 
+<!-- =========================
+     ORDER DETAIL MODAL
+========================= -->
+
 <div class="modal" id="modal">
 
-<div class="modal-box order-detail-modal">
+    <div class="order-detail-modal">
 
-    <!-- CLOSE -->
+        <!-- CLOSE -->
 
-    <div class="close-modal"
-         onclick="closeModal()">
-        ✕
-    </div>
+        <div class="close-modal"
+             onclick="closeModal()">
+            ✕
+        </div>
 
-    <!-- TOP -->
+        <!-- TOP -->
 
-    <div class="order-top">
+        <div class="order-top">
 
-        <div>
+            <div>
 
-            <div class="order-title">
-                Order #<span id="m_order"></span>
+                <div class="order-title">
+                    Order #<span id="m_order"></span>
+                </div>
+
+                <div class="order-subtitle">
+                    Customer purchase details
+                </div>
+
             </div>
 
-            <div class="order-subtitle">
-                Customer purchase details
+            <div class="status-badge"
+                 id="m_status_badge">
             </div>
 
         </div>
 
-        <div class="status-badge"
-             id="m_status_badge">
-        </div>
+        <!-- INFO -->
 
-    </div>
+        <div class="info-grid">
 
-    <!-- CUSTOMER INFO -->
+            <div class="info-card">
 
-    <div class="info-grid">
+                <div class="info-label">
+                    Customer Name
+                </div>
 
-        <div class="info-card">
+                <div class="info-value"
+                     id="m_customer">
+                </div>
 
-            <div class="info-label">
-                Customer Name
             </div>
 
-            <div class="info-value"
-                 id="m_customer">
+            <div class="info-card">
+
+                <div class="info-label">
+                    Email Address
+                </div>
+
+                <div class="info-value"
+                     id="m_email">
+                </div>
+
             </div>
 
-        </div>
+            <div class="info-card">
 
-        <div class="info-card">
+                <div class="info-label">
+                    Order Date
+                </div>
 
-            <div class="info-label">
-                Email Address
+                <div class="info-value"
+                     id="m_date">
+                </div>
+
             </div>
 
-            <div class="info-value"
-                 id="m_email">
-            </div>
+            <div class="info-card">
 
-        </div>
+                <div class="info-label">
+                    Payment Method
+                </div>
 
-        <div class="info-card">
+                <div class="info-value">
+                    Online Banking
+                </div>
 
-            <div class="info-label">
-                Order Date
-            </div>
-
-            <div class="info-value"
-                 id="m_date">
-            </div>
-
-        </div>
-
-        <div class="info-card">
-
-            <div class="info-label">
-                Payment Method
-            </div>
-
-            <div class="info-value">
-                Online Banking
             </div>
 
         </div>
 
-    </div>
-
-    <!-- PRODUCTS -->
-
-    <div class="product-section">
+        <!-- PRODUCTS -->
 
         <div class="section-title">
             Purchased Products
         </div>
 
-        <div id="product_list">
+        <div id="product_list"></div>
 
-            <!-- AUTO LOAD -->
+        <!-- SUMMARY -->
+
+        <div class="summary-box">
+
+            <div class="summary-row">
+
+                <span>Subtotal</span>
+
+                <span id="subtotal">
+                    RM 0.00
+                </span>
+
+            </div>
+
+            <div class="summary-row">
+
+                <span>SST (6%)</span>
+
+                <span id="sst">
+                    RM 0.00
+                </span>
+
+            </div>
+
+            <div class="summary-row">
+
+                <span>Shipping Fee</span>
+
+                <span>RM 5.00</span>
+
+            </div>
+
+            <div class="summary-total">
+
+                <span>Total Amount</span>
+
+                <span id="grand_total">
+                    RM 0.00
+                </span>
+
+            </div>
 
         </div>
 
     </div>
-
-    <!-- SUMMARY -->
-
-    <div class="summary-box">
-
-        <div class="summary-row">
-
-            <span>Subtotal</span>
-
-            <span id="subtotal">
-            </span>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>SST (6%)</span>
-
-            <span id="sst">
-            </span>
-
-        </div>
-
-        <div class="summary-row">
-
-            <span>Shipping Fee</span>
-
-            <span>RM 5.00</span>
-
-        </div>
-
-        <div class="summary-total">
-
-            <span>Total Amount</span>
-
-            <span id="grand_total">
-            </span>
-
-        </div>
-
-    </div>
-
-</div>
 
 </div>
 
 <style>
 
 /* =========================
-   MODAL
+   MODAL BACKGROUND
+========================= */
+
+.modal{
+
+    position:fixed;
+    inset:0;
+
+    background:rgba(15,23,42,.65);
+
+    display:none;
+
+    justify-content:center;
+    align-items:flex-start;
+
+    overflow-y:auto;
+
+    padding:110px 20px 40px;
+
+    z-index:999999;
+
+    backdrop-filter:blur(5px);
+}
+
+/* =========================
+   MODAL BOX
 ========================= */
 
 .order-detail-modal{
 
     width:900px;
-    max-height:90vh;
-
-    overflow-y:auto;
+    max-width:100%;
 
     background:#fff;
 
-    border-radius:28px;
+    border-radius:30px;
 
     padding:35px;
 
     position:relative;
+
+    margin:auto;
+
+    animation:popup .25s ease;
+
+    box-shadow:0 20px 60px rgba(0,0,0,.2);
 }
 
-/* CLOSE */
+/* =========================
+   ANIMATION
+========================= */
+
+@keyframes popup{
+
+    from{
+        opacity:0;
+        transform:translateY(25px) scale(.96);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+}
+
+/* =========================
+   CLOSE BUTTON
+========================= */
 
 .close-modal{
 
     position:absolute;
 
-    top:25px;
-    right:25px;
+    top:20px;
+    right:20px;
 
-    width:42px;
-    height:42px;
+    width:44px;
+    height:44px;
 
     border-radius:50%;
 
@@ -1019,19 +1067,32 @@ View
 
     cursor:pointer;
 
-    font-size:20px;
+    font-size:18px;
     font-weight:700;
 
     color:#0f172a;
+
+    transition:.2s;
 }
 
-/* TOP */
+.close-modal:hover{
+
+    background:#e2e8f0;
+
+    transform:rotate(90deg);
+}
+
+/* =========================
+   TOP
+========================= */
 
 .order-top{
 
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
+
+    gap:20px;
 
     margin-bottom:35px;
 }
@@ -1042,16 +1103,22 @@ View
     font-weight:900;
 
     color:#0f172a;
+
+    line-height:1.1;
 }
 
 .order-subtitle{
 
-    margin-top:8px;
+    margin-top:10px;
 
     color:#64748b;
+
+    font-size:15px;
 }
 
-/* STATUS */
+/* =========================
+   STATUS
+========================= */
 
 .status-badge{
 
@@ -1059,11 +1126,13 @@ View
 
     border-radius:14px;
 
-    font-size:15px;
+    font-size:14px;
     font-weight:700;
 }
 
-/* INFO */
+/* =========================
+   INFO GRID
+========================= */
 
 .info-grid{
 
@@ -1080,9 +1149,11 @@ View
 
     background:#f8fafc;
 
-    border-radius:18px;
+    border-radius:20px;
 
     padding:22px;
+
+    border:1px solid #e2e8f0;
 }
 
 .info-label{
@@ -1100,19 +1171,27 @@ View
 
     font-size:20px;
     font-weight:700;
+
+    word-break:break-word;
 }
 
-/* PRODUCTS */
+/* =========================
+   TITLE
+========================= */
 
 .section-title{
 
-    font-size:24px;
+    font-size:26px;
     font-weight:800;
 
-    margin-bottom:20px;
+    margin-bottom:22px;
 
     color:#0f172a;
 }
+
+/* =========================
+   PRODUCT CARD
+========================= */
 
 .product-card{
 
@@ -1120,13 +1199,17 @@ View
     justify-content:space-between;
     align-items:center;
 
+    gap:20px;
+
     padding:18px 20px;
 
     border:1px solid #e2e8f0;
 
-    border-radius:18px;
+    border-radius:20px;
 
     margin-bottom:15px;
+
+    background:#fff;
 }
 
 .product-left{
@@ -1135,18 +1218,22 @@ View
     align-items:center;
 
     gap:18px;
+
+    flex:1;
 }
 
 .product-img{
 
-    width:70px;
-    height:70px;
+    width:72px;
+    height:72px;
 
     border-radius:14px;
 
     object-fit:cover;
 
     border:1px solid #e2e8f0;
+
+    background:#fff;
 }
 
 .product-name{
@@ -1155,6 +1242,8 @@ View
     font-weight:700;
 
     color:#0f172a;
+
+    line-height:1.4;
 }
 
 .product-category{
@@ -1176,17 +1265,21 @@ View
     color:#64748b;
 
     margin-bottom:6px;
+
+    font-size:14px;
 }
 
 .product-price{
 
-    font-size:18px;
+    font-size:28px;
     font-weight:800;
 
     color:#2563eb;
 }
 
-/* SUMMARY */
+/* =========================
+   SUMMARY
+========================= */
 
 .summary-box{
 
@@ -1194,9 +1287,11 @@ View
 
     background:#f8fafc;
 
-    border-radius:20px;
+    border-radius:22px;
 
     padding:25px;
+
+    border:1px solid #e2e8f0;
 }
 
 .summary-row{
@@ -1222,10 +1317,52 @@ View
     display:flex;
     justify-content:space-between;
 
-    font-size:28px;
+    font-size:30px;
     font-weight:900;
 
     color:#0f172a;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:900px){
+
+    .modal{
+        padding:90px 15px 30px;
+    }
+
+    .order-detail-modal{
+        padding:25px;
+    }
+
+    .order-top{
+        flex-direction:column;
+    }
+
+    .order-title{
+        font-size:30px;
+    }
+
+    .info-grid{
+        grid-template-columns:1fr;
+    }
+
+    .product-card{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .product-right{
+        width:100%;
+        text-align:left;
+    }
+
+    .summary-total{
+        font-size:24px;
+    }
+
 }
 
 </style>
@@ -1244,53 +1381,51 @@ date,
 status
 ){
 
-document.getElementById("modal")
-.style.display="flex";
+const modal =
+document.getElementById("modal");
 
-document.getElementById("m_order")
-.innerText=id;
+modal.style.display = "flex";
 
-document.getElementById("m_customer")
-.innerText=name;
+document.body.style.overflow = "hidden";
 
-document.getElementById("m_email")
-.innerText=email;
+/* INFO */
 
-document.getElementById("m_date")
-.innerText=date;
+document.getElementById("m_order").innerText = id;
+document.getElementById("m_customer").innerText = name;
+document.getElementById("m_email").innerText = email;
+document.getElementById("m_date").innerText = date;
 
 /* STATUS */
 
 let badge =
 document.getElementById("m_status_badge");
 
-badge.innerText=status;
+badge.innerText = status;
+
+badge.style.background = "#e2e8f0";
+badge.style.color = "#0f172a";
 
 if(status=="Pending"){
-
     badge.style.background="#fef3c7";
     badge.style.color="#92400e";
 }
 
 if(status=="Shipped"){
-
     badge.style.background="#dbeafe";
     badge.style.color="#1d4ed8";
 }
 
 if(status=="Delivered"){
-
     badge.style.background="#ddd6fe";
     badge.style.color="#6d28d9";
 }
 
 if(status=="Completed"){
-
     badge.style.background="#dcfce7";
     badge.style.color="#166534";
 }
 
-/* PRODUCTS */
+/* LOAD PRODUCTS */
 
 fetch("get_order_products.php?id="+id)
 
@@ -1305,25 +1440,23 @@ let subtotal = 0;
 if(data.length === 0){
 
 html = `
-
 <div style="
 padding:30px;
 text-align:center;
 color:#64748b;
 font-size:16px;
 ">
-
 No purchased product found
-
 </div>
-
 `;
 
 }
 
 data.forEach(item => {
 
-subtotal += parseFloat(item.total.replace(/,/g,''));
+subtotal += parseFloat(
+item.total.replace(/,/g,'')
+);
 
 html += `
 
@@ -1366,11 +1499,14 @@ html += `
 
 });
 
+/* INSERT */
+
 document.getElementById("product_list")
 .innerHTML = html;
 
-let sst = subtotal * 0.06;
+/* TOTAL */
 
+let sst = subtotal * 0.06;
 let grand = subtotal + sst + 5;
 
 document.getElementById("subtotal")
@@ -1389,12 +1525,33 @@ document.getElementById("grand_total")
 
 }
 
-/* CLOSE */
+/* =========================
+   CLOSE
+========================= */
 
 function closeModal(){
 
 document.getElementById("modal")
-.style.display="none";
+.style.display = "none";
+
+document.body.style.overflow = "auto";
+
+}
+
+/* =========================
+   CLOSE OUTSIDE
+========================= */
+
+window.onclick = function(event){
+
+const modal =
+document.getElementById("modal");
+
+if(event.target == modal){
+
+    closeModal();
+
+}
 
 }
 
@@ -1405,6 +1562,6 @@ document.getElementById("modal")
 
 <script src="bootstrap.bundle.js"></script>
 
-<script src="admin.js"></script>
+
 </body>
 </html>

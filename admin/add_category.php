@@ -2,28 +2,24 @@
 session_start();
 include "../db.php";
 
-if (!isset($_SESSION['admin'])) {
+if(!isset($_SESSION['admin'])){
     header("Location: admin_login.php");
     exit();
 }
 
 /* =========================
-   ADD CATEGORY
+ADD CATEGORY
 ========================= */
 
-if(isset($_POST['add_category'])){
+if(isset($_POST['save_category'])){
 
     $category_name = trim($_POST['category_name']);
 
     if($category_name != ""){
 
-        /* CHECK USING PRODUCTS TABLE */
-
         $check = $conn->prepare("
-            SELECT *
-            FROM products
-            WHERE category=?
-            LIMIT 1
+            SELECT * FROM category
+            WHERE category_name=?
         ");
 
         $check->bind_param("s",$category_name);
@@ -35,16 +31,24 @@ if(isset($_POST['add_category'])){
 
             echo "
             <script>
-                alert('Category already exists');
+            alert('Category Already Exists');
             </script>
             ";
 
         }else{
 
+            $stmt = $conn->prepare("
+                INSERT INTO category(category_name)
+                VALUES (?)
+            ");
+
+            $stmt->bind_param("s",$category_name);
+            $stmt->execute();
+
             echo "
             <script>
-                alert('Category added successfully');
-                window.location='view_category.php';
+            alert('Category Added Successfully');
+            window.location='add_category.php';
             </script>
             ";
         }
@@ -54,6 +58,7 @@ if(isset($_POST['add_category'])){
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -61,190 +66,177 @@ if(isset($_POST['add_category'])){
 
 <title>Add Category</title>
 
-<link rel="stylesheet" href="style.css?v=500">
+<link rel="stylesheet" href="style.css?v=999">
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
-body{
+*{
     margin:0;
-    background:#eef3f9;
-    font-family:'Segoe UI',sans-serif;
-    overflow-x:hidden;
-}
-
-/* FIX SIDEBAR */
-
-.sidebar{
-    z-index:9999 !important;
-}
-
-/* MAIN CONTENT */
-
-.main-content{
-
-    margin-left:275px;
-
-    padding:120px 30px 40px;
-
-    min-height:100vh;
-
+    padding:0;
     box-sizing:border-box;
 }
 
-/* TITLE */
+body{
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f1f5f9;
+    overflow-x:hidden;
+}
+
+/* =========================================
+MAIN
+========================================= */
+
+.main{
+    margin-left:95px;
+    transition:.3s ease;
+    min-height:100vh;
+}
+
+.sidebar.expanded ~ .main{
+    margin-left:250px;
+}
+
+/* =========================================
+CONTENT
+========================================= */
+
+.main-content{
+    padding:130px 40px 40px;
+}
+
+/* =========================================
+TITLE
+========================================= */
 
 .page-title{
-    font-size:58px;
-    font-weight:800;
+    font-size:72px;
+    font-weight:900;
     color:#0f172a;
     margin-bottom:10px;
+    line-height:1;
 }
 
 .page-sub{
     color:#64748b;
-    margin-bottom:35px;
-    font-size:17px;
+    font-size:18px;
+    margin-bottom:40px;
 }
 
-/* CARD */
+/* =========================================
+CARD
+========================================= */
 
 .category-card{
-
     width:100%;
-    max-width:760px;
-
+    max-width:700px;
     background:#fff;
-
-    border-radius:32px;
-
-    padding:40px;
-
-    box-shadow:0 10px 30px rgba(0,0,0,.05);
-
-    box-sizing:border-box;
+    border-radius:30px;
+    padding:36px;
+    box-shadow:0 5px 20px rgba(0,0,0,.04);
 }
 
-/* FORM */
+/* =========================================
+FORM
+========================================= */
 
 .form-group{
     margin-bottom:28px;
 }
 
-.form-label{
+.form-group label{
     display:block;
-
-    font-size:16px;
+    font-size:17px;
     font-weight:700;
-
-    margin-bottom:12px;
-
     color:#0f172a;
+    margin-bottom:14px;
 }
 
-.form-input{
-
+.form-group input{
     width:100%;
-    height:60px;
-
-    border:1px solid #dbe3ef;
+    height:58px;
     border-radius:18px;
-
+    border:1px solid #dbe2ea;
+    background:#f8fafc;
     padding:0 20px;
-
-    font-size:15px;
-
+    font-size:16px;
     outline:none;
-
-    box-sizing:border-box;
-
-    transition:0.2s;
+    transition:.2s;
 }
 
-.form-input:focus{
+.form-group input:focus{
     border-color:#2563eb;
+    background:#fff;
 }
 
-/* BUTTONS */
+/* =========================================
+BUTTONS
+========================================= */
 
-.button-group{
+.btn-group{
     display:flex;
     gap:16px;
-    margin-top:10px;
 }
 
-.save-btn{
-
+.add-btn{
     height:54px;
-    padding:0 30px;
-
+    padding:0 28px;
     border:none;
     border-radius:16px;
-
     background:#2563eb;
     color:#fff;
-
     font-size:15px;
     font-weight:700;
-
     cursor:pointer;
-
-    transition:0.2s;
+    transition:.2s;
 }
 
-.save-btn:hover{
+.add-btn:hover{
     background:#1d4ed8;
 }
 
 .cancel-btn{
-
     height:54px;
-    padding:0 30px;
-
+    padding:0 28px;
     border:none;
     border-radius:16px;
-
     background:#e2e8f0;
-    color:#0f172a;
-
+    color:#111827;
     font-size:15px;
     font-weight:700;
-
     cursor:pointer;
-
-    transition:0.2s;
+    transition:.2s;
 }
 
 .cancel-btn:hover{
     background:#cbd5e1;
 }
 
-/* RESPONSIVE */
+/* =========================================
+RESPONSIVE
+========================================= */
 
 @media(max-width:900px){
 
-    .main-content{
+    .main{
         margin-left:0;
-        padding:110px 18px 30px;
+    }
+
+    .main-content{
+        padding:120px 20px 20px;
     }
 
     .page-title{
-        font-size:42px;
+        font-size:48px;
+    }
+
+    .page-sub{
+        font-size:16px;
     }
 
     .category-card{
-        padding:25px;
-    }
-
-    .button-group{
-        flex-direction:column;
-    }
-
-    .save-btn,
-    .cancel-btn{
-        width:100%;
+        padding:24px;
     }
 }
 
@@ -255,119 +247,96 @@ body{
 <body>
 
 <!-- SIDEBAR -->
-<?php include "admin_sidebar.php"; ?>
 
-<!-- HEADER -->
-<div class="admin-header">
+<?php
 
-    <div class="header-left">
+if(isset($_SESSION['role']) &&
+$_SESSION['role']=="super_admin"){
 
-        <button class="toggle-btn" id="toggleSidebar">
-            <i class="fa-solid fa-bars"></i>
-        </button>
+    include "sadmin_sidebar.php";
 
-        <div class="search-box">
+}else{
 
-            <i class="fa-solid fa-magnifying-glass"></i>
+    include "admin_sidebar.php";
+}
 
-            <input type="text" placeholder="Search...">
-
-        </div>
-
-    </div>
-
-    <div class="header-right">
-
-        <div class="notif">
-
-            <i class="fa-regular fa-bell"></i>
-
-            <span class="badge">24</span>
-
-        </div>
-
-        <div class="avatar">
-            ZI
-        </div>
-
-    </div>
-
-</div>
+?>
 
 <!-- MAIN -->
-<div class="main-content">
 
-    <div class="page-title">
-        Add Category
-    </div>
+<div class="main">
 
-    <div class="page-sub">
-        Create new product category.
-    </div>
+    <!-- HEADER -->
+    <?php include "admin_header.php"; ?>
 
-    <div class="category-card">
+    <!-- CONTENT -->
 
-        <form method="POST">
+    <div class="main-content">
 
-            <div class="form-group">
+        <div class="page-title">
+            Add Category
+        </div>
 
-                <label class="form-label">
-                    Category Name
-                </label>
+        <div class="page-sub">
+            Create new product category.
+        </div>
 
-                <input
-                    type="text"
-                    name="category_name"
-                    class="form-input"
-                    placeholder="Enter category name"
-                    required
-                >
+        <!-- CARD -->
 
-            </div>
+        <div class="category-card">
 
-            <div class="button-group">
+            <form method="POST">
 
-                <button
-                    type="submit"
-                    name="add_category"
-                    class="save-btn">
+                <div class="form-group">
 
-                    Add Category
+                    <label>
+                        Category Name
+                    </label>
 
-                </button>
+                    <input type="text"
+                           name="category_name"
+                           placeholder="Enter category name"
+                           required>
 
-                <button
-                    type="button"
-                    class="cancel-btn"
-                    onclick="window.location='view_category.php'">
+                </div>
 
-                    Cancel
+                <div class="btn-group">
 
-                </button>
+                    <button type="submit"
+                            name="save_category"
+                            class="add-btn">
 
-            </div>
+                        Add Category
 
-        </form>
+                    </button>
+
+                    <button type="button"
+                            class="cancel-btn"
+                            onclick="window.location='view_category.php'">
+
+                        Cancel
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
 
     </div>
 
 </div>
 
+<!-- IMPORTANT -->
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
 <script>
-
-const toggleBtn =
-document.getElementById("toggleSidebar");
-
-const sidebar =
-document.getElementById("sidebar");
-
-toggleBtn.onclick = function(){
-
-    sidebar.classList.toggle("collapsed");
-
-};
-
+lucide.createIcons();
 </script>
+
+
 
 </body>
 </html>

@@ -5,7 +5,7 @@ include "db.php";
 $user_id = $_SESSION['user']['user_id'];
 $product_id = intval($_GET['id']);
 
-// check if already in cart
+// check if already in cart or not
 $res = mysqli_query($conn, "SELECT * FROM cart WHERE user_id=$user_id AND product_id=$product_id");
 
 if(mysqli_num_rows($res) > 0){
