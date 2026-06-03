@@ -8,6 +8,22 @@ if(!isset($_SESSION['admin'])){
 }
 
 /* =========================
+   CHECK COLUMN EXISTS
+========================= */
+
+$checkColumn = $conn->query("
+    SHOW COLUMNS FROM reviews LIKE 'admin_reply'
+");
+
+if($checkColumn->num_rows == 0){
+
+    $conn->query("
+        ALTER TABLE reviews
+        ADD admin_reply TEXT NULL
+    ");
+}
+
+/* =========================
    REPLY REVIEW
 ========================= */
 
@@ -319,8 +335,6 @@ body{
     margin-bottom:10px;
 }
 
-/* RESPONSIVE */
-
 @media(max-width:900px){
 
     .main-content{
@@ -336,6 +350,7 @@ body{
         overflow-x:auto;
     }
 }
+
 
 /* FIX HEADER AVATAR */
 
@@ -375,6 +390,7 @@ body{
     border-radius:50% !important;
     display:block !important;
 }
+
 
 </style>
 
@@ -421,18 +437,14 @@ body{
 
 <tr>
 
-<td>
-    #<?= $r['review_id'] ?>
-</td>
+<td>#<?= $r['review_id'] ?></td>
 
 <td>
 
 <div class="product-box">
 
 <?php
-$image = !empty($r['image'])
-? "../uploads/reviews/" . $r['image']
-: "../no-image.png";
+$image = "../no-image.png";
 ?>
 
 <img src="<?= $image ?>" class="product-image">
@@ -473,9 +485,7 @@ for($i=1;$i<=5;$i++){
 <td>
 
 <div class="review-text">
-
 <?= htmlspecialchars(substr($r['review_text'],0,70)) ?>
-
 </div>
 
 </td>
@@ -483,9 +493,7 @@ for($i=1;$i<=5;$i++){
 <td>
 
 <div class="review-date">
-
 <?= date('M d, Y', strtotime($r['created_at'])) ?>
-
 </div>
 
 </td>
@@ -519,9 +527,7 @@ View Detail
 <tr>
 
 <td colspan="7" style="text-align:center;padding:40px;">
-
 No reviews found
-
 </td>
 
 </tr>
