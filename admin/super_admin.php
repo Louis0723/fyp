@@ -7,211 +7,322 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-/* =========================
-   STATS
-========================= */
+/* =========================================
+TOTAL COUNTS
+========================================= */
 
 $productCount = $conn->query("
-    SELECT COUNT(*) as t 
+    SELECT COUNT(*) as total
     FROM products
-")->fetch_assoc()['t'];
+")->fetch_assoc()['total'];
 
 $orderCount = $conn->query("
-    SELECT COUNT(*) as t 
+    SELECT COUNT(*) as total
     FROM orders
-")->fetch_assoc()['t'];
+")->fetch_assoc()['total'];
 
 $userCount = $conn->query("
-    SELECT COUNT(*) as t 
+    SELECT COUNT(*) as total
     FROM users
-")->fetch_assoc()['t'];
-
-$adminCount = $conn->query("
-    SELECT COUNT(*) as t 
-    FROM admins
-")->fetch_assoc()['t'];
+")->fetch_assoc()['total'];
 
 $revenue = $conn->query("
-    SELECT SUM(total_price) as t 
+    SELECT SUM(total_price) as total
     FROM orders
-")->fetch_assoc()['t'] ?? 0;
+")->fetch_assoc()['total'] ?? 0;
 
-/* =========================
-   RECENT ADMINS
-========================= */
+/* =========================================
+MONTHLY REVENUE
+========================================= */
 
-$recentAdmins = $conn->query("
-    SELECT *
-    FROM admins
-    ORDER BY admin_id DESC
+$monthLabels = [];
+$monthRevenue = [];
+
+for($i=5; $i>=0; $i--){
+
+    $month = date("m", strtotime("-$i month"));
+    $year  = date("Y", strtotime("-$i month"));
+
+    $monthLabels[] = date("M", strtotime("-$i month"));
+
+    $sql = $conn->query("
+        SELECT SUM(total_price) as total
+        FROM orders
+        WHERE MONTH(created_at)='$month'
+        AND YEAR(created_at)='$year'
+    ");
+
+    $row = $sql->fetch_assoc();
+
+    $monthRevenue[] = (float)($row['total'] ?? 0);
+}
+
+/* =========================================
+ORDER STATUS
+========================================= */
+
+$pending = $conn->query("
+SELECT COUNT(*) as total
+FROM orders
+WHERE status='Pending'
+")->fetch_assoc()['total'];
+
+$processing = $conn->query("
+SELECT COUNT(*) as total
+FROM orders
+WHERE status='Processing'
+")->fetch_assoc()['total'];
+
+$shipped = $conn->query("
+SELECT COUNT(*) as total
+FROM orders
+WHERE status='Shipped'
+")->fetch_assoc()['total'];
+
+$completed = $conn->query("
+SELECT COUNT(*) as total
+FROM orders
+WHERE status='Completed'
+OR status='Delivered'
+")->fetch_assoc()['total'];
+
+/* =========================================
+CATEGORY INVENTORY
+========================================= */
+
+$categoryLabels = [];
+$categoryValues = [];
+
+$categoryQuery = $conn->query("
+    SELECT
+        category,
+        SUM(price * stock) as total_value
+    FROM products
+    GROUP BY category
+");
+
+while($cat = $categoryQuery->fetch_assoc()){
+
+    $categoryLabels[] = $cat['category'];
+    $categoryValues[] = (float)$cat['total_value'];
+}
+
+/* =========================================
+TOP INVENTORY
+========================================= */
+
+$topInventory = $conn->query("
+    SELECT product_name, stock
+    FROM products
+    ORDER BY stock DESC
     LIMIT 5
 ");
 
+/* =========================================
+LOW STOCK
+========================================= */
+
+$lowStock = $conn->query("
+    SELECT product_name, stock
+    FROM products
+    WHERE stock <= 5
+    ORDER BY stock ASC
+    LIMIT 5
+");
+
+/* =========================================
+RECENT ORDERS
+========================================= */
+
+$recentOrders = $conn->query("
+    SELECT *
+    FROM orders
+    ORDER BY order_id DESC
+    LIMIT 5
+");
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Super Admin Dashboard</title>
+<title>Dashboard</title>
 
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=200">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Inter',sans-serif;
-}
-
 body{
-    background:#f4f7fb;
+    background:#eef2f7;
+    font-family:Arial,sans-serif;
 }
-
-/* MAIN */
 
 .main-content{
-    margin-left:270px;
-    margin-top:95px;
-    padding:30px;
-    transition:.3s ease;
+    margin-left:250px;
+    padding:110px 24px 30px;
 }
 
 .sidebar.collapsed ~ .main-content{
-    margin-left:95px;
+    margin-left:90px;
 }
 
-/* TITLE */
-
 .page-title{
-    font-size:42px;
-    font-weight:800;
+    font-size:58px;
+    font-weight:900;
     color:#0f172a;
 }
 
-.page-subtitle{
-    margin-top:6px;
+.page-sub{
+    margin-top:10px;
     color:#64748b;
-    font-size:15px;
+    margin-bottom:30px;
 }
 
 /* CARDS */
 
 .cards{
-    margin-top:28px;
-
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    grid-template-columns:repeat(4,1fr);
     gap:20px;
+    margin-bottom:24px;
 }
 
 .card{
     background:#fff;
-    border-radius:20px;
+    border-radius:24px;
     padding:24px;
-
-    border:1px solid #e5e7eb;
-
-    box-shadow:0 8px 24px rgba(0,0,0,.05);
-
-    position:relative;
-    overflow:hidden;
-
-    transition:.25s ease;
+    border:1px solid #e2e8f0;
 }
 
-.card:hover{
-    transform:translateY(-5px);
-}
-
-.card-icon{
-    width:52px;
-    height:52px;
-
-    border-radius:14px;
-
-    background:#eff6ff;
-
+.card-top{
     display:flex;
-    align-items:center;
-    justify-content:center;
-
-    margin-bottom:18px;
-}
-
-.card-icon i{
-    width:24px;
-    height:24px;
-    color:#2563eb;
+    justify-content:space-between;
+    margin-bottom:20px;
 }
 
 .card-title{
     color:#64748b;
-    font-size:14px;
-    margin-bottom:8px;
+}
+
+.card-icon{
+    width:50px;
+    height:50px;
+    border-radius:16px;
+    background:#eff6ff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 .card-value{
-    font-size:34px;
-    font-weight:800;
+    font-size:42px;
+    font-weight:900;
     color:#0f172a;
 }
 
-/* CHARTS */
+.card-growth{
+    margin-top:10px;
+    color:#16a34a;
+    font-size:14px;
+}
 
-.charts{
-    margin-top:24px;
+/* GRID */
 
+.top-grid{
     display:grid;
     grid-template-columns:2fr 1fr;
     gap:20px;
+    margin-bottom:24px;
 }
 
-.chart-box{
+.bottom-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:20px;
+    margin-bottom:24px;
+}
+
+.chart-card,
+.inventory-card,
+.status-card,
+.alert-card,
+.table-card{
     background:#fff;
-
-    border-radius:20px;
+    border-radius:24px;
     padding:24px;
-
-    border:1px solid #e5e7eb;
-
-    box-shadow:0 8px 24px rgba(0,0,0,.05);
+    border:1px solid #e2e8f0;
 }
 
 .chart-title{
-    font-size:20px;
-    font-weight:700;
-    color:#0f172a;
+    font-size:18px;
+    font-weight:800;
     margin-bottom:20px;
 }
 
-/* ADMIN TABLE */
+/* CHART */
 
-.admin-box{
-    margin-top:24px;
+.chart-wrapper{
+    position:relative;
+    width:100%;
+    height:320px;
+}
 
-    background:#fff;
+/* INVENTORY */
 
+.inventory-item{
+    margin-bottom:18px;
+}
+
+.inventory-top{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:8px;
+    font-size:14px;
+}
+
+.progress{
+    width:100%;
+    height:8px;
+    background:#e2e8f0;
     border-radius:20px;
-    padding:24px;
-
-    border:1px solid #e5e7eb;
-
-    box-shadow:0 8px 24px rgba(0,0,0,.05);
+    overflow:hidden;
 }
 
-.admin-title{
-    font-size:22px;
+.progress-bar{
+    height:100%;
+    background:#2563eb;
+}
+
+/* ALERT */
+
+.alert-item{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:18px;
+}
+
+.alert-badge{
+    padding:6px 12px;
+    border-radius:12px;
+    font-size:13px;
     font-weight:700;
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+/* TABLE */
+
+.table-title{
+    font-size:24px;
+    font-weight:800;
     margin-bottom:20px;
-    color:#0f172a;
 }
 
 table{
@@ -221,80 +332,119 @@ table{
 
 th{
     text-align:left;
-    padding-bottom:16px;
+    padding:14px;
+    border-bottom:1px solid #e2e8f0;
     color:#64748b;
-    font-size:14px;
 }
 
 td{
-    padding:18px 0;
-    border-top:1px solid #f1f5f9;
+    padding:14px;
+    border-bottom:1px solid #f1f5f9;
 }
 
-.admin-user{
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-
-.avatar{
-    width:42px;
-    height:42px;
-    border-radius:50%;
-
-    background:#2563eb;
-    color:#fff;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    font-size:14px;
-    font-weight:700;
-}
-
-.admin-name{
-    font-weight:700;
-    color:#0f172a;
-}
-
-.admin-email{
-    color:#64748b;
+.status{
+    padding:8px 14px;
+    border-radius:12px;
     font-size:13px;
-    margin-top:2px;
-}
-
-/* BADGE */
-
-.badge{
-    width:fit-content;
-
-    padding:7px 14px;
-
-    border-radius:999px;
-
-    font-size:12px;
     font-weight:700;
 }
 
-.badge-super{
-    background:#fee2e2;
-    color:#991b1b;
+.pending{
+    background:#fef3c7;
+    color:#b45309;
 }
 
-.badge-admin{
+.processing{
     background:#dbeafe;
-    color:#1d4ed8;
+    color:#2563eb;
 }
 
-/* RESPONSIVE */
+.shipped{
+    background:#dcfce7;
+    color:#16a34a;
+}
 
-@media(max-width:1000px){
+.completed{
+    background:#dcfce7;
+    color:#15803d;
+}
 
-    .charts{
-        grid-template-columns:1fr;
-    }
+/* FIX HEADER AVATAR */
 
+.admin-header .avatar-btn{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    min-height:42px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+    padding:0 !important;
+}
+
+.admin-header .avatar-btn img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
+}
+
+/* DROPDOWN PROFILE AVATAR */
+
+.admin-header .profile-avatar{
+    width:52px !important;
+    height:52px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+}
+
+.admin-header .profile-avatar img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
+}
+
+/* FIX HEADER AVATAR */
+
+.admin-header .avatar-btn{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    min-height:42px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+    padding:0 !important;
+}
+
+.admin-header .avatar-btn img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
+}
+
+/* DROPDOWN PROFILE AVATAR */
+
+.admin-header .profile-avatar{
+    width:52px !important;
+    height:52px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+}
+
+.admin-header .profile-avatar img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
 }
 
 </style>
@@ -308,201 +458,476 @@ td{
 
 <div class="main-content">
 
-    <div class="page-title">
-        Super Admin Dashboard
-    </div>
+<div class="page-title">
+Overview
+</div>
 
-    <div class="page-subtitle">
-        Full system analytics and administrator overview.
-    </div>
+<div class="page-sub">
+Welcome back. Here's what's happening in your store.
+</div>
 
-    <!-- CARDS -->
+<!-- CARDS -->
 
-    <div class="cards">
+<div class="cards">
 
-        <div class="card">
+<div class="card">
 
-            <div class="card-icon">
-                <i data-lucide="shield"></i>
-            </div>
+<div class="card-top">
 
-            <div class="card-title">
-                Total Admins
-            </div>
+<div class="card-title">Revenue</div>
 
-            <div class="card-value">
-                <?= $adminCount ?>
-            </div>
+<div class="card-icon">
+<i data-lucide="dollar-sign"></i>
+</div>
 
-        </div>
+</div>
 
-        <div class="card">
+<div class="card-value">
+RM <?= number_format($revenue,2) ?>
+</div>
 
-            <div class="card-icon">
-                <i data-lucide="wallet"></i>
-            </div>
+<div class="card-growth">
+↗ Live revenue
+</div>
 
-            <div class="card-title">
-                Total Revenue
-            </div>
+</div>
 
-            <div class="card-value">
-                RM <?= number_format($revenue,2) ?>
-            </div>
+<div class="card">
 
-        </div>
+<div class="card-top">
 
-        <div class="card">
+<div class="card-title">Orders</div>
 
-            <div class="card-icon">
-                <i data-lucide="shopping-cart"></i>
-            </div>
+<div class="card-icon">
+<i data-lucide="shopping-cart"></i>
+</div>
 
-            <div class="card-title">
-                Total Orders
-            </div>
+</div>
 
-            <div class="card-value">
-                <?= $orderCount ?>
-            </div>
+<div class="card-value">
+<?= $orderCount ?>
+</div>
 
-        </div>
+<div class="card-growth">
+↗ Total orders
+</div>
 
-        <div class="card">
+</div>
 
-            <div class="card-icon">
-                <i data-lucide="users"></i>
-            </div>
+<div class="card">
 
-            <div class="card-title">
-                Total Customers
-            </div>
+<div class="card-top">
 
-            <div class="card-value">
-                <?= $userCount ?>
-            </div>
+<div class="card-title">Customers</div>
 
-        </div>
+<div class="card-icon">
+<i data-lucide="users"></i>
+</div>
 
-    </div>
+</div>
 
-    <!-- CHARTS -->
+<div class="card-value">
+<?= $userCount ?>
+</div>
 
-    <div class="charts">
+<div class="card-growth">
+↗ Registered users
+</div>
 
-        <div class="chart-box">
+</div>
 
-            <div class="chart-title">
-                Revenue Analytics
-            </div>
+<div class="card">
 
-            <canvas id="lineChart"></canvas>
+<div class="card-top">
 
-        </div>
+<div class="card-title">Products</div>
 
-        <div class="chart-box">
+<div class="card-icon">
+<i data-lucide="package"></i>
+</div>
 
-            <div class="chart-title">
-                Product Sales
-            </div>
+</div>
 
-            <canvas id="barChart"></canvas>
+<div class="card-value">
+<?= $productCount ?>
+</div>
 
-        </div>
+<div class="card-growth">
+↗ Active products
+</div>
 
-    </div>
+</div>
 
-    <!-- RECENT ADMINS -->
+</div>
 
-    <div class="admin-box">
+<!-- TOP GRID -->
 
-        <div class="admin-title">
-            Recent Admin Activity
-        </div>
+<div class="top-grid">
 
-        <table>
+<div class="chart-card">
 
-            <thead>
+<div class="chart-title">
+Revenue trend
+</div>
 
-                <tr>
-                    <th>Administrator</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                </tr>
+<div class="chart-wrapper">
+<canvas id="lineChart"></canvas>
+</div>
 
-            </thead>
+</div>
 
-            <tbody>
+<div class="chart-card">
 
-<?php while($a = $recentAdmins->fetch_assoc()): 
+<div class="chart-title">
+Inventory value by category
+</div>
 
-$initials = strtoupper(substr($a['username'],0,2));
+<div class="chart-wrapper">
+<canvas id="donutChart"></canvas>
+</div>
 
-$role = $a['role'] ?? 'Admin';
+</div>
+
+</div>
+
+<!-- BOTTOM -->
+
+<div class="bottom-grid">
+
+<div class="status-card">
+
+<div class="chart-title">
+Order status
+</div>
+
+<div class="chart-wrapper">
+<canvas id="pieChart"></canvas>
+</div>
+
+</div>
+
+<!-- INVENTORY -->
+
+<div class="inventory-card">
+
+<div class="chart-title">
+Top inventory
+</div>
+
+<?php
+
+$items = [];
+$maxStock = 1;
+
+while($row = $topInventory->fetch_assoc()){
+
+    $items[] = $row;
+
+    if($row['stock'] > $maxStock){
+        $maxStock = $row['stock'];
+    }
+}
+
+foreach($items as $row):
+
+$width = ($row['stock'] / $maxStock) * 100;
+?>
+
+<div class="inventory-item">
+
+<div class="inventory-top">
+
+<span><?= $row['product_name'] ?></span>
+
+<span><?= $row['stock'] ?> pcs</span>
+
+</div>
+
+<div class="progress">
+
+<div class="progress-bar"
+style="width:<?= $width ?>%">
+</div>
+
+</div>
+
+</div>
+
+<?php endforeach; ?>
+
+</div>
+
+<!-- ALERT -->
+
+<div class="alert-card">
+
+<div class="chart-title">
+Stock alerts
+</div>
+
+<?php while($low = $lowStock->fetch_assoc()): ?>
+
+<div class="alert-item">
+
+<div>
+
+<b><?= $low['product_name'] ?></b>
+
+<br>
+
+<small style="color:#64748b">
+Low stock product
+</small>
+
+</div>
+
+<div class="alert-badge">
+
+<?= $low['stock'] ?> left
+
+</div>
+
+</div>
+
+<?php endwhile; ?>
+
+</div>
+
+</div>
+<!-- =========================================
+RECENT ADMIN ACTIVITY
+========================================= -->
+
+<?php
+
+$recentAdmins = $conn->query("
+    SELECT
+        username,
+        email,
+        role,
+        status,
+        avatar
+    FROM admins
+    ORDER BY admin_id DESC
+    LIMIT 5
+");
 
 ?>
 
+<div class="table-card" style="margin-bottom:24px;">
+
+    <div class="table-title">
+        Recent Admin Activity
+    </div>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Administrator</th>
+                <th>Role</th>
+                <th>Status</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+        <?php while($admin = $recentAdmins->fetch_assoc()): ?>
+
+            <?php
+
+            /* =========================
+               FIX AVATAR PATH
+            ========================= */
+
+            if(
+                !empty($admin['avatar']) &&
+                file_exists("../uploads/admins/" . $admin['avatar'])
+            ){
+
+                $avatar =
+                "../uploads/admins/" .
+                $admin['avatar'];
+
+            }else{
+
+                $avatar =
+                "https://ui-avatars.com/api/?name=" .
+                urlencode($admin['username']) .
+                "&background=2563eb&color=fff";
+
+            }
+
+            ?>
+
+            <tr>
+
+                <td>
+
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:14px;
+                    ">
+
+                        <!-- AVATAR -->
+
+                        <img
+                        src="<?= $avatar ?>"
+                        alt="avatar"
+
+                        style="
+                            width:46px;
+                            height:46px;
+
+                            border-radius:50%;
+
+                            object-fit:cover;
+                            object-position:center;
+
+                            display:block;
+
+                            border:2px solid #2563eb;
+
+                            background:#fff;
+                        ">
+
+                        <!-- INFO -->
+
+                        <div>
+
+                            <div style="
+                                font-weight:800;
+                                color:#0f172a;
+                                font-size:18px;
+                            ">
+
+                                <?= htmlspecialchars($admin['username']) ?>
+
+                            </div>
+
+                            <div style="
+                                color:#64748b;
+                                font-size:14px;
+                                margin-top:4px;
+                            ">
+
+                                <?= htmlspecialchars($admin['email']) ?>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </td>
+
+                <!-- ROLE -->
+
+                <td>
+
+                    <span style="
+                        font-weight:700;
+                        color:#2563eb;
+                        text-transform:capitalize;
+                    ">
+
+                        <?= str_replace("_"," ",$admin['role']) ?>
+
+                    </span>
+
+                </td>
+
+                <!-- STATUS -->
+
+                <td>
+
+                    <span style="
+                        color:#22c55e;
+                        font-weight:800;
+                    ">
+
+                        <?= $admin['status'] ?>
+
+                    </span>
+
+                </td>
+
+            </tr>
+
+        <?php endwhile; ?>
+
+        </tbody>
+
+    </table>
+
+</div>
+<!-- TABLE -->
+
+<div class="table-card">
+
+<div class="table-title">
+Recent orders
+</div>
+
+<table>
+
+<thead>
+
 <tr>
 
-    <td>
+<th>Order</th>
+<th>Date</th>
+<th>Status</th>
+<th>Total</th>
 
-        <div class="admin-user">
+</tr>
 
-            <div class="avatar">
-                <?= $initials ?>
-            </div>
+</thead>
 
-            <div>
+<tbody>
 
-                <div class="admin-name">
-                    <?= htmlspecialchars($a['username']) ?>
-                </div>
+<?php while($row = $recentOrders->fetch_assoc()): ?>
 
-                <div class="admin-email">
-                    <?= htmlspecialchars($a['email']) ?>
-                </div>
+<tr>
 
-            </div>
+<td>
+ORD-<?= $row['order_id'] ?>
+</td>
 
-        </div>
+<td>
+<?= date("Y-m-d", strtotime($row['created_at'])) ?>
+</td>
 
-    </td>
+<td>
 
-    <td>
+<span class="status <?= strtolower($row['status']) ?>">
 
-<?php if($role == "Super Admin"): ?>
+<?= $row['status'] ?>
 
-        <div class="badge badge-super">
-            Super Admin
-        </div>
+</span>
 
-<?php else: ?>
+</td>
 
-        <div class="badge badge-admin">
-            Admin
-        </div>
-
-<?php endif; ?>
-
-    </td>
-
-    <td style="color:#22c55e;font-weight:700;">
-        Active
-    </td>
+<td>
+RM <?= number_format($row['total_price'],2) ?>
+</td>
 
 </tr>
 
 <?php endwhile; ?>
 
-            </tbody>
+</tbody>
 
-        </table>
-
-    </div>
+</table>
 
 </div>
 
-<script src="admin.js"></script>
+</div>
 
 <script>
 
@@ -510,62 +935,130 @@ lucide.createIcons();
 
 /* LINE CHART */
 
-new Chart(document.getElementById("lineChart"), {
+new Chart(document.getElementById('lineChart'),{
 
-    type:'line',
+type:'line',
 
-    data:{
-        labels:['Nov','Dec','Jan','Feb','Mar','Apr'],
+data:{
 
-        datasets:[{
-            label:'Revenue',
+labels:<?= json_encode($monthLabels) ?>,
 
-            data:[28000,40000,35000,42000,48000,52000],
+datasets:[{
 
-            borderColor:'#2563eb',
+label:'Revenue',
 
-            backgroundColor:'rgba(37,99,235,.1)',
+data:<?= json_encode($monthRevenue) ?>,
 
-            tension:.4,
+borderColor:'#2563eb',
 
-            fill:true
-        }]
-    },
+backgroundColor:'rgba(37,99,235,.15)',
 
-    options:{
-        responsive:true,
-        plugins:{
-            legend:{
-                display:true
-            }
-        }
-    }
+fill:true,
+
+tension:.4,
+
+pointRadius:5
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false
+
+}
 
 });
 
-/* BAR CHART */
+/* DONUT CHART */
 
-new Chart(document.getElementById("barChart"), {
+new Chart(document.getElementById('donutChart'),{
 
-    type:'bar',
+type:'doughnut',
 
-    data:{
-        labels:['GPU','CPU','RAM','Storage','Case'],
+data:{
 
-        datasets:[{
-            label:'Sales',
+labels:<?= json_encode($categoryLabels) ?>,
 
-            data:[150,200,300,250,100],
+datasets:[{
 
-            backgroundColor:'#2563eb',
+data:<?= json_encode($categoryValues) ?>,
 
-            borderRadius:8
-        }]
-    },
+backgroundColor:[
+'#2563eb',
+'#0ea5e9',
+'#14b8a6',
+'#8b5cf6',
+'#f59e0b',
+'#ef4444',
+'#22c55e'
+],
 
-    options:{
-        responsive:true
-    }
+borderWidth:0
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+cutout:'60%'
+
+}
+
+});
+
+/* PIE CHART */
+
+new Chart(document.getElementById('pieChart'),{
+
+type:'pie',
+
+data:{
+
+labels:[
+'Pending',
+'Processing',
+'Shipped',
+'Completed'
+],
+
+datasets:[{
+
+data:[
+<?= $pending ?>,
+<?= $processing ?>,
+<?= $shipped ?>,
+<?= $completed ?>
+],
+
+backgroundColor:[
+'#f59e0b',
+'#2563eb',
+'#0ea5e9',
+'#22c55e'
+],
+
+borderWidth:0
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false
+
+}
 
 });
 

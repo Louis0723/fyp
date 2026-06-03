@@ -9,13 +9,21 @@ include __DIR__ . "/../db.php";
 NOTIFICATION COUNT
 ========================================= */
 
+$count = 0;
+
 $countQuery = $conn->query("
     SELECT COUNT(*) as total 
     FROM orders 
     WHERE status='Pending'
 ");
 
-$count = $countQuery->fetch_assoc()['total'];
+if($countQuery && $countQuery->num_rows > 0){
+
+    $countData = $countQuery->fetch_assoc();
+
+    $count = $countData['total'];
+
+}
 
 /* =========================================
 NOTIFICATIONS
@@ -36,10 +44,37 @@ $notifications = $conn->query("
 ADMIN INFO
 ========================================= */
 
-$adminName  = $_SESSION['admin'] ?? 'Admin';
-$adminEmail = $_SESSION['admin_email'] ?? 'admin@lozpcstore.com';
+$adminName   = "Admin";
+$adminEmail  = "No Email";
+$adminAvatar = "";
 
-$avatar = strtoupper(substr($adminName,0,2));
+if(isset($_SESSION['admin'])){
+
+    $username = $_SESSION['admin'];
+
+    $adminQuery = $conn->query("
+        SELECT *
+        FROM admins
+        WHERE username = '$username'
+        LIMIT 1
+    ");
+
+    if($adminQuery && $adminQuery->num_rows > 0){
+
+        $adminData = $adminQuery->fetch_assoc();
+
+        $adminName  = $adminData['username'];
+        $adminEmail = $adminData['email'];
+
+        if(isset($adminData['avatar'])){
+            $adminAvatar = $adminData['avatar'];
+        }
+
+    }
+
+}
+
+$avatarText = strtoupper(substr($adminName,0,2));
 ?>
 
 <header class="admin-header">
@@ -59,13 +94,12 @@ $avatar = strtoupper(substr($adminName,0,2));
         <!-- NOTIFICATION -->
         <div class="notif">
 
-            <!-- BUTTON -->
             <button id="notifBtn" class="notif-btn">
 
                 <i data-lucide="bell"></i>
 
                 <?php if($count > 0): ?>
-                    <span class="badge" id="notifBadge">
+                    <span class="badge">
                         <?= $count ?>
                     </span>
                 <?php endif; ?>
@@ -75,20 +109,21 @@ $avatar = strtoupper(substr($adminName,0,2));
             <!-- DROPDOWN -->
             <div class="notif-box" id="notifBox">
 
-                <!-- TOP -->
+                <!-- HEADER -->
                 <div class="notif-header">
 
                     <div>
+
                         <h4>Notifications</h4>
 
                         <span id="unreadText">
                             <?= $count ?> unread
                         </span>
+
                     </div>
 
                     <div class="notif-actions">
 
-                        <!-- MARK ALL -->
                         <button type="button"
                                 class="mark-all-btn"
                                 id="markAllBtn">
@@ -98,7 +133,6 @@ $avatar = strtoupper(substr($adminName,0,2));
 
                         </button>
 
-                        <!-- CLEAR -->
                         <button type="button"
                                 class="clear-btn"
                                 id="clearBtn">
@@ -113,76 +147,56 @@ $avatar = strtoupper(substr($adminName,0,2));
                 </div>
 
                 <!-- LIST -->
-                <div class="notif-list" id="notifList">
+                <div class="notif-list">
 
-                    <?php while($n = $notifications->fetch_assoc()): ?>
+                    <?php if($notifications && $notifications->num_rows > 0): ?>
 
-                        <?php
+                        <?php while($n = $notifications->fetch_assoc()): ?>
 
-                        $status = strtolower($n['status']);
+                            <a href="admin_orders.php"
+                               class="notif-item">
 
-                        if($status == 'pending'){
-                            $title = "New pending order";
-                            $iconClass = "pending";
-                            $icon = "shopping-cart";
-                        }
-                        elseif($status == 'processing'){
-                            $title = "Processing order";
-                            $iconClass = "processing";
-                            $icon = "package";
-                        }
-                        elseif($status == 'completed'){
-                            $title = "Completed order";
-                            $iconClass = "completed";
-                            $icon = "badge-check";
-                        }
-                        else{
-                            $title = ucfirst($status)." order";
-                            $iconClass = "default";
-                            $icon = "bell";
-                        }
+                                <div class="notif-icon pending">
 
-                        ?>
-
-                        <!-- CLICKABLE ITEM -->
-                        <a href="admin_orders.php"
-                           class="notif-item">
-
-                            <!-- ICON -->
-                            <div class="notif-icon <?= $iconClass ?>">
-
-                                <i data-lucide="<?= $icon ?>"></i>
-
-                            </div>
-
-                            <!-- CONTENT -->
-                            <div class="notif-content">
-
-                                <div class="notif-top">
-
-                                    <h5>
-                                        <?= $title ?> #<?= $n['order_id'] ?>
-                                    </h5>
-
-                                    <span class="notif-new">
-                                        New
-                                    </span>
+                                    <i data-lucide="shopping-cart"></i>
 
                                 </div>
 
-                                <p>
-                                    RM <?= number_format($n['total_price'],2) ?>
-                                </p>
+                                <div class="notif-content">
 
-                                <small>
-                                    <?= date('Y-m-d', strtotime($n['created_at'])) ?>
-                                </small>
+                                    <div class="notif-top">
 
-                            </div>
+                                        <h5>
+                                            Order #<?= $n['order_id'] ?>
+                                        </h5>
 
-                        </a>
+                                    </div>
 
-                    <?php endwhile; ?>
+                                    <p>
+                                        RM <?= number_format($n['total_price'],2) ?>
+                                    </p>
+
+                                    <small>
+                                        <?= date('Y-m-d', strtotime($n['created_at'])) ?>
+                                    </small>
+
+                                </div>
+
+                            </a>
+
+                        <?php endwhile; ?>
+
+                    <?php else: ?>
+
+                        <div class="empty-notification">
+
+                            <i data-lucide="bell-off"></i>
+
+                            <p>No notifications</p>
+
+                        </div>
+
+                    <?php endif; ?>
 
                 </div>
 
@@ -194,7 +208,17 @@ $avatar = strtoupper(substr($adminName,0,2));
         <div class="profile-wrapper">
 
             <button class="avatar-btn" id="profileBtn">
-                <?= $avatar ?>
+
+                <?php if(!empty($adminAvatar) && $adminAvatar != "default-avatar.png"): ?>
+
+                    <img src="../uploads/admins/<?= $adminAvatar ?>">
+
+                <?php else: ?>
+
+                    <?= $avatarText ?>
+
+                <?php endif; ?>
+
             </button>
 
             <!-- PROFILE BOX -->
@@ -204,12 +228,22 @@ $avatar = strtoupper(substr($adminName,0,2));
                 <div class="profile-header">
 
                     <div class="profile-avatar">
-                        <?= $avatar ?>
+
+                        <?php if(!empty($adminAvatar) && $adminAvatar != "default-avatar.png"): ?>
+
+                            <img src="../uploads/admins/<?= $adminAvatar ?>">
+
+                        <?php else: ?>
+
+                            <?= $avatarText ?>
+
+                        <?php endif; ?>
+
                     </div>
 
                     <div>
-                        <h4><?= $adminName ?></h4>
-                        <p><?= $adminEmail ?></p>
+                        <h4><?= htmlspecialchars($adminName) ?></h4>
+                        <p><?= htmlspecialchars($adminEmail) ?></p>
                     </div>
 
                 </div>
@@ -227,7 +261,7 @@ $avatar = strtoupper(substr($adminName,0,2));
                         Edit Profile
                     </a>
 
-                    <a href="logout.php" class="logout-btn">
+                    <a href="admin_logout.php" class="logout-btn">
                         <i data-lucide="log-out"></i>
                         Logout
                     </a>
@@ -261,7 +295,6 @@ $avatar = strtoupper(substr($adminName,0,2));
 .header-left{
     display:flex;
     align-items:center;
-    gap:18px;
 }
 
 .header-right{
@@ -270,6 +303,8 @@ $avatar = strtoupper(substr($adminName,0,2));
     gap:18px;
     position:relative;
 }
+
+/* TOGGLE */
 
 .toggle-btn{
     width:42px;
@@ -288,9 +323,7 @@ $avatar = strtoupper(substr($adminName,0,2));
     background:#f3f4f6;
 }
 
-/* =========================================
-NOTIFICATION
-========================================= */
+/* NOTIFICATION */
 
 .notif{
     position:relative;
@@ -307,11 +340,6 @@ NOTIFICATION
     align-items:center;
     justify-content:center;
     position:relative;
-}
-
-.notif-btn i{
-    width:20px;
-    height:20px;
 }
 
 .badge{
@@ -334,7 +362,7 @@ NOTIFICATION
     position:absolute;
     top:60px;
     right:0;
-    width:390px;
+    width:360px;
     background:#fff;
     border-radius:18px;
     border:1px solid #e5e7eb;
@@ -349,15 +377,14 @@ NOTIFICATION
 }
 
 .notif-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
     padding:18px;
     border-bottom:1px solid #f1f5f9;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
 }
 
 .notif-header h4{
-    margin:0;
     font-size:18px;
 }
 
@@ -368,7 +395,7 @@ NOTIFICATION
 
 .notif-actions{
     display:flex;
-    gap:12px;
+    gap:10px;
 }
 
 .notif-actions button{
@@ -379,6 +406,13 @@ NOTIFICATION
     align-items:center;
     gap:5px;
     font-size:13px;
+    color:#475569;
+    font-weight:600;
+    transition:.2s;
+}
+
+.notif-actions button:hover{
+    color:#2563eb;
 }
 
 .notif-list{
@@ -404,43 +438,19 @@ NOTIFICATION
     width:44px;
     height:44px;
     border-radius:50%;
+    background:#dbeafe;
+    color:#2563eb;
     display:flex;
     align-items:center;
     justify-content:center;
     flex-shrink:0;
 }
 
-.notif-icon.pending{
-    background:#dbeafe;
-    color:#2563eb;
-}
-
-.notif-icon.processing{
-    background:#ede9fe;
-    color:#7c3aed;
-}
-
-.notif-icon.completed{
-    background:#dcfce7;
-    color:#16a34a;
-}
-
-.notif-icon.default{
-    background:#f3f4f6;
-    color:#6b7280;
-}
-
 .notif-content{
     flex:1;
 }
 
-.notif-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.notif-top h5{
+.notif-content h5{
     margin:0;
     font-size:15px;
 }
@@ -455,6 +465,8 @@ NOTIFICATION
     color:#9ca3af;
 }
 
+/* PROFILE */
+
 .profile-wrapper{
     position:relative;
 }
@@ -468,6 +480,16 @@ NOTIFICATION
     color:#fff;
     font-weight:700;
     cursor:pointer;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.avatar-btn img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
 }
 
 .profile-box{
@@ -496,8 +518,8 @@ NOTIFICATION
 }
 
 .profile-avatar{
-    width:50px;
-    height:50px;
+    width:52px;
+    height:52px;
     border-radius:50%;
     background:#2563eb;
     color:#fff;
@@ -505,6 +527,13 @@ NOTIFICATION
     align-items:center;
     justify-content:center;
     font-weight:700;
+    overflow:hidden;
+}
+
+.profile-avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
 }
 
 .profile-menu{
@@ -545,12 +574,9 @@ NOTIFICATION
 
 <script>
 
-/* ICONS */
 lucide.createIcons();
 
-/* =========================================
-SIDEBAR TOGGLE
-========================================= */
+/* SIDEBAR */
 
 const toggleSidebar = document.getElementById("toggleSidebar");
 const sidebar = document.getElementById("sidebar");
@@ -568,81 +594,22 @@ if(toggleSidebar && sidebar){
 
     });
 
-    if(localStorage.getItem("sidebarCollapsed") === "true"){
-
-        sidebar.classList.add("collapsed");
-
-    }
-
 }
 
-/* =========================================
-NOTIFICATION DROPDOWN
-========================================= */
+/* NOTIFICATION */
 
 const notifBtn = document.getElementById("notifBtn");
 const notifBox = document.getElementById("notifBox");
 
-if(notifBtn){
+notifBtn.addEventListener("click", function(e){
 
-    notifBtn.addEventListener("click", function(e){
+    e.stopPropagation();
 
-        e.stopPropagation();
-
-        notifBox.classList.toggle("active");
-
-    });
-
-}
-
-/* =========================================
-PROFILE
-========================================= */
-
-const profileBtn = document.getElementById("profileBtn");
-const profileBox = document.getElementById("profileBox");
-
-if(profileBtn){
-
-    profileBtn.addEventListener("click", function(e){
-
-        e.stopPropagation();
-
-        profileBox.classList.toggle("active");
-
-    });
-
-}
-
-/* =========================================
-CLOSE DROPDOWN
-========================================= */
-
-document.addEventListener("click", function(e){
-
-    if(
-        notifBox &&
-        notifBtn &&
-        !notifBox.contains(e.target) &&
-        !notifBtn.contains(e.target)
-    ){
-        notifBox.classList.remove("active");
-    }
-
-    if(
-        profileBox &&
-        profileBtn &&
-        !profileBox.contains(e.target) &&
-        !profileBtn.contains(e.target)
-    ){
-        profileBox.classList.remove("active");
-    }
+    notifBox.classList.toggle("active");
 
 });
 
-/* =========================================
-MARK ALL
-========================================= */
+/* MARK ALL */
 
 const markAllBtn = document.getElementById("markAllBtn");
 
@@ -650,41 +617,23 @@ if(markAllBtn){
 
     markAllBtn.addEventListener("click", function(){
 
-        let notifNew = document.querySelectorAll(".notif-new");
-
-        notifNew.forEach(item => {
-
-            item.innerHTML = "Read";
-
-            item.style.color = "#16a34a";
-
-            item.style.fontWeight = "700";
-
-        });
-
-        const badge = document.getElementById("notifBadge");
+        const badge = document.querySelector(".badge");
 
         if(badge){
-
             badge.remove();
-
         }
 
         const unreadText = document.getElementById("unreadText");
 
         if(unreadText){
-
             unreadText.innerHTML = "0 unread";
-
         }
 
     });
 
 }
 
-/* =========================================
-CLEAR ALL
-========================================= */
+/* CLEAR */
 
 const clearBtn = document.getElementById("clearBtn");
 
@@ -692,10 +641,9 @@ if(clearBtn){
 
     clearBtn.addEventListener("click", function(){
 
-        const notifList = document.getElementById("notifList");
+        const notifList = document.querySelector(".notif-list");
 
         notifList.innerHTML = `
-
             <div class="empty-notification">
 
                 <i data-lucide="bell-off"></i>
@@ -703,23 +651,18 @@ if(clearBtn){
                 <p>No notifications</p>
 
             </div>
-
         `;
 
-        const badge = document.getElementById("notifBadge");
+        const badge = document.querySelector(".badge");
 
         if(badge){
-
             badge.remove();
-
         }
 
         const unreadText = document.getElementById("unreadText");
 
         if(unreadText){
-
             unreadText.innerHTML = "0 unread";
-
         }
 
         lucide.createIcons();
@@ -727,5 +670,32 @@ if(clearBtn){
     });
 
 }
+
+/* PROFILE */
+
+const profileBtn = document.getElementById("profileBtn");
+const profileBox = document.getElementById("profileBox");
+
+profileBtn.addEventListener("click", function(e){
+
+    e.stopPropagation();
+
+    profileBox.classList.toggle("active");
+
+});
+
+/* CLOSE */
+
+document.addEventListener("click", function(e){
+
+    if(!notifBox.contains(e.target) && !notifBtn.contains(e.target)){
+        notifBox.classList.remove("active");
+    }
+
+    if(!profileBox.contains(e.target) && !profileBtn.contains(e.target)){
+        profileBox.classList.remove("active");
+    }
+
+});
 
 </script>

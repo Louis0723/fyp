@@ -34,31 +34,6 @@ if(isset($_POST['update_category'])){
 }
 
 /* =========================
-   DELETE CATEGORY
-========================= */
-
-if(isset($_GET['delete'])){
-
-    $delete = $_GET['delete'];
-
-    $stmt = $conn->prepare("
-        UPDATE products
-        SET category=''
-        WHERE category=?
-    ");
-
-    $stmt->bind_param("s",$delete);
-    $stmt->execute();
-
-    echo "
-    <script>
-        alert('Category deleted successfully');
-        window.location='view_category.php';
-    </script>
-    ";
-}
-
-/* =========================
    GET CATEGORY
 ========================= */
 
@@ -111,40 +86,6 @@ body{
     min-height:100vh;
     position:relative;
     z-index:1;
-}
-
-/* =========================
-   FIX TOP HEADER OVERLAP
-========================= */
-
-.top-header,
-.admin-header,
-.header,
-.topbar{
-    position:fixed;
-    top:0;
-    left:260px;
-    right:0;
-    height:88px;
-    background:#f8fafc;
-    z-index:999;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 30px;
-    border-bottom:1px solid #e2e8f0;
-}
-
-/* =========================
-   REMOVE BROKEN NOTIFICATION
-========================= */
-
-.notification-dropdown,
-.notification-box,
-.notification-list,
-.order-notification,
-.floating-orders{
-    display:none !important;
 }
 
 /* =========================
@@ -258,8 +199,7 @@ body{
     gap:14px;
 }
 
-.edit-btn,
-.delete-btn{
+.edit-btn{
     width:46px;
     height:46px;
     border:none;
@@ -271,25 +211,12 @@ body{
     font-size:18px;
     transition:.2s;
     text-decoration:none;
-}
-
-.edit-btn{
     background:#dbeafe;
     color:#2563eb;
 }
 
 .edit-btn:hover{
     background:#bfdbfe;
-    transform:translateY(-2px);
-}
-
-.delete-btn{
-    background:#fee2e2;
-    color:#dc2626;
-}
-
-.delete-btn:hover{
-    background:#fecaca;
     transform:translateY(-2px);
 }
 
@@ -318,18 +245,6 @@ body{
     border-radius:32px;
     padding:40px;
     position:relative;
-    animation:popup .2s ease;
-}
-
-@keyframes popup{
-    from{
-        transform:scale(.95);
-        opacity:0;
-    }
-    to{
-        transform:scale(1);
-        opacity:1;
-    }
 }
 
 .modal-title{
@@ -372,12 +287,10 @@ body{
     padding:0 18px;
     font-size:16px;
     outline:none;
-    transition:.2s;
 }
 
 .form-input:focus{
     border-color:#2563eb;
-    box-shadow:0 0 0 4px rgba(37,99,235,.1);
 }
 
 .button-group{
@@ -396,11 +309,6 @@ body{
     border-radius:16px;
     font-weight:700;
     cursor:pointer;
-    transition:.2s;
-}
-
-.cancel-btn:hover{
-    background:#cbd5e1;
 }
 
 .save-btn{
@@ -412,7 +320,6 @@ body{
     border-radius:16px;
     font-weight:700;
     cursor:pointer;
-    transition:.2s;
 }
 
 .save-btn:hover{
@@ -442,13 +349,6 @@ body{
     .form-grid{
         grid-template-columns:1fr;
     }
-
-    .top-header,
-    .admin-header,
-    .header,
-    .topbar{
-        left:0;
-    }
 }
 
 </style>
@@ -456,7 +356,17 @@ body{
 </head>
 <body>
 
-<?php include "admin_sidebar.php"; ?>
+<?php
+if(isset($_SESSION['role']) &&
+$_SESSION['role']=="super_admin"){
+
+    include "sadmin_sidebar.php";
+
+}else{
+
+    include "admin_sidebar.php";
+}
+?>
 <?php include "admin_header.php"; ?>
 
 <div class="main-content">
@@ -527,15 +437,6 @@ body{
                             <i class="fa-solid fa-pen"></i>
 
                         </button>
-
-                        <a
-                            href="?delete=<?= urlencode($row['category']) ?>"
-                            class="delete-btn"
-                            onclick="return confirm('Delete this category?')">
-
-                            <i class="fa-solid fa-trash"></i>
-
-                        </a>
 
                     </div>
 
