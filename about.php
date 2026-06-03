@@ -417,7 +417,7 @@ YAP.ZI.YI@student.mmu.edu.my
 
 
 <footer>
-© 2026 Homestay Reservation System | Developed by Creative Team
+© 2026 PC Store System | Developed by Creative Team
 </footer>
 
 <script>
