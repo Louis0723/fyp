@@ -7,7 +7,6 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-/* GET FILTER VALUES */
 $search = $_GET['search'] ?? '';
 $sort = $_GET['sort'] ?? '';
 $category = $_GET['category'] ?? '';
