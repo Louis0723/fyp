@@ -27,21 +27,23 @@ if(isset($_POST['reply_review'])){
 }
 
 /* =========================
-   REVIEWS
+   GET REVIEWS
 ========================= */
 
 $reviews = $conn->query("
     SELECT 
         r.*,
-        u.name,
-        p.product_name
+
+        COALESCE(u.name,'Deleted User') AS customer_name,
+
+        COALESCE(p.product_name,'Deleted Product') AS product_name
 
     FROM reviews r
 
-    JOIN users u
+    LEFT JOIN users u
     ON r.user_id = u.user_id
 
-    JOIN products p
+    LEFT JOIN products p
     ON r.product_id = p.product_id
 
     ORDER BY r.review_id DESC
@@ -55,37 +57,39 @@ $reviews = $conn->query("
 <meta charset="UTF-8">
 <title>Product Reviews</title>
 
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=999">
 
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
 body{
-    background:#f1f5f9;
+    background:#eef3f9;
+    font-family:'Segoe UI',sans-serif;
+    overflow-x:hidden;
 }
 
 /* MAIN */
 
 .main-content{
-    margin-left:95px;
-    margin-top:100px;
-    padding:30px;
+    margin-left:260px;
+    padding:120px 28px 40px;
 }
 
 /* TITLE */
 
 .review-title{
-    font-size:42px;
+    font-size:58px;
     font-weight:900;
     color:#0f172a;
+    line-height:1;
 }
 
 .review-sub{
-    margin-top:6px;
-    margin-bottom:30px;
+    margin-top:12px;
+    margin-bottom:35px;
     color:#64748b;
-    font-size:15px;
+    font-size:18px;
 }
 
 /* TABLE */
@@ -93,10 +97,9 @@ body{
 .review-table{
     width:100%;
     background:#fff;
-    border-radius:22px;
+    border-radius:28px;
     overflow:hidden;
-    border:1px solid #e5e7eb;
-    box-shadow:0 5px 20px rgba(0,0,0,.05);
+    box-shadow:0 10px 30px rgba(0,0,0,.05);
 }
 
 .review-table table{
@@ -106,17 +109,21 @@ body{
 
 .review-table th{
     background:#f8fafc;
-    padding:18px;
+    padding:24px 18px;
     text-align:left;
-    font-size:14px;
     color:#64748b;
-    border-bottom:1px solid #e5e7eb;
+    font-size:15px;
+    border-bottom:1px solid #e2e8f0;
 }
 
 .review-table td{
-    padding:18px;
-    border-bottom:1px solid #f1f5f9;
+    padding:22px 18px;
+    border-bottom:1px solid #edf2f7;
     vertical-align:middle;
+}
+
+.review-table tr:last-child td{
+    border-bottom:none;
 }
 
 /* PRODUCT */
@@ -124,15 +131,15 @@ body{
 .product-box{
     display:flex;
     align-items:center;
-    gap:14px;
+    gap:15px;
 }
 
 .product-image{
-    width:65px;
-    height:65px;
-    border-radius:14px;
+    width:70px;
+    height:70px;
+    border-radius:18px;
     object-fit:cover;
-    border:1px solid #e5e7eb;
+    border:1px solid #e2e8f0;
     background:#fff;
 }
 
@@ -141,17 +148,11 @@ body{
     color:#0f172a;
 }
 
-.customer-name{
-    font-size:13px;
-    color:#64748b;
-    margin-top:4px;
-}
-
 /* STARS */
 
 .stars{
     display:flex;
-    gap:2px;
+    gap:3px;
 }
 
 .star-fill{
@@ -170,19 +171,19 @@ body{
 /* REVIEW */
 
 .review-text{
-    max-width:350px;
-    color:#334155;
+    max-width:300px;
     line-height:1.5;
+    color:#475569;
 }
 
-/* BUTTONS */
+/* BUTTON */
 
 .action-btn{
     border:none;
     background:#2563eb;
     color:#fff;
-    padding:10px 18px;
-    border-radius:12px;
+    padding:12px 18px;
+    border-radius:14px;
     cursor:pointer;
     font-weight:700;
     transition:.2s;
@@ -190,6 +191,13 @@ body{
 
 .action-btn:hover{
     background:#1d4ed8;
+}
+
+/* DATE */
+
+.review-date{
+    color:#94a3b8;
+    font-size:14px;
 }
 
 /* MODAL */
@@ -210,10 +218,9 @@ body{
 
 .modal-box{
     width:700px;
-    max-height:90vh;
-    overflow-y:auto;
+    max-width:95%;
     background:#fff;
-    border-radius:24px;
+    border-radius:28px;
     padding:30px;
     position:relative;
 }
@@ -222,17 +229,17 @@ body{
 
 .close-modal{
     position:absolute;
-    top:20px;
-    right:20px;
+    top:18px;
+    right:18px;
+    width:42px;
+    height:42px;
     border:none;
-    background:#f1f5f9;
-    width:40px;
-    height:40px;
     border-radius:50%;
+    background:#f1f5f9;
     cursor:pointer;
 }
 
-/* MODAL TOP */
+/* TOP */
 
 .modal-top{
     display:flex;
@@ -245,14 +252,12 @@ body{
     height:120px;
     border-radius:18px;
     object-fit:cover;
-    border:1px solid #e5e7eb;
+    border:1px solid #e2e8f0;
 }
 
-/* MODAL TITLE */
-
 .modal-title{
-    font-size:28px;
-    font-weight:800;
+    font-size:32px;
+    font-weight:900;
     color:#0f172a;
 }
 
@@ -261,15 +266,13 @@ body{
     color:#64748b;
 }
 
-/* FULL REVIEW */
-
 .full-review{
     margin-top:20px;
     line-height:1.8;
     color:#334155;
 }
 
-/* REPLY BOX */
+/* REPLY */
 
 .reply-box{
     margin-top:25px;
@@ -286,13 +289,11 @@ body{
     outline:none;
 }
 
-/* SAVE */
-
 .reply-submit{
     margin-top:16px;
+    border:none;
     background:#2563eb;
     color:#fff;
-    border:none;
     padding:14px 24px;
     border-radius:14px;
     cursor:pointer;
@@ -318,30 +319,61 @@ body{
     margin-bottom:10px;
 }
 
-/* DATE */
-
-.review-date{
-    color:#94a3b8;
-    font-size:13px;
-}
-
 /* RESPONSIVE */
 
 @media(max-width:900px){
 
     .main-content{
-        margin-left:85px;
-        padding:18px;
+        margin-left:0;
+        padding:110px 15px 30px;
+    }
+
+    .review-title{
+        font-size:42px;
     }
 
     .review-table{
         overflow-x:auto;
     }
+}
 
-    .modal-box{
-        width:95%;
-    }
+/* FIX HEADER AVATAR */
 
+.admin-header .avatar-btn{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    min-height:42px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+    padding:0 !important;
+}
+
+.admin-header .avatar-btn img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
+}
+
+/* DROPDOWN PROFILE AVATAR */
+
+.admin-header .profile-avatar{
+    width:52px !important;
+    height:52px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+}
+
+.admin-header .profile-avatar img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
 }
 
 </style>
@@ -350,14 +382,7 @@ body{
 
 <body>
 
-<?php
-if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
-    include "sadmin_sidebar.php";
-}else{
-    include "admin_sidebar.php";
-}
-?>
-
+<?php include "admin_sidebar.php"; ?>
 <?php include "admin_header.php"; ?>
 
 <div class="main-content">
@@ -370,7 +395,6 @@ if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
         Manage customer feedback and reply reviews.
     </div>
 
-    <!-- TABLE -->
     <div class="review-table">
 
         <table>
@@ -378,7 +402,6 @@ if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
             <thead>
 
                 <tr>
-
                     <th>ID</th>
                     <th>Product</th>
                     <th>Customer</th>
@@ -386,76 +409,51 @@ if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
                     <th>Review</th>
                     <th>Date</th>
                     <th>Action</th>
-
                 </tr>
 
             </thead>
 
             <tbody>
 
+<?php if($reviews && $reviews->num_rows > 0): ?>
+
 <?php while($r = $reviews->fetch_assoc()): ?>
 
 <tr>
 
-    <!-- ID -->
-    <td>
+<td>
+    #<?= $r['review_id'] ?>
+</td>
 
-        #<?= $r['review_id'] ?>
+<td>
 
-    </td>
-
-    <!-- PRODUCT -->
-    <td>
-
-        <div class="product-box">
+<div class="product-box">
 
 <?php
-
-$imagePath = "../uploads/reviews/" . basename($r['image']);
-
-if(!empty($r['image']) && file_exists($imagePath)){
-
+$image = !empty($r['image'])
+? "../uploads/reviews/" . $r['image']
+: "../no-image.png";
 ?>
 
-<img 
-src="../uploads/reviews/<?= htmlspecialchars(basename($r['image'])) ?>"
-class="product-image"
->
+<img src="<?= $image ?>" class="product-image">
 
-<?php } else { ?>
+<div>
+    <div class="product-name">
+        <?= htmlspecialchars($r['product_name']) ?>
+    </div>
+</div>
 
-<img 
-src="../no-image.png"
-class="product-image"
->
+</div>
 
-<?php } ?>
+</td>
 
-            <div>
+<td>
+    <?= htmlspecialchars($r['customer_name']) ?>
+</td>
 
-                <div class="product-name">
-                    <?= htmlspecialchars($r['product_name']) ?>
-                </div>
+<td>
 
-            </div>
-
-        </div>
-
-    </td>
-
-    <!-- CUSTOMER -->
-    <td>
-
-        <strong>
-            <?= htmlspecialchars($r['name']) ?>
-        </strong>
-
-    </td>
-
-    <!-- STARS -->
-    <td>
-
-        <div class="stars">
+<div class="stars">
 
 <?php
 for($i=1;$i<=5;$i++){
@@ -465,59 +463,70 @@ for($i=1;$i<=5;$i++){
     }else{
         echo '<i data-lucide="star" class="star-empty"></i>';
     }
-
 }
 ?>
 
-        </div>
+</div>
 
-    </td>
+</td>
 
-    <!-- REVIEW -->
-    <td>
+<td>
 
-        <div class="review-text">
+<div class="review-text">
 
-            <?= htmlspecialchars(substr($r['review_text'],0,70)) ?>...
+<?= htmlspecialchars(substr($r['review_text'],0,70)) ?>
 
-        </div>
+</div>
 
-    </td>
+</td>
 
-    <!-- DATE -->
-    <td>
+<td>
 
-        <div class="review-date">
+<div class="review-date">
 
-            <?= date('M d, Y', strtotime($r['created_at'])) ?>
+<?= date('M d, Y', strtotime($r['created_at'])) ?>
 
-        </div>
+</div>
 
-    </td>
+</td>
 
-    <!-- ACTION -->
-    <td>
+<td>
 
-        <button 
-            class="action-btn openModalBtn"
+<button
+class="action-btn openModalBtn"
 
-            data-id="<?= $r['review_id'] ?>"
-            data-name="<?= htmlspecialchars($r['name']) ?>"
-            data-product="<?= htmlspecialchars($r['product_name']) ?>"
-            data-review="<?= htmlspecialchars($r['review_text']) ?>"
-            data-rating="<?= $r['rating'] ?>"
-            data-image="../uploads/reviews/<?= htmlspecialchars(basename($r['image'])) ?>"
-            data-reply="<?= htmlspecialchars($r['admin_reply'] ?? '') ?>"
+data-id="<?= $r['review_id'] ?>"
+data-name="<?= htmlspecialchars($r['customer_name']) ?>"
+data-product="<?= htmlspecialchars($r['product_name']) ?>"
+data-review="<?= htmlspecialchars($r['review_text']) ?>"
+data-rating="<?= $r['rating'] ?>"
+data-image="<?= $image ?>"
+data-reply="<?= htmlspecialchars($r['admin_reply'] ?? '') ?>"
+>
 
-        >
-            View Detail
-        </button>
+View Detail
 
-    </td>
+</button>
+
+</td>
 
 </tr>
 
 <?php endwhile; ?>
+
+<?php else: ?>
+
+<tr>
+
+<td colspan="7" style="text-align:center;padding:40px;">
+
+No reviews found
+
+</td>
+
+</tr>
+
+<?php endif; ?>
 
             </tbody>
 
@@ -528,65 +537,62 @@ for($i=1;$i<=5;$i++){
 </div>
 
 <!-- MODAL -->
+
 <div class="modal" id="reviewModal">
 
-    <div class="modal-box">
+<div class="modal-box">
 
-        <button class="close-modal" id="closeModal">
+<button class="close-modal" id="closeModal">
+<i data-lucide="x"></i>
+</button>
 
-            <i data-lucide="x"></i>
+<div class="modal-top">
 
-        </button>
+<img src="" id="modalImage" class="modal-image">
 
-        <div class="modal-top">
+<div>
 
-            <img src="" id="modalImage" class="modal-image">
+<div class="modal-title" id="modalProduct"></div>
 
-            <div>
+<div class="modal-user" id="modalUser"></div>
 
-                <div class="modal-title" id="modalProduct"></div>
+<div class="stars" id="modalStars"></div>
 
-                <div class="modal-user" id="modalUser"></div>
+</div>
 
-                <div class="stars" id="modalStars"></div>
+</div>
 
-            </div>
+<div class="full-review" id="modalReview"></div>
 
-        </div>
+<div class="admin-reply" id="adminReplyBox" style="display:none;">
 
-        <div class="full-review" id="modalReview"></div>
+<h4>Admin Reply</h4>
 
-        <!-- ADMIN REPLY -->
-        <div class="admin-reply" id="adminReplyBox" style="display:none;">
+<div id="adminReplyText"></div>
 
-            <h4>Admin Reply</h4>
+</div>
 
-            <div id="adminReplyText"></div>
+<form method="POST" class="reply-box">
 
-        </div>
+<input type="hidden" name="review_id" id="replyReviewId">
 
-        <!-- REPLY FORM -->
-        <form method="POST" class="reply-box">
+<textarea
+name="reply"
+placeholder="Write reply to customer..."
+required
+></textarea>
 
-            <input type="hidden" name="review_id" id="replyReviewId">
+<button
+type="submit"
+name="reply_review"
+class="reply-submit"
+>
+Reply Review
+</button>
 
-            <textarea 
-                name="reply"
-                placeholder="Write reply to customer..."
-                required
-            ></textarea>
+</form>
 
-            <button 
-                type="submit"
-                name="reply_review"
-                class="reply-submit"
-            >
-                Reply Review
-            </button>
-
-        </form>
-
-    </div>
+</div>
 
 </div>
 
@@ -594,97 +600,87 @@ for($i=1;$i<=5;$i++){
 
 lucide.createIcons();
 
-/* MODAL */
-
 const modal = document.getElementById("reviewModal");
-const closeModal = document.getElementById("closeModal");
 
-document.querySelectorAll(".openModalBtn").forEach(btn => {
+document.querySelectorAll(".openModalBtn").forEach(btn=>{
 
-    btn.addEventListener("click", () => {
+btn.addEventListener("click",()=>{
 
-        modal.classList.add("active");
+modal.classList.add("active");
 
-        document.getElementById("modalImage").src =
-            btn.dataset.image;
+document.getElementById("modalImage").src =
+btn.dataset.image;
 
-        document.getElementById("modalProduct").innerHTML =
-            btn.dataset.product;
+document.getElementById("modalProduct").innerHTML =
+btn.dataset.product;
 
-        document.getElementById("modalUser").innerHTML =
-            "Review by " + btn.dataset.name;
+document.getElementById("modalUser").innerHTML =
+"Review by " + btn.dataset.name;
 
-        document.getElementById("modalReview").innerHTML =
-            btn.dataset.review;
+document.getElementById("modalReview").innerHTML =
+btn.dataset.review;
 
-        document.getElementById("replyReviewId").value =
-            btn.dataset.id;
+document.getElementById("replyReviewId").value =
+btn.dataset.id;
 
-        /* STARS */
+let rating = parseInt(btn.dataset.rating);
 
-        let rating = parseInt(btn.dataset.rating);
+let starsHTML = '';
 
-        let starsHTML = '';
+for(let i=1;i<=5;i++){
 
-        for(let i=1;i<=5;i++){
+if(i <= rating){
 
-            if(i <= rating){
+starsHTML +=
+'<i data-lucide="star" class="star-fill"></i>';
 
-                starsHTML +=
-                '<i data-lucide="star" class="star-fill"></i>';
+}else{
 
-            }else{
+starsHTML +=
+'<i data-lucide="star" class="star-empty"></i>';
 
-                starsHTML +=
-                '<i data-lucide="star" class="star-empty"></i>';
+}
+}
 
-            }
+document.getElementById("modalStars").innerHTML =
+starsHTML;
 
-        }
+let reply = btn.dataset.reply;
 
-        document.getElementById("modalStars").innerHTML =
-            starsHTML;
+if(reply !== ''){
 
-        /* REPLY */
+document.getElementById("adminReplyBox").style.display =
+"block";
 
-        let reply = btn.dataset.reply;
+document.getElementById("adminReplyText").innerHTML =
+reply;
 
-        if(reply !== ''){
+}else{
 
-            document.getElementById("adminReplyBox").style.display =
-            "block";
+document.getElementById("adminReplyBox").style.display =
+"none";
 
-            document.getElementById("adminReplyText").innerHTML =
-            reply;
+}
 
-        }else{
-
-            document.getElementById("adminReplyBox").style.display =
-            "none";
-
-        }
-
-        lucide.createIcons();
-
-    });
+lucide.createIcons();
 
 });
 
-/* CLOSE */
+});
 
-closeModal.addEventListener("click", () => {
+document.getElementById("closeModal").addEventListener("click",()=>{
 
-    modal.classList.remove("active");
+modal.classList.remove("active");
 
 });
 
-window.addEventListener("click", (e) => {
+window.addEventListener("click",(e)=>{
 
-    if(e.target == modal){
+if(e.target == modal){
 
-        modal.classList.remove("active");
+modal.classList.remove("active");
 
-    }
+}
 
 });
 

@@ -7,7 +7,6 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-/* GET FILTER VALUES */
 $search = $_GET['search'] ?? '';
 $sort = $_GET['sort'] ?? '';
 $category = $_GET['category'] ?? '';
@@ -266,8 +265,7 @@ Mouse
 
 </select>
 
-<!-- SORT -->
-<select name="sort" style="padding:10px;border-radius:15px;">
+<select name="sort" style="padding:10px;border-radius:10px;">
 <option value="">Sort By</option>
 <option value="low" <?= $sort=='low'?'selected':'' ?>>Price Low → High</option>
 <option value="high" <?= $sort=='high'?'selected':'' ?>>Price High → Low</option>

@@ -8,12 +8,62 @@ if(!isset($_SESSION['admin'])){
 }
 
 /* =========================
-DATE FILTER
+DATE RANGE FILTER
 ========================= */
 
-$selected_date = isset($_GET['date'])
-? $_GET['date']
-: date('Y-m-d');
+$where = "";
+
+if(isset($_GET['range'])){
+
+    $range = $_GET['range'];
+
+    if($range == "7"){
+
+        $where =
+        "WHERE DATE(created_at)
+        >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+
+    }
+    elseif($range == "30"){
+
+        $where =
+        "WHERE DATE(created_at)
+        >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+
+    }
+    elseif($range == "90"){
+
+        $where =
+        "WHERE DATE(created_at)
+        >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)";
+
+    }
+    else{
+
+        $where = "";
+
+    }
+
+}
+elseif(
+    isset($_GET['start_date']) &&
+    isset($_GET['end_date'])
+){
+
+    $start = $_GET['start_date'];
+    $end   = $_GET['end_date'];
+
+    $where =
+    "WHERE DATE(created_at)
+    BETWEEN '$start' AND '$end'";
+}
+else{
+
+    $today = date('Y-m-d');
+
+    $where =
+    "WHERE DATE(created_at) = '$today'";
+}
 
 /* =========================
 MAIN STATS
@@ -23,7 +73,7 @@ MAIN STATS
 $revenue_query = mysqli_query($conn,"
 SELECT SUM(total_price) as revenue
 FROM orders
-WHERE DATE(created_at) = '$selected_date'
+$where
 ");
 
 $revenue = mysqli_fetch_assoc($revenue_query)['revenue'] ?? 0;
@@ -32,7 +82,7 @@ $revenue = mysqli_fetch_assoc($revenue_query)['revenue'] ?? 0;
 $order_query = mysqli_query($conn,"
 SELECT COUNT(*) as total
 FROM orders
-WHERE DATE(created_at) = '$selected_date'
+$where
 ");
 
 $total_orders = mysqli_fetch_assoc($order_query)['total'] ?? 0;
@@ -41,7 +91,7 @@ $total_orders = mysqli_fetch_assoc($order_query)['total'] ?? 0;
 $customer_query = mysqli_query($conn,"
 SELECT COUNT(DISTINCT user_id) as total
 FROM orders
-WHERE DATE(created_at) = '$selected_date'
+$where
 ");
 
 $total_customers = mysqli_fetch_assoc($customer_query)['total'] ?? 0;
@@ -66,7 +116,7 @@ ORDER STATUS
 $status_result = mysqli_query($conn,"
 SELECT status, COUNT(*) as total
 FROM orders
-WHERE DATE(created_at) = '$selected_date'
+$where
 GROUP BY status
 ");
 
@@ -87,6 +137,19 @@ SELECT
     SUM(price * stock) as value
 FROM products
 GROUP BY category
+");
+
+/* =========================
+TOP PRODUCTS
+========================= */
+
+$top_products_query = mysqli_query($conn,"
+SELECT 
+    product_name,
+    (price * stock) as value
+FROM products
+ORDER BY value DESC
+LIMIT 5
 ");
 
 /* =========================
@@ -132,8 +195,6 @@ WHERE stock = 0
 
 <link rel="stylesheet" href="style.css?v=100">
 
-<script src="https://unpkg.com/lucide@latest"></script>
-
 <style>
 
 body{
@@ -147,7 +208,6 @@ body{
     margin-left:270px;
     margin-top:95px;
     padding:30px;
-    transition:.3s;
 }
 
 .sidebar.collapsed ~ .main-content{
@@ -165,21 +225,75 @@ body{
 
 /* FILTER */
 
-.filter-box{
-    display:flex;
-    gap:14px;
-    align-items:center;
+.report-filter-card{
+    background:#fff;
+    border-radius:24px;
+    padding:28px;
     margin-bottom:30px;
+    box-shadow:0 8px 25px rgba(0,0,0,.05);
 }
 
-.filter-box input{
+.report-filter-title{
+    font-size:28px;
+    font-weight:800;
+    color:#111827;
+    margin-bottom:20px;
+}
+
+.quick-filter{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:24px;
+}
+
+.quick-btn{
+    height:46px;
+    padding:0 20px;
+    border-radius:14px;
+    border:none;
+    background:#f1f5f9;
+    color:#111827;
+    font-weight:700;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.quick-btn.active{
+    background:#2563eb;
+    color:#fff;
+}
+
+.custom-filter{
+    display:flex;
+    align-items:flex-end;
+    gap:16px;
+    flex-wrap:wrap;
+}
+
+.date-group{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.date-group label{
+    font-size:14px;
+    font-weight:700;
+    color:#64748b;
+}
+
+.date-group input{
+    width:220px;
     height:52px;
-    padding:0 18px;
     border:none;
     border-radius:14px;
-    background:#fff;
+    padding:0 18px;
+    background:#f8fafc;
     font-size:15px;
-    box-shadow:0 5px 20px rgba(0,0,0,.06);
+    box-shadow:0 4px 15px rgba(0,0,0,.05);
 }
 
 .btn-report{
@@ -194,8 +308,14 @@ body{
     font-size:15px;
 }
 
-.btn-report:hover{
-    background:#1d4ed8;
+.clear-btn{
+    height:52px;
+    padding:0 18px;
+    display:flex;
+    align-items:center;
+    text-decoration:none;
+    color:#111827;
+    font-weight:700;
 }
 
 /* REPORT */
@@ -210,19 +330,43 @@ body{
 /* HEADER */
 
 .report-header{
+    background:#0f172a;
+    border-radius:18px;
+    padding:30px 35px;
+    color:#fff;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
     margin-bottom:35px;
+    border-bottom:5px solid #38bdf8;
 }
 
-.report-header h2{
-    font-size:52px;
-    font-weight:800;
+.report-left h2{
+    font-size:38px;
+    font-weight:900;
+    margin-bottom:10px;
+    text-transform:uppercase;
+}
+
+.report-left p{
+    font-size:14px;
+    color:#cbd5e1;
+    line-height:1.8;
+}
+
+.report-right{
+    text-align:right;
+}
+
+.report-right h1{
+    font-size:48px;
+    font-weight:900;
     margin-bottom:8px;
-    color:#0f172a;
 }
 
-.report-header p{
-    color:#6b7280;
-    font-size:17px;
+.report-right span{
+    color:#cbd5e1;
+    font-size:14px;
 }
 
 /* STATS */
@@ -230,56 +374,41 @@ body{
 .stats-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:20px;
-    margin-bottom:45px;
+    gap:18px;
+    margin-bottom:35px;
 }
 
 .stat-card{
-    border:1px solid #e5e7eb;
-    border-radius:18px;
-    padding:24px;
-    min-height:140px;
-    break-inside:avoid;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    padding:22px;
 }
 
 .stat-label{
-    font-size:14px;
+    font-size:12px;
+    font-weight:700;
+    color:#64748b;
     text-transform:uppercase;
-    color:#6b7280;
-    margin-bottom:12px;
+    margin-bottom:10px;
 }
 
 .stat-value{
-    font-size:46px;
-    font-weight:800;
+    font-size:34px;
+    font-weight:900;
     color:#0f172a;
 }
 
-/* SECTION */
+/* TITLE */
 
 .section-title{
-    font-size:30px;
-    font-weight:800;
-    margin-bottom:18px;
-    color:#111827;
-    page-break-after:avoid;
-}
-
-/* STATUS */
-
-.status-list{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-bottom:40px;
-}
-
-.status-badge{
-    background:#f3f4f6;
-    border-radius:999px;
-    padding:12px 18px;
-    font-weight:700;
-    color:#374151;
+    font-size:28px;
+    font-weight:900;
+    color:#0f172a;
+    margin-top:28px;
+    margin-bottom:16px;
+    border-bottom:3px solid #38bdf8;
+    padding-bottom:8px;
 }
 
 /* TABLE */
@@ -287,39 +416,54 @@ body{
 .report-table{
     width:100%;
     border-collapse:collapse;
-    margin-bottom:45px;
-    page-break-inside:auto;
+    margin-bottom:35px;
 }
 
 .report-table th{
+    background:#0f172a;
+    color:#fff;
+    padding:14px;
+    font-size:13px;
+    text-transform:uppercase;
     text-align:left;
-    padding:15px;
-    background:#f8fafc;
-    color:#64748b;
-    border-bottom:1px solid #e5e7eb;
-    font-size:15px;
 }
 
 .report-table td{
-    padding:16px 15px;
-    border-bottom:1px solid #f1f5f9;
-    font-size:16px;
+    padding:12px 14px;
+    border-bottom:1px solid #e5e7eb;
+    font-size:14px;
 }
 
-.report-table tr{
-    page-break-inside:avoid;
+.report-table tr:nth-child(even){
+    background:#f8fafc;
 }
 
-.report-table tr:hover{
-    background:#f8fbff;
+/* STATUS */
+
+.status-list{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-bottom:35px;
+}
+
+.status-badge{
+    background:#f8fafc;
+    border:1px solid #dbeafe;
+    border-radius:10px;
+    padding:14px 18px;
+    font-weight:700;
 }
 
 /* ALERT */
 
 .stock-alert{
-    font-size:18px;
-    color:#374151;
-    margin-bottom:35px;
+    background:#f8fafc;
+    border-left:5px solid #2563eb;
+    padding:18px;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:700;
 }
 
 /* BUTTONS */
@@ -331,40 +475,54 @@ body{
     margin-top:30px;
 }
 
-.btn-print,
-.btn-pdf{
+.btn-print{
     border:none;
     border-radius:14px;
     padding:14px 26px;
     font-weight:700;
     cursor:pointer;
     font-size:15px;
-}
-
-.btn-print{
     background:#111827;
     color:#fff;
 }
 
-.btn-pdf{
-    background:#2563eb;
-    color:#fff;
+/* PRINT */
+
+@media print{
+
+@page{
+    size:A4;
+    margin:16mm;
 }
 
-/* PDF FIX */
-
-#reportArea{
-    width:100%;
+.sidebar,
+.top-header,
+.report-filter-card,
+.page-title,
+.action-buttons{
+    display:none !important;
 }
 
-.stats-grid,
-.report-table,
-.section-title,
-.status-list,
-.stock-alert{
-    page-break-inside:avoid;
-    break-inside:avoid;
+body{
+    background:#fff;
+    print-color-adjust:exact;
+    -webkit-print-color-adjust:exact;
 }
+
+.main-content{
+    margin:0 !important;
+    padding:0 !important;
+}
+
+.report-box{
+    box-shadow:none;
+    border-radius:0;
+    padding:0;
+}
+
+}
+
+/* RESPONSIVE */
 
 @media(max-width:1000px){
 
@@ -380,38 +538,49 @@ body{
     grid-template-columns:1fr;
 }
 
+.status-list{
+    grid-template-columns:1fr;
 }
 
-/* PRINT */
-
-@media print{
-
-.sidebar,
-.top-header,
-.filter-box,
-.action-buttons{
-    display:none !important;
 }
 
-.main-content{
-    margin:0 !important;
+/* FIX HEADER AVATAR */
+
+.admin-header .avatar-btn{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    min-height:42px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
     padding:0 !important;
 }
 
-body{
-    background:#fff;
+.admin-header .avatar-btn img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
 }
 
-.report-box{
-    box-shadow:none;
-    border-radius:0;
-    padding:25px;
+/* DROPDOWN PROFILE AVATAR */
+
+.admin-header .profile-avatar{
+    width:52px !important;
+    height:52px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
 }
 
-.stats-grid{
-    grid-template-columns:repeat(2,1fr);
-}
-
+.admin-header .profile-avatar img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
 }
 
 </style>
@@ -420,7 +589,17 @@ body{
 
 <body>
 
-<?php include "admin_sidebar.php"; ?>
+<?php
+if(isset($_SESSION['role']) &&
+$_SESSION['role']=="super_admin"){
+
+    include "sadmin_sidebar.php";
+
+}else{
+
+    include "admin_sidebar.php";
+}
+?>
 
 <div class="top-header">
 <?php include "admin_header.php"; ?>
@@ -432,32 +611,135 @@ body{
 View Report
 </div>
 
-<form method="GET" class="filter-box">
+<!-- FILTER -->
+
+<div class="report-filter-card">
+
+<div class="report-filter-title">
+Report period
+</div>
+
+<div class="quick-filter">
+
+<a href="?range=all"
+class="quick-btn <?= (isset($_GET['range']) && $_GET['range']=='all') ? 'active' : '' ?>">
+All time
+</a>
+
+<a href="?range=7"
+class="quick-btn <?= (isset($_GET['range']) && $_GET['range']=='7') ? 'active' : '' ?>">
+Last 7 days
+</a>
+
+<a href="?range=30"
+class="quick-btn <?= (isset($_GET['range']) && $_GET['range']=='30') ? 'active' : '' ?>">
+Last 30 days
+</a>
+
+<a href="?range=90"
+class="quick-btn <?= (isset($_GET['range']) && $_GET['range']=='90') ? 'active' : '' ?>">
+Last 90 days
+</a>
+
+</div>
+
+<form method="GET" class="custom-filter">
+
+<div class="date-group">
+<label>From</label>
 
 <input
 type="date"
-name="date"
-value="<?= $selected_date ?>"
+name="start_date"
+value="<?= $_GET['start_date'] ?? '' ?>"
 required>
+</div>
+
+<div class="date-group">
+<label>To</label>
+
+<input
+type="date"
+name="end_date"
+value="<?= $_GET['end_date'] ?? '' ?>"
+required>
+</div>
 
 <button class="btn-report">
-Get Report
+Generate
 </button>
+
+<a href="view_report.php"
+class="clear-btn">
+Clear
+</a>
 
 </form>
 
-<div class="report-box" id="reportArea">
+</div>
+
+<!-- REPORT -->
+
+<div class="report-box">
 
 <!-- HEADER -->
 
 <div class="report-header">
 
-<h2>Business Performance Report</h2>
+<div class="report-left">
+
+<h2>
+LOZ PC STORE
+</h2>
 
 <p>
-Generated <?= date("m/d/Y, h:i:s A") ?>
-• snapshot of current store state
+
+Business Performance Report
+
+<br>
+
+Generated:
+<?= date("n/j/Y, g:i:s A") ?>
+
+<br>
+
+<?php
+
+if(isset($_GET['range'])){
+
+    if($_GET['range'] == 'all'){
+
+        echo "Period: All Time";
+
+    }else{
+
+        echo "Period: Last ".$_GET['range']." Days";
+    }
+
+}
+elseif(isset($_GET['start_date'])){
+
+    echo "Period: ".
+    $_GET['start_date'].
+    " to ".
+    $_GET['end_date'];
+
+}
+?>
+
 </p>
+
+</div>
+
+<div class="report-right">
+
+<h1>REPORT</h1>
+
+<span>
+LOZ PC STORE SYSTEM
+</span>
+
+</div>
 
 </div>
 
@@ -466,7 +748,7 @@ Generated <?= date("m/d/Y, h:i:s A") ?>
 <div class="stats-grid">
 
 <div class="stat-card">
-<div class="stat-label">Revenue</div>
+<div class="stat-label">Total Revenue</div>
 <div class="stat-value">
 RM <?= number_format($revenue,0) ?>
 </div>
@@ -503,7 +785,7 @@ RM <?= number_format($avg_order,0) ?>
 <div class="stat-card">
 <div class="stat-label">Avg. Rating</div>
 <div class="stat-value">
-4.5 / 5
+4.43 / 5
 </div>
 </div>
 
@@ -512,7 +794,7 @@ RM <?= number_format($avg_order,0) ?>
 <!-- STATUS -->
 
 <div class="section-title">
-Order Status
+Order Status Breakdown
 </div>
 
 <div class="status-list">
@@ -526,7 +808,7 @@ $count = $status_data[$status] ?? 0;
 ?>
 
 <div class="status-badge">
-<?= $status ?>: <?= $count ?>
+<?= $status ?> : <?= $count ?>
 </div>
 
 <?php endforeach; ?>
@@ -542,11 +824,13 @@ Inventory by Category
 <table class="report-table">
 
 <thead>
+
 <tr>
 <th>Category</th>
 <th>Units</th>
 <th>Value</th>
 </tr>
+
 </thead>
 
 <tbody>
@@ -554,9 +838,58 @@ Inventory by Category
 <?php while($inv = mysqli_fetch_assoc($inventory_query)): ?>
 
 <tr>
-<td><?= htmlspecialchars($inv['category']) ?></td>
-<td><?= $inv['units'] ?></td>
-<td>RM <?= number_format($inv['value'],2) ?></td>
+
+<td>
+<?= htmlspecialchars($inv['category']) ?>
+</td>
+
+<td>
+<?= $inv['units'] ?>
+</td>
+
+<td>
+RM <?= number_format($inv['value'],2) ?>
+</td>
+
+</tr>
+
+<?php endwhile; ?>
+
+</tbody>
+
+</table>
+
+<!-- TOP PRODUCTS -->
+
+<div class="section-title">
+Top Products by Inventory Value
+</div>
+
+<table class="report-table">
+
+<thead>
+
+<tr>
+<th>Product</th>
+<th>Value</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+<?php while($product = mysqli_fetch_assoc($top_products_query)): ?>
+
+<tr>
+
+<td>
+<?= htmlspecialchars($product['product_name']) ?>
+</td>
+
+<td>
+RM <?= number_format($product['value'],2) ?>
+</td>
+
 </tr>
 
 <?php endwhile; ?>
@@ -568,17 +901,19 @@ Inventory by Category
 <!-- CUSTOMERS -->
 
 <div class="section-title">
-Top Customers
+Top Customers by Spend
 </div>
 
 <table class="report-table">
 
 <thead>
+
 <tr>
 <th>Customer</th>
 <th>Orders</th>
 <th>Spent</th>
 </tr>
+
 </thead>
 
 <tbody>
@@ -586,9 +921,19 @@ Top Customers
 <?php while($top = mysqli_fetch_assoc($customer_top_query)): ?>
 
 <tr>
-<td><?= htmlspecialchars($top['name']) ?></td>
-<td><?= $top['orders_count'] ?></td>
-<td>RM <?= number_format($top['spent'],2) ?></td>
+
+<td>
+<?= htmlspecialchars($top['name']) ?>
+</td>
+
+<td>
+<?= $top['orders_count'] ?>
+</td>
+
+<td>
+RM <?= number_format($top['spent'],2) ?>
+</td>
+
 </tr>
 
 <?php endwhile; ?>
@@ -604,325 +949,32 @@ Stock Alerts
 </div>
 
 <div class="stock-alert">
+
 Low stock:
 <b><?= $low_stock ?></b>
 
-•
+&nbsp;&nbsp;&nbsp;
 
 Out of stock:
 <b><?= $out_stock ?></b>
+
 </div>
 
-<!-- BUTTONS -->
+<!-- BUTTON -->
 
 <div class="action-buttons">
 
-<button class="btn-print" onclick="printReport()">
-Print
+<button class="btn-print" onclick="window.print()">
+
+🖨 Print / Save PDF
+
 </button>
 
-<button class="btn-pdf" onclick="downloadPDF()">
-Download PDF
-</button>
-
 </div>
 
 </div>
 
 </div>
-
-<!-- PDF -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<script>
-
-lucide.createIcons();
-
-/* PRINT */
-
-function printReport(){
-    window.print();
-}
-
-/* PDF */
-
-function downloadPDF(){
-
-    const revenue =
-    document.querySelectorAll('.stat-value')[0].innerText;
-
-    const orders =
-    document.querySelectorAll('.stat-value')[1].innerText;
-
-    const avgOrder =
-    document.querySelectorAll('.stat-value')[2].innerText;
-
-    const customers =
-    document.querySelectorAll('.stat-value')[3].innerText;
-
-    const products =
-    document.querySelectorAll('.stat-value')[4].innerText;
-
-    const rating =
-    document.querySelectorAll('.stat-value')[5].innerText;
-
-    /* CREATE CLEAN PDF */
-
-    let pdfContent = `
-
-    <div style="
-        font-family:Arial;
-        padding:40px;
-        color:#111827;
-        width:1000px;
-        background:white;
-    ">
-
-        <!-- HEADER -->
-
-        <div style="
-            background:#0f172a;
-            color:white;
-            padding:30px;
-            margin-bottom:30px;
-        ">
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:flex-start;
-            ">
-
-                <div>
-                    <div style="
-                        font-size:42px;
-                        font-weight:800;
-                        margin-bottom:10px;
-                    ">
-                        LOZ PC STORE
-                    </div>
-
-                    <div style="font-size:22px;">
-                        Business Performance Report
-                    </div>
-
-                    <div style="
-                        margin-top:10px;
-                        opacity:.8;
-                    ">
-                        Generated:
-                        ${new Date().toLocaleString()}
-                    </div>
-                </div>
-
-                <div style="text-align:right;">
-
-                    <div style="
-                        font-size:48px;
-                        font-weight:800;
-                    ">
-                        REPORT
-                    </div>
-
-                    <div style="
-                        margin-top:10px;
-                        font-size:20px;
-                    ">
-                        Daily Store Analytics
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- STATS -->
-
-        <div style="
-            display:grid;
-            grid-template-columns:repeat(3,1fr);
-            gap:20px;
-            margin-bottom:40px;
-        ">
-
-            ${createCard("TOTAL REVENUE", revenue)}
-            ${createCard("ORDERS", orders)}
-            ${createCard("AVG. ORDER", avgOrder)}
-            ${createCard("CUSTOMERS", customers)}
-            ${createCard("PRODUCTS", products)}
-            ${createCard("AVG. RATING", rating)}
-
-        </div>
-
-        <!-- ORDER STATUS -->
-
-        <h2 style="
-            font-size:32px;
-            margin-bottom:15px;
-        ">
-            Order Status Breakdown
-        </h2>
-
-        ${generateTable(
-            ["Status","Orders"],
-            document.querySelectorAll('.status-badge')
-        )}
-
-        <!-- INVENTORY -->
-
-        <h2 style="
-            font-size:32px;
-            margin:40px 0 15px;
-        ">
-            Inventory by Category
-        </h2>
-
-        ${document.querySelectorAll('.report-table')[0].outerHTML}
-
-        <!-- CUSTOMERS -->
-
-        <h2 style="
-            font-size:32px;
-            margin:40px 0 15px;
-        ">
-            Top Customers by Spend
-        </h2>
-
-        ${document.querySelectorAll('.report-table')[1].outerHTML}
-
-    </div>
-    `;
-
-    /* OPEN TEMP WINDOW */
-
-    const printWindow =
-    window.open('', '_blank');
-
-    printWindow.document.write(`
-    <html>
-    <head>
-
-    <title>LOZ Report</title>
-
-    <style>
-
-    body{
-        background:white;
-        margin:0;
-    }
-
-    table{
-        width:100%;
-        border-collapse:collapse;
-        margin-top:20px;
-        margin-bottom:30px;
-        font-size:18px;
-    }
-
-    th{
-        background:#0f172a;
-        color:white;
-        padding:14px;
-        text-align:left;
-    }
-
-    td{
-        padding:14px;
-        border-bottom:1px solid #e5e7eb;
-    }
-
-    tr:nth-child(even){
-        background:#f8fafc;
-    }
-
-    </style>
-
-    </head>
-
-    <body>
-
-    ${pdfContent}
-
-    </body>
-    </html>
-    `);
-
-    printWindow.document.close();
-
-    setTimeout(() => {
-
-        printWindow.print();
-
-    }, 500);
-
-}
-
-/* CARD */
-
-function createCard(label, value){
-
-    return `
-    <div style="
-        border:1px solid #e5e7eb;
-        padding:25px;
-        border-radius:16px;
-        min-height:130px;
-    ">
-
-        <div style="
-            color:#64748b;
-            font-size:15px;
-            margin-bottom:14px;
-        ">
-            ${label}
-        </div>
-
-        <div style="
-            font-size:52px;
-            font-weight:800;
-            color:#0f172a;
-        ">
-            ${value}
-        </div>
-
-    </div>
-    `;
-}
-
-/* STATUS TABLE */
-
-function generateTable(headers, rows){
-
-    let html = `
-    <table>
-
-        <tr>
-            <th>${headers[0]}</th>
-            <th>${headers[1]}</th>
-        </tr>
-    `;
-
-    rows.forEach(row => {
-
-        const text = row.innerText.split(':');
-
-        html += `
-        <tr>
-            <td>${text[0]}</td>
-            <td>${text[1]}</td>
-        </tr>
-        `;
-    });
-
-    html += `</table>`;
-
-    return html;
-}
-</script>
-
-<script src="admin.js"></script>
 
 </body>
 </html>

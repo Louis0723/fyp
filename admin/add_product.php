@@ -286,6 +286,44 @@ if(isset($_POST['save_product'])){
         margin-left:0;
     }
 }
+/* FIX HEADER AVATAR */
+
+.admin-header .avatar-btn{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    min-height:42px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+    padding:0 !important;
+}
+
+.admin-header .avatar-btn img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
+}
+
+/* DROPDOWN PROFILE AVATAR */
+
+.admin-header .profile-avatar{
+    width:52px !important;
+    height:52px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+}
+
+.admin-header .profile-avatar img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:center !important;
+    border-radius:50% !important;
+    display:block !important;
+}
 
 </style>
 
