@@ -7,7 +7,6 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-/* GET FILTER VALUES */
 $search = $_GET['search'] ?? '';
 $sort = $_GET['sort'] ?? '';
 $category = $_GET['category'] ?? '';
@@ -246,23 +245,23 @@ value="<?= htmlspecialchars($search) ?>"
 style="padding:10px;width:250px;border-radius:15px;">
 
 <select name="category" style="padding:10px;border-radius:15px;">
-<option value="">Category</option>
 
-<option value="PC" <?= $category=='PC'?'selected':'' ?>>
-PC
-</option>
+    <option value="">All Categories</option>
 
-<option value="Laptop" <?= $category=='Laptop'?'selected':'' ?>>
-Laptop
-</option>
+    <?php
+    $category_result = mysqli_query($conn, "SELECT * FROM category ORDER BY category_name");
 
-<option value="Keyboard" <?= $category=='Keyboard'?'selected':'' ?>>
-Keyboard
-</option>
+    while($cat = mysqli_fetch_assoc($category_result)){
+    ?>
 
-<option value="Mouse" <?= $category=='Mouse'?'selected':'' ?>>
-Mouse
-</option>
+        <option value="<?= $cat['category_name'] ?>"
+            <?= ($category == $cat['category_name']) ? 'selected' : '' ?>>
+
+            <?= htmlspecialchars($cat['category_name']) ?>
+
+        </option>
+
+    <?php } ?>
 
 </select>
 
