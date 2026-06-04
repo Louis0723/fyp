@@ -47,12 +47,14 @@ if(isset($_POST['reply_review'])){
 ========================= */
 
 $reviews = $conn->query("
-    SELECT 
+    SELECT
         r.*,
 
         COALESCE(u.name,'Deleted User') AS customer_name,
 
-        COALESCE(p.product_name,'Deleted Product') AS product_name
+        COALESCE(p.product_name,'Deleted Product') AS product_name,
+
+        p.image
 
     FROM reviews r
 
@@ -444,10 +446,29 @@ body{
 <div class="product-box">
 
 <?php
-$image = "../no-image.png";
+
+$image = trim($r['image'] ?? '');
+
+if(
+    strpos($image,'http://') === 0 ||
+    strpos($image,'https://') === 0
+){
+    $image = $image;
+}
+elseif(!empty($image)){
+    $image = "../uploads/" . $image;
+}
+else{
+    $image = "https://via.placeholder.com/70";
+}
+
 ?>
 
-<img src="<?= $image ?>" class="product-image">
+<img
+    src="<?= htmlspecialchars($image) ?>"
+    class="product-image"
+    onerror="this.src='https://via.placeholder.com/70';"
+>
 
 <div>
     <div class="product-name">

@@ -42,8 +42,8 @@ if(!$stmt->execute()){
     die("UPDATE FAILED: " . $stmt->error);
 }
 
-        $reset_link = "http://localhost/fyp/admin/reset_password_admin.php?token=" . urlencode($token);
-
+       $reset_link = "http://localhost/fyp/fyp/admin/reset_password_admin.php?token=" . $token;
+       
         $mail = new PHPMailer(true);
 
         try{

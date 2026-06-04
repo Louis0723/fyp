@@ -19,7 +19,9 @@ if(isset($_POST['save_product'])){
     $stock       = $_POST['stock'];
     $feature     = trim($_POST['feature']);
     $spec        = trim($_POST['specification']);
-    $category_id = intval($_POST['category_id']);
+    $category_id = isset($_POST['category_id'])
+    ? intval($_POST['category_id'])
+    : 0;
 
     $status = ($stock > 0)
         ? "In-Stock"
@@ -117,6 +119,21 @@ if(isset($_POST['save_product'])){
     </script>
     ";
 }
+?>
+<?php
+
+$categories = [];
+
+$result = mysqli_query($conn,"
+    SELECT *
+    FROM category
+    ORDER BY category_name ASC
+");
+
+while($row = mysqli_fetch_assoc($result)){
+    $categories[] = $row;
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -384,39 +401,21 @@ $_SESSION['role']=="super_admin"){
 
         <label>Product Type</label>
 
-        <select name="category" required>
+      <select name="category_id" required>
 
     <option value="">
         Select Category
     </option>
 
-    <option value="CPU">
-        CPU
-    </option>
+    <?php foreach($categories as $category): ?>
 
-    <option value="GPU">
-        GPU
-    </option>
+        <option
+            value="<?= $category['category_id'] ?>"
+        >
+            <?= htmlspecialchars($category['category_name']) ?>
+        </option>
 
-    <option value="PC">
-        PC
-    </option>
-
-    <option value="Keyboard">
-        Keyboard
-    </option>
-
-    <option value="Mouse">
-        Mouse
-    </option>
-
-    <option value="RAM">
-        RAM
-    </option>
-
-    <option value="Storage">
-        Storage
-    </option>
+    <?php endforeach; ?>
 
 </select>
 

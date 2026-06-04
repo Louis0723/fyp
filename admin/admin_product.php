@@ -614,25 +614,26 @@ elseif($row['stock']<10){$status="low";$text="Low Stock";}
 
 $image = trim($row['image']);
 
+if(
+    strpos($image,'http://') === 0 ||
+    strpos($image,'https://') === 0
+){
+    $image_src = $image;
+}
+elseif(!empty($image)){
+    $image_src = "../uploads/products/" . $image;
+}
+else{
+    $image_src = "https://via.placeholder.com/55";
+}
+
 ?>
 
-<?php if(!empty($image)){ ?>
-
-<img 
-    src="../uploads/<?= rawurlencode($image) ?>"
+<img
+    src="<?= htmlspecialchars($image_src) ?>"
     class="product-img"
     onerror="this.src='https://via.placeholder.com/55';"
 >
-
-<?php } else { ?>
-
-<img 
-    src="https://via.placeholder.com/55"
-    class="product-img"
->
-
-<?php } ?>
-
 <?= htmlspecialchars($row['product_name']) ?>
 
 </td>
