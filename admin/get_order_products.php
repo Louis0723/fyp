@@ -2,7 +2,10 @@
 
 include "../db.php";
 
-$order_id = intval($_GET['id']);
+$order_id = mysqli_real_escape_string(
+    $conn,
+    $_GET['id']
+);
 
 $sql = "
 
@@ -32,16 +35,17 @@ $data = [];
 
 while($row = $result->fetch_assoc()){
 
-    $data[] = [
+$data[] = [
 
-        "product_name" => $row['product_name'],
-        "image"        => $row['image'],
-        "category"     => $row['category'],
-        "quantity"     => $row['quantity'],
-        "price"        => number_format($row['price'],2),
-        "total"        => number_format($row['total'],2)
+    "product_name" => $row['product_name'],
+    "image"        => $row['image'],
+    "category"     => $row['category'],
+    "quantity"     => (int)$row['quantity'],
 
-    ];
+    "price"        => (float)$row['price'],
+    "total"        => (float)$row['total']
+
+];
 
 }
 
