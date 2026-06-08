@@ -53,7 +53,7 @@ th {
 </style>
 
 <div class="header">
-    <h1>INVOICE</h1>
+    <h1>RECEIPT</h1>
     <p>Order ID: #' . $order_id . '</p>
 </div>
 

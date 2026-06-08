@@ -17,7 +17,7 @@ $total = 0;
 <!DOCTYPE html>
 <html>
 <head>
-<title>Invoice</title>
+<title>Receipt</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -203,7 +203,7 @@ button:hover{
 
 <div class="box">
 
-<h2>🧾 INVOICE</h2>
+<h2>🧾 RECEIPT</h2>
 
 <div class="top-bar">
     <div>Order ID: #<?= $order_id ?></div>
