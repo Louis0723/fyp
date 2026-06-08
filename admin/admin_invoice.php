@@ -24,8 +24,9 @@ SELECT
     o.total_price,
     o.status,
 
-    u.name,
-    u.email,
+  u.name,
+  u.email,
+  u.address,
 
     p.product_name,
 
@@ -68,14 +69,19 @@ while($row = $result->fetch_assoc()){
    CALCULATIONS
 ========================= */
 
-$subtotal = $first['total_price'];
+$subtotal = 0;
 
-$tax = $subtotal * 0.06; // SST 6%
+foreach($items as $item){
 
-$shipping = 5.00; // Shipping fee RM5
+    $subtotal += ($item['price'] * $item['quantity']);
+
+}
+
+$tax = $subtotal * 0.06;
+
+$shipping = 5.00;
 
 $total = $subtotal + $tax + $shipping;
-
 ?>
 
 <!DOCTYPE html>
@@ -452,10 +458,22 @@ td:nth-child(4){
                 <?= htmlspecialchars($first['name']) ?>
             </h2>
 
-            <p>
-                <?= htmlspecialchars($first['email']) ?><br>
-                Customer Address Available On File
-            </p>
+         <p>
+    <strong>Email:</strong><br>
+    <?= htmlspecialchars($first['email']) ?>
+</p>
+
+<br>
+
+<p>
+    <strong>Address:</strong><br>
+
+    <?php if(!empty($first['address'])): ?>
+        <?= nl2br(htmlspecialchars($first['address'])) ?>
+    <?php else: ?>
+        No Address Available
+    <?php endif; ?>
+</p>
 
         </div>
 

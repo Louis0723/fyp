@@ -12,9 +12,9 @@ NOTIFICATION COUNT
 $count = 0;
 
 $countQuery = $conn->query("
-    SELECT COUNT(*) as total 
-    FROM orders 
-    WHERE status='Pending'
+    SELECT COUNT(*) as total
+    FROM admin_notifications
+    WHERE is_read = 0
 ");
 
 if($countQuery && $countQuery->num_rows > 0){

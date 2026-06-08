@@ -88,11 +88,20 @@ try {
         exit;
     }
 
-    mysqli_query($conn, "
-        UPDATE users 
-        SET name='$name', email='$email', address='$address', phone='$phone'
-        WHERE user_id=$user_id
-    ");
+$name = mysqli_real_escape_string($conn, $name);
+$email = mysqli_real_escape_string($conn, $email);
+$address = mysqli_real_escape_string($conn, $address);
+$phone = mysqli_real_escape_string($conn, $phone);
+
+mysqli_query($conn, "
+    UPDATE users
+    SET
+        name='$name',
+        email='$email',
+        address='$address',
+        phone='$phone'
+    WHERE user_id=$user_id
+");
 
     header("Location: profile.php?updated=1");
     exit;
