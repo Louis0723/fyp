@@ -30,8 +30,13 @@ ORDER BY created_at DESC
             font-family:'Poppins',sans-serif;
         }
 
-        body{ 
-            font-family: Arial;  padding:30px; 
+        body{
+            margin:0;
+            padding:0;
+            font-family:'Poppins',sans-serif;
+            background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+            color:white;
+            min-height:100vh;
         }
 
         #particles-js{
