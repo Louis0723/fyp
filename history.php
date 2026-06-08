@@ -2,7 +2,6 @@
 session_start();
 include "db.php";
 
-// Redirect if user is not logged in//
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
@@ -24,9 +23,24 @@ ORDER BY created_at DESC
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-        body{background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:white; min-height:100vh;}
-        #particles-js{position:fixed;width:100%;height:100%;z-index:-1;pointer-events:none;}
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Poppins',sans-serif;
+        }
+
+        body{ 
+            font-family: Arial; background:#f5f5f5; padding:30px; 
+        }
+
+        #particles-js{
+            position:fixed;
+            width:100%;
+            height:100%;
+            z-index:-1;
+            pointer-events:none;
+        }
 
         .container{
             max-width:900px;

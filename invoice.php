@@ -22,6 +22,24 @@ $total = 0;
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+
+@media print {
+    .actions,
+    .back-btn {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .box {
+        box-shadow: none !important;
+        background: white !important;
+    }
+}
+
 body{
     background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
     color:white;

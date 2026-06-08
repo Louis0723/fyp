@@ -7,18 +7,10 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-/* =========================
-   ONLY SUPER ADMIN
-========================= */
-
 if($_SESSION['role'] != "super_admin"){
     header("Location: admin_dashboard.php");
     exit();
 }
-
-/* =========================
-   ADD PHONE COLUMN IF NOT EXISTS
-========================= */
 
 $checkPhone = $conn->query("
     SHOW COLUMNS FROM admins LIKE 'phone'
@@ -34,10 +26,6 @@ if($checkPhone->num_rows == 0){
 
 }
 
-/* =========================
-   ADD ADMIN
-========================= */
-
 $message = "";
 
 if(isset($_POST['add_admin'])){
@@ -48,8 +36,6 @@ if(isset($_POST['add_admin'])){
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $role     = $_POST['role'];
     $status   = $_POST['status'];
-
-    /* CHECK EMAIL */
 
     $check = $conn->prepare("
         SELECT *
@@ -125,8 +111,6 @@ body{
     font-family:'Inter',sans-serif;
 }
 
-/* MAIN */
-
 .main-content{
     margin-left:270px;
     margin-top:95px;
@@ -137,8 +121,6 @@ body{
 .sidebar.collapsed ~ .main-content{
     margin-left:95px;
 }
-
-/* PAGE TITLE */
 
 .page-title{
     font-size:52px;
@@ -152,8 +134,6 @@ body{
     color:#64748b;
     font-size:16px;
 }
-
-/* CARD */
 
 .form-card{
     margin-top:28px;
@@ -171,8 +151,6 @@ body{
 
     max-width:950px;
 }
-
-/* FORM */
 
 .form-grid{
     display:grid;
@@ -224,8 +202,6 @@ body{
     outline:none;
 }
 
-/* BUTTON */
-
 .submit-btn{
     margin-top:10px;
 
@@ -259,8 +235,6 @@ body{
     transform:translateY(-2px);
 }
 
-/* ALERT */
-
 .error-msg{
     margin-bottom:22px;
 
@@ -273,8 +247,6 @@ body{
 
     font-weight:700;
 }
-
-/* RESPONSIVE */
 
 @media(max-width:900px){
 
@@ -292,8 +264,6 @@ body{
     }
 
 }
-
-/* FIX HEADER AVATAR */
 
 .admin-header .avatar-btn{
     width:42px !important;
@@ -313,8 +283,6 @@ body{
     border-radius:50% !important;
     display:block !important;
 }
-
-/* DROPDOWN PROFILE AVATAR */
 
 .admin-header .profile-avatar{
     width:52px !important;
@@ -369,7 +337,6 @@ $_SESSION['role']=="super_admin"){
 
             <div class="form-grid">
 
-                <!-- USERNAME -->
                 <div class="form-group">
 
                     <label>Username</label>
@@ -382,7 +349,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- EMAIL -->
                 <div class="form-group">
 
                     <label>Email Address</label>
@@ -395,7 +361,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- PHONE -->
                 <div class="form-group">
 
                     <label>Phone Number</label>
@@ -407,7 +372,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- PASSWORD -->
                 <div class="form-group">
 
                     <label>Password</label>
@@ -420,7 +384,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- ROLE -->
                 <div class="form-group">
 
                     <label>Role</label>
@@ -441,7 +404,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- STATUS -->
                 <div class="form-group">
 
                     <label>Status</label>

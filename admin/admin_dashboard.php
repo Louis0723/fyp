@@ -7,10 +7,6 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-/* =========================================
-TOTAL COUNTS
-========================================= */
-
 $productCount = $conn->query("
     SELECT COUNT(*) as total
     FROM products
@@ -31,9 +27,6 @@ $revenue = $conn->query("
     FROM orders
 ")->fetch_assoc()['total'] ?? 0;
 
-/* =========================================
-MONTHLY REVENUE
-========================================= */
 
 $monthLabels = [];
 $monthRevenue = [];
@@ -56,10 +49,6 @@ for($i=5; $i>=0; $i--){
 
     $monthRevenue[] = (float)($row['total'] ?? 0);
 }
-
-/* =========================================
-ORDER STATUS
-========================================= */
 
 $pending = $conn->query("
 SELECT COUNT(*) as total
@@ -86,10 +75,6 @@ WHERE status='Completed'
 OR status='Delivered'
 ")->fetch_assoc()['total'];
 
-/* =========================================
-CATEGORY INVENTORY
-========================================= */
-
 $categoryLabels = [];
 $categoryValues = [];
 
@@ -107,9 +92,6 @@ while($cat = $categoryQuery->fetch_assoc()){
     $categoryValues[] = (float)$cat['total_value'];
 }
 
-/* =========================================
-TOP INVENTORY
-========================================= */
 
 $topInventory = $conn->query("
     SELECT product_name, stock
@@ -118,9 +100,6 @@ $topInventory = $conn->query("
     LIMIT 5
 ");
 
-/* =========================================
-LOW STOCK
-========================================= */
 
 $lowStock = $conn->query("
     SELECT product_name, stock
@@ -130,9 +109,6 @@ $lowStock = $conn->query("
     LIMIT 5
 ");
 
-/* =========================================
-RECENT ORDERS
-========================================= */
 
 $recentOrders = $conn->query("
     SELECT *
@@ -185,8 +161,6 @@ body{
     margin-bottom:30px;
 }
 
-/* CARDS */
-
 .cards{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -233,8 +207,6 @@ body{
     font-size:14px;
 }
 
-/* GRID */
-
 .top-grid{
     display:grid;
     grid-template-columns:2fr 1fr;
@@ -266,15 +238,11 @@ body{
     margin-bottom:20px;
 }
 
-/* CHART */
-
 .chart-wrapper{
     position:relative;
     width:100%;
     height:320px;
 }
-
-/* INVENTORY */
 
 .inventory-item{
     margin-bottom:18px;
@@ -300,8 +268,6 @@ body{
     background:#2563eb;
 }
 
-/* ALERT */
-
 .alert-item{
     display:flex;
     justify-content:space-between;
@@ -316,8 +282,6 @@ body{
     background:#fee2e2;
     color:#dc2626;
 }
-
-/* TABLE */
 
 .table-title{
     font-size:24px;
@@ -369,8 +333,6 @@ td{
     color:#15803d;
 }
 
-/* FIX HEADER AVATAR */
-
 .admin-header .avatar-btn{
     width:42px !important;
     height:42px !important;
@@ -389,8 +351,6 @@ td{
     border-radius:50% !important;
     display:block !important;
 }
-
-/* DROPDOWN PROFILE AVATAR */
 
 .admin-header .profile-avatar{
     width:52px !important;
@@ -426,8 +386,6 @@ Overview
 <div class="page-sub">
 Welcome back. Here's what's happening in your store.
 </div>
-
-<!-- CARDS -->
 
 <div class="cards">
 
@@ -521,7 +479,6 @@ RM <?= number_format($revenue,2) ?>
 
 </div>
 
-<!-- TOP GRID -->
 
 <div class="top-grid">
 
@@ -551,7 +508,6 @@ Inventory value by category
 
 </div>
 
-<!-- BOTTOM -->
 
 <div class="bottom-grid">
 
@@ -566,8 +522,6 @@ Order status
 </div>
 
 </div>
-
-<!-- INVENTORY -->
 
 <div class="inventory-card">
 
@@ -618,8 +572,6 @@ style="width:<?= $width ?>%">
 
 </div>
 
-<!-- ALERT -->
-
 <div class="alert-card">
 
 <div class="chart-title">
@@ -655,8 +607,6 @@ Low stock product
 </div>
 
 </div>
-
-<!-- TABLE -->
 
 <div class="table-card">
 
@@ -723,8 +673,6 @@ RM <?= number_format($row['total_price'],2) ?>
 
 lucide.createIcons();
 
-/* LINE CHART */
-
 new Chart(document.getElementById('lineChart'),{
 
 type:'line',
@@ -762,8 +710,6 @@ maintainAspectRatio:false
 }
 
 });
-
-/* DONUT CHART */
 
 new Chart(document.getElementById('donutChart'),{
 

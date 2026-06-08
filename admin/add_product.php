@@ -7,10 +7,6 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-/* =========================
-   ADD PRODUCT
-========================= */
-
 if(isset($_POST['save_product'])){
 
     $name        = trim($_POST['product_name']);
@@ -33,10 +29,6 @@ if(isset($_POST['save_product'])){
         $product_category =
         implode(",", $_POST['product_category']);
     }
-
-    /* =========================
-       IMAGE UPLOAD
-    ========================== */
 
     $image_name = "";
 
@@ -69,10 +61,6 @@ if(isset($_POST['save_product'])){
             );
         }
     }
-
-    /* =========================
-       INSERT PRODUCT
-    ========================== */
 
     $stmt = $conn->prepare("
         INSERT INTO products
@@ -141,8 +129,6 @@ if(isset($_POST['save_product'])){
     padding:28px;
 }
 
-/* TITLE */
-
 .page-title{
     font-size:40px;
     font-weight:800;
@@ -155,16 +141,12 @@ if(isset($_POST['save_product'])){
     margin-bottom:28px;
 }
 
-/* CARD */
-
 .product-card{
     background:#fff;
     border-radius:24px;
     padding:30px;
     box-shadow:0 10px 25px rgba(0,0,0,.05);
 }
-
-/* GRID */
 
 .form-grid{
     display:grid;
@@ -175,8 +157,6 @@ if(isset($_POST['save_product'])){
 .full{
     grid-column:1/3;
 }
-
-/* GROUP */
 
 .form-group{
     display:flex;
@@ -189,8 +169,6 @@ if(isset($_POST['save_product'])){
     font-weight:700;
     color:#0f172a;
 }
-
-/* INPUT */
 
 .form-group input,
 .form-group textarea,
@@ -209,8 +187,6 @@ if(isset($_POST['save_product'])){
     resize:vertical;
 }
 
-/* CHECKBOX */
-
 .checkbox-group{
     display:flex;
     gap:22px;
@@ -223,8 +199,6 @@ if(isset($_POST['save_product'])){
     gap:8px;
     font-weight:600;
 }
-
-/* IMAGE */
 
 .image-upload{
     border:2px dashed #cbd5e1;
@@ -253,8 +227,6 @@ if(isset($_POST['save_product'])){
     margin-top:20px;
     display:none;
 }
-
-/* BUTTON */
 
 .submit-btn{
     width:100%;
@@ -286,7 +258,6 @@ if(isset($_POST['save_product'])){
         margin-left:0;
     }
 }
-/* FIX HEADER AVATAR */
 
 .admin-header .avatar-btn{
     width:42px !important;
@@ -306,8 +277,6 @@ if(isset($_POST['save_product'])){
     border-radius:50% !important;
     display:block !important;
 }
-
-/* DROPDOWN PROFILE AVATAR */
 
 .admin-header .profile-avatar{
     width:52px !important;
@@ -331,8 +300,6 @@ if(isset($_POST['save_product'])){
 
 <body>
 
-<!-- SIDEBAR -->
-
 <?php
 if(isset($_SESSION['role']) &&
 $_SESSION['role']=="super_admin"){
@@ -345,11 +312,7 @@ $_SESSION['role']=="super_admin"){
 }
 ?>
 
-<!-- HEADER -->
-
 <?php include "admin_header.php"; ?>
-
-<!-- MAIN -->
 
 <div class="main-content">
 
@@ -368,7 +331,6 @@ $_SESSION['role']=="super_admin"){
 
 <div class="form-grid">
 
-    <!-- NAME -->
     <div class="form-group">
 
         <label>Product Name</label>
@@ -379,7 +341,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- CATEGORY -->
     <div class="form-group">
 
         <label>Product Type</label>
@@ -422,7 +383,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- PRICE -->
     <div class="form-group">
 
         <label>Product Price (RM)</label>
@@ -434,7 +394,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- STOCK -->
     <div class="form-group">
 
         <label>Product Stock</label>
@@ -445,7 +404,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- TAG -->
     <div class="form-group full">
 
         <label>Product Category</label>
@@ -477,7 +435,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- DESCRIPTION -->
     <div class="form-group full">
 
         <label>Description</label>
@@ -487,7 +444,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- FEATURE -->
     <div class="form-group full">
 
         <label>Product Features</label>
@@ -497,7 +453,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- SPEC -->
     <div class="form-group full">
 
         <label>Product Specification</label>
@@ -507,7 +462,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- IMAGE -->
     <div class="form-group full">
 
         <label>Product Image</label>
@@ -532,7 +486,6 @@ $_SESSION['role']=="super_admin"){
 
     </div>
 
-    <!-- BUTTON -->
     <div class="form-group full">
 
         <button type="submit"
@@ -557,7 +510,6 @@ $_SESSION['role']=="super_admin"){
 
 lucide.createIcons();
 
-/* IMAGE PREVIEW */
 
 const imageInput =
 document.getElementById("imageInput");

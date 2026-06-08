@@ -15,7 +15,6 @@ WHERE oi.order_id = $order_id
 
 $total = 0;
 
-// Build HTML
 $html = '
 <style>
 body { font-family: Arial, sans-serif; }

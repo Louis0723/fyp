@@ -7,10 +7,6 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-/* =========================
-ADD CATEGORY
-========================= */
-
 if(isset($_POST['save_category'])){
 
     $category_name = trim($_POST['category_name']);
@@ -84,10 +80,6 @@ body{
     overflow-x:hidden;
 }
 
-/* =========================================
-MAIN
-========================================= */
-
 .main{
     margin-left:95px;
     transition:.3s ease;
@@ -98,17 +90,9 @@ MAIN
     margin-left:250px;
 }
 
-/* =========================================
-CONTENT
-========================================= */
-
 .main-content{
     padding:130px 40px 40px;
 }
-
-/* =========================================
-TITLE
-========================================= */
 
 .page-title{
     font-size:72px;
@@ -124,10 +108,6 @@ TITLE
     margin-bottom:40px;
 }
 
-/* =========================================
-CARD
-========================================= */
-
 .category-card{
     width:100%;
     max-width:700px;
@@ -136,10 +116,6 @@ CARD
     padding:36px;
     box-shadow:0 5px 20px rgba(0,0,0,.04);
 }
-
-/* =========================================
-FORM
-========================================= */
 
 .form-group{
     margin-bottom:28px;
@@ -169,10 +145,6 @@ FORM
     border-color:#2563eb;
     background:#fff;
 }
-
-/* =========================================
-BUTTONS
-========================================= */
 
 .btn-group{
     display:flex;
@@ -213,10 +185,6 @@ BUTTONS
     background:#cbd5e1;
 }
 
-/* =========================================
-RESPONSIVE
-========================================= */
-
 @media(max-width:900px){
 
     .main{
@@ -246,8 +214,6 @@ RESPONSIVE
 
 <body>
 
-<!-- SIDEBAR -->
-
 <?php
 
 if(isset($_SESSION['role']) &&
@@ -262,14 +228,10 @@ $_SESSION['role']=="super_admin"){
 
 ?>
 
-<!-- MAIN -->
 
 <div class="main">
 
-    <!-- HEADER -->
     <?php include "admin_header.php"; ?>
-
-    <!-- CONTENT -->
 
     <div class="main-content">
 
@@ -280,8 +242,6 @@ $_SESSION['role']=="super_admin"){
         <div class="page-sub">
             Create new product category.
         </div>
-
-        <!-- CARD -->
 
         <div class="category-card">
 
@@ -327,8 +287,6 @@ $_SESSION['role']=="super_admin"){
     </div>
 
 </div>
-
-<!-- IMPORTANT -->
 
 <script src="https://unpkg.com/lucide@latest"></script>
 

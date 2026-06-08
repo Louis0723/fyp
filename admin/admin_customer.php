@@ -7,10 +7,6 @@ if(!isset($_SESSION['admin'])){
     exit();
 }
 
-/* =========================
-AUTO CREATE STATUS COLUMN
-========================= */
-
 $checkColumn = $conn->query("
     SHOW COLUMNS FROM users LIKE 'status'
 ");
@@ -24,10 +20,6 @@ if($checkColumn->num_rows == 0){
     ");
 
 }
-
-/* =========================
-UPDATE STATUS
-========================= */
 
 if(isset($_POST['update_status'])){
 
@@ -46,10 +38,6 @@ if(isset($_POST['update_status'])){
     header("Location: admin_customer.php");
     exit();
 }
-
-/* =========================
-USERS + STATS
-========================= */
 
 $users = $conn->query("
     SELECT 
@@ -96,8 +84,6 @@ body{
     background:#f3f7fb;
 }
 
-/* MAIN */
-
 .main{
     margin-left:270px;
     margin-top:95px;
@@ -109,13 +95,9 @@ body{
     margin-left:95px;
 }
 
-/* SIDEBAR COLLAPSE */
-
 .sidebar.collapsed ~ .main{
     margin-left:95px;
 }
-
-/* TITLE */
 
 .page-title{
     font-size:42px;
@@ -128,8 +110,6 @@ body{
     color:#64748b;
     font-size:15px;
 }
-
-/* SEARCH */
 
 .search-wrapper{
     display:flex;
@@ -157,8 +137,6 @@ body{
     background:none;
     font-size:15px;
 }
-
-/* TABLE */
 
 .customer-table-wrapper{
     margin-top:25px;
@@ -196,15 +174,11 @@ body{
     background:#f8fbff;
 }
 
-/* PROFILE */
-
 .customer-profile{
     display:flex;
     align-items:center;
     gap:12px;
 }
-
-/* AVATAR */
 
 .avatar{
     width:46px;
@@ -219,8 +193,6 @@ body{
     font-weight:700;
 }
 
-/* TEXT */
-
 .customer-name{
     font-size:15px;
     font-weight:700;
@@ -232,8 +204,6 @@ body{
     font-size:13px;
     margin-top:3px;
 }
-
-/* STATUS */
 
 .customer-status{
     width:fit-content;
@@ -258,7 +228,6 @@ body{
     color:#991b1b;
 }
 
-/* ACTIONS */
 
 .table-actions{
     display:flex;
@@ -288,8 +257,6 @@ body{
 .delete{
     color:#ef4444;
 }
-
-/* MODAL FIX */
 
 .customer-modal{
     position:fixed;
@@ -579,8 +546,6 @@ onclick="openCustomerModal(
 </div>
 
 </div>
-
-<!-- MODAL -->
 
 <div class="customer-modal"
      id="customerModal">
