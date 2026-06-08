@@ -31,7 +31,7 @@ ORDER BY created_at DESC
         }
 
         body{ 
-            font-family: Arial; background:#f5f5f5; padding:30px; 
+            font-family: Arial;  padding:30px; 
         }
 
         #particles-js{
