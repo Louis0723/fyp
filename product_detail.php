@@ -4,19 +4,20 @@ include "db.php";
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-$res = mysqli_query($conn,"SELECT * FROM products WHERE product_id=$id");
+$res = mysqli_query($conn, "SELECT * FROM products WHERE product_id=$id");
 
-if(!$res || mysqli_num_rows($res) == 0){
+if (!$res || mysqli_num_rows($res) == 0) {
     die("❌ Product not found.");
 }
 
 $row = mysqli_fetch_assoc($res);
-$reviews = mysqli_query($conn,"
-SELECT r.*, u.name
-FROM reviews r
-JOIN users u ON r.user_id = u.user_id
-WHERE r.product_id = $id
-ORDER BY r.created_at DESC
+
+$reviews = mysqli_query($conn, "
+    SELECT r.*, u.name
+    FROM reviews r
+    JOIN users u ON r.user_id = u.user_id
+    WHERE r.product_id = $id
+    ORDER BY r.created_at DESC
 ");
 ?>
 
@@ -24,13 +25,18 @@ ORDER BY r.created_at DESC
 <html>
 <head>
 <meta charset="UTF-8">
-<title><?= $row['product_name'] ?></title>
+<title><?= htmlspecialchars($row['product_name']) ?></title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
 <style>
-*{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
 
 body{
     background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
@@ -117,6 +123,7 @@ button{
     transition:0.3s;
     width:100%;
 }
+
 button:hover{
     transform:scale(1.05);
     box-shadow:0 0 15px #00f0ff,0 0 25px #ff00ff;
@@ -137,6 +144,7 @@ button:disabled{
     text-decoration:none;
     font-weight:600;
 }
+
 .back:hover{
     transform:scale(1.05);
 }
@@ -151,21 +159,16 @@ button:disabled{
 .qty-btn{
     width:45px !important;
     height:45px;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     border:none;
     border-radius:10px;
-
     background:#00f0ff;
     color:black;
-
     font-size:22px;
     font-weight:bold;
     line-height:1;
-
     cursor:pointer;
     padding:0;
 }
@@ -205,6 +208,52 @@ button:disabled{
     border-radius:15px;
 }
 
+.admin-reply{
+    margin-top:18px;
+    padding:18px 20px;
+    border-radius:16px;
+    background:rgba(0,255,255,0.08);
+    border:1px solid rgba(0,255,255,0.22);
+}
+
+.admin-reply-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+}
+
+.admin-avatar{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#00f0ff,#00bfff);
+    color:#000;
+    font-weight:700;
+    flex-shrink:0;
+}
+
+.admin-name{
+    font-weight:700;
+    color:#00f0ff;
+    line-height:1.2;
+}
+
+.admin-date{
+    font-size:12px;
+    color:#aaa;
+    margin-top:2px;
+}
+
+.admin-reply-text{
+    color:#ddd;
+    line-height:1.7;
+    font-size:14px;
+    margin-left:54px;
+}
 </style>
 </head>
 
@@ -214,115 +263,200 @@ button:disabled{
 
 <div class="container">
 
-<a href="product.php" class="back">⬅ Back to Products</a>
+    <a href="product.php" class="back">⬅ Back to Products</a>
 
-<div class="card">
+    <div class="card">
 
-    <div class="image">
-        <img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/400' ?>">
-    </div>
-
-    <div class="details">
-        <h2><?= $row['product_name'] ?></h2>
-
-        <div class="spec">CPU: <?= $row['cpu'] ?></div>
-        <div class="spec">GPU: <?= $row['gpu'] ?></div>
-        <div class="spec">RAM: <?= $row['ram'] ?></div>
-        <div class="spec">Storage: <?= $row['storage'] ?></div>
-        <div class="spec">Motherboard: <?= $row['motherboard'] ?></div>
-
-        <div class="desc">
-            <?= !empty($row['description']) ? $row['description'] : 'No description available.' ?>
+        <div class="image">
+            <img src="<?= !empty($row['image']) ? htmlspecialchars($row['image']) : 'https://via.placeholder.com/400' ?>" alt="Product Image">
         </div>
 
-        <div class="price">RM <?= $row['price'] ?></div>
-        <div class="stock">Stock: <?= $row['stock'] ?></div>
+        <div class="details">
+            <h2><?= htmlspecialchars($row['product_name']) ?></h2>
 
-<div class="qty-box">
-    <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+            <?php
+            $category = strtolower(trim($row['category']));
+            ?>
 
-    <input type="number" id="qty" value="1" min="1" max="<?= $row['stock'] ?>">
+            <?php if (
+                $category == 'gaming pc' ||
+                $category == 'pc' ||
+                $category == 'laptop'
+            ): ?>
 
-    <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
-</div>
+                <?php if (!empty($row['cpu'])): ?>
+                    <div class="spec"><strong>CPU:</strong> <?= htmlspecialchars($row['cpu']) ?></div>
+                <?php endif; ?>
 
-<div class="btn-group">
+                <?php if (!empty($row['gpu'])): ?>
+                    <div class="spec"><strong>GPU:</strong> <?= htmlspecialchars($row['gpu']) ?></div>
+                <?php endif; ?>
 
-    <button 
-        onclick="add(<?= $row['product_id'] ?>)"
-        <?= ($row['stock'] <= 0) ? 'disabled' : '' ?>
-    >
-        <?= ($row['stock'] <= 0) ? 'Out of Stock' : 'Add to Cart' ?>
-    </button>
+                <?php if (!empty($row['ram'])): ?>
+                    <div class="spec"><strong>RAM:</strong> <?= htmlspecialchars($row['ram']) ?></div>
+                <?php endif; ?>
 
-    <button 
-        class="buy-btn"
-        onclick="buyNow(<?= $row['product_id'] ?>)"
-        <?= ($row['stock'] <= 0) ? 'disabled' : '' ?>
-    >
-        Buy Now
-    </button>
+                <?php if (!empty($row['storage'])): ?>
+                    <div class="spec"><strong>Storage:</strong> <?= htmlspecialchars($row['storage']) ?></div>
+                <?php endif; ?>
 
-</div>
+                <?php if (!empty($row['motherboard'])): ?>
+                    <div class="spec"><strong>Motherboard:</strong> <?= htmlspecialchars($row['motherboard']) ?></div>
+                <?php endif; ?>
+
+            <?php elseif (strpos($category, 'monitor') !== false): ?>
+
+                <?php if (!empty($row['screen_size'])): ?>
+                    <div class="spec"><strong>Screen Size:</strong> <?= htmlspecialchars($row['screen_size']) ?></div>
+                <?php endif; ?>
+
+            <?php elseif (strpos($category, 'keyboard') !== false): ?>
+
+                <?php if (!empty($row['switch_type'])): ?>
+                    <div class="spec"><strong>Switch Type:</strong> <?= htmlspecialchars($row['switch_type']) ?></div>
+                <?php endif; ?>
+
+                <?php if (!empty($row['keyboard_size'])): ?>
+                    <div class="spec"><strong>Keyboard Size:</strong> <?= htmlspecialchars($row['keyboard_size']) ?></div>
+                <?php endif; ?>
+
+                <?php if (!empty($row['battery'])): ?>
+                    <div class="spec"><strong>Battery:</strong> <?= htmlspecialchars($row['battery']) ?></div>
+                <?php endif; ?>
+
+            <?php elseif (strpos($category, 'mouse') !== false): ?>
+
+                <?php if (!empty($row['dpi'])): ?>
+                    <div class="spec"><strong>DPI:</strong> <?= htmlspecialchars($row['dpi']) ?></div>
+                <?php endif; ?>
+
+                <?php if (!empty($row['mouse_type'])): ?>
+                    <div class="spec"><strong>Mouse Type:</strong> <?= htmlspecialchars($row['mouse_type']) ?></div>
+                <?php endif; ?>
+
+                <?php if (!empty($row['battery'])): ?>
+                    <div class="spec"><strong>Battery:</strong> <?= htmlspecialchars($row['battery']) ?></div>
+                <?php endif; ?>
+
+            <?php endif; ?>
+
+            <div class="desc">
+                <?= !empty($row['description']) ? nl2br(htmlspecialchars($row['description'])) : 'No description available.' ?>
+            </div>
+
+            <?php if (!empty($row['specs'])): ?>
+                <div class="desc" style="margin-top:20px;">
+                    <strong>Specifications:</strong><br><br>
+                    <?= nl2br(htmlspecialchars($row['specs'])) ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="qty-box">
+                <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+
+                <input type="number" id="qty" value="1" min="1" max="<?= (int)$row['stock'] ?>">
+
+                <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+            </div>
+
+            <div class="btn-group">
+
+                <button
+                    onclick="add(<?= (int)$row['product_id'] ?>)"
+                    <?= ((int)$row['stock'] <= 0) ? 'disabled' : '' ?>
+                >
+                    <?= ((int)$row['stock'] <= 0) ? 'Out of Stock' : 'Add to Cart' ?>
+                </button>
+
+                <button
+                    class="buy-btn"
+                    onclick="buyNow(<?= (int)$row['product_id'] ?>)"
+                    <?= ((int)$row['stock'] <= 0) ? 'disabled' : '' ?>
+                >
+                    Buy Now
+                </button>
+
+            </div>
+        </div>
+
     </div>
 
-</div>
-<div class="reviews-box">
+    <div class="reviews-box">
+        <h2 style="margin-bottom:25px;">⭐ Customer Reviews</h2>
 
-<h2 style="margin-bottom:25px;">⭐ Customer Reviews</h2>
-
-<?php if(mysqli_num_rows($reviews) == 0): ?>
-    <p>No reviews yet.</p>
-<?php endif; ?>
-
-<?php while($r = mysqli_fetch_assoc($reviews)): ?>
-
-<div class="review-item">
-
-    <h3><?= htmlspecialchars($r['name']) ?></h3>
-
-    <div style="color:gold;font-size:20px;margin:8px 0;">
-        <?php
-        for($i=1;$i<=5;$i++){
-            echo ($i <= $r['rating']) ? "★" : "☆";
-        }
-        ?>
-    </div>
-
-    <p><?= htmlspecialchars($r['review_text']) ?></p>
-
-    <?php if(!empty($r['image'])): ?>
-        <?php if(!empty($r['image'])): ?>
-            <img src="uploads/reviews/<?= htmlspecialchars($r['image']) ?>" 
-            style="width:150px;margin-top:15px;border-radius:12px;object-fit:cover;">
+        <?php if (mysqli_num_rows($reviews) == 0): ?>
+            <p>No reviews yet.</p>
         <?php endif; ?>
-    <?php endif; ?>
 
-    <div style="margin-top:10px;font-size:13px;color:#aaa;">
-        <?= $r['created_at'] ?>
+        <?php while ($r = mysqli_fetch_assoc($reviews)): ?>
+            <div class="review-item">
+
+                <h3><?= htmlspecialchars($r['name']) ?></h3>
+
+                <div style="color:gold;font-size:20px;margin:8px 0;">
+                    <?php
+                    for ($i = 1; $i <= 5; $i++) {
+                        echo ($i <= (int)$r['rating']) ? "★" : "☆";
+                    }
+                    ?>
+                </div>
+
+                <p><?= nl2br(htmlspecialchars($r['review_text'])) ?></p>
+
+                <?php if (!empty($r['image'])): ?>
+                    <img
+                        src="uploads/reviews/<?= htmlspecialchars($r['image']) ?>"
+                        style="width:150px;margin-top:15px;border-radius:12px;object-fit:cover;"
+                        alt="Review Image"
+                    >
+                <?php endif; ?>
+
+                <div style="margin-top:10px;font-size:13px;color:#aaa;">
+                    <?= date('Y-m-d H:i', strtotime($r['created_at'])) ?>
+                </div>
+
+                <?php if (!empty($r['admin_reply'])): ?>
+                <div class="admin-reply-header">
+    <div class="admin-avatar">A</div>
+    <div>
+        <div class="admin-date">
+            <?php if (!empty($r['admin_reply_date'])): ?>
+                <?= date('M d, Y H:i', strtotime($r['admin_reply_date'])) ?>
+            <?php else: ?>
+                Admin reply
+            <?php endif; ?>
+        </div>
     </div>
-
 </div>
 
-<?php endwhile; ?>
+                        <div class="admin-reply-text">
+                            <?= nl2br(htmlspecialchars($r['admin_reply'])) ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+            </div>
+        <?php endwhile; ?>
+    </div>
+
 </div>
 
 <script>
-particlesJS("particles-js",{
-  particles:{
-    number:{value:70},
-    color:{value:["#00f0ff","#ff00ff"]},
-    shape:{type:"circle"},
-    opacity:{value:0.5},
-    size:{value:3,random:true},
-    line_linked:{enable:true,distance:150,color:"#00f0ff",opacity:0.3,width:1},
-    move:{enable:true,speed:2}
+particlesJS("particles-js", {
+  particles: {
+    number: { value: 70 },
+    color: { value: ["#00f0ff", "#ff00ff"] },
+    shape: { type: "circle" },
+    opacity: { value: 0.5 },
+    size: { value: 3, random: true },
+    line_linked: { enable: true, distance: 150, color: "#00f0ff", opacity: 0.3, width: 1 },
+    move: { enable: true, speed: 2 }
   }
 });
 
 function changeQty(amount){
     let qty = document.getElementById("qty");
-    let current = parseInt(qty.value);
+    let current = parseInt(qty.value) || 1;
 
     current += amount;
 
@@ -330,8 +464,8 @@ function changeQty(amount){
         current = 1;
     }
 
-    if(current > <?= $row['stock'] ?>){
-        current = <?= $row['stock'] ?>;
+    if(current > <?= (int)$row['stock'] ?>){
+        current = <?= (int)$row['stock'] ?>;
     }
 
     qty.value = current;
@@ -339,7 +473,6 @@ function changeQty(amount){
 
 function add(id){
     let qty = document.getElementById("qty").value;
-
     fetch("add_to_cart.php?id=" + id + "&qty=" + qty)
     .then(() => {
         alert("✅ Added to cart!");
@@ -348,9 +481,7 @@ function add(id){
 
 function buyNow(id){
     let qty = document.getElementById("qty").value;
-
-    window.location.href =
-        "checkout.php?id=" + id + "&qty=" + qty;
+    window.location.href = "checkout.php?id=" + id + "&qty=" + qty;
 }
 </script>
 

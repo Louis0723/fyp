@@ -943,17 +943,30 @@ View
 
             </div>
 
-            <div class="info-card">
+          <div class="info-card">
 
-                <div class="info-label">
-                    Payment Method
-                </div>
+    <div class="info-label">
+        Payment Method
+    </div>
 
-                <div class="info-value">
-                    Online Banking
-                </div>
+    <div class="info-value">
+        Online Banking
+    </div>
 
-            </div>
+</div>
+
+<div class="info-card">
+
+    <div class="info-label">
+        Shipping Address
+    </div>
+
+    <div class="info-value"
+         id="m_address">
+        Loading...
+    </div>
+
+</div>
 
         </div>
 
@@ -1412,157 +1425,183 @@ View
    OPEN MODAL
 ========================= */
 
-function openModal(
-id,
-name,
-email,
-date,
-status
-){
+function openModal(id,name,email,date,status){
 
-const modal =
-document.getElementById("modal");
+    const modal = document.getElementById("modal");
 
-modal.style.display = "flex";
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
 
-document.body.style.overflow = "hidden";
+    document.getElementById("m_order").innerText = id;
+    document.getElementById("m_customer").innerText = name;
+    document.getElementById("m_email").innerText = email;
+    document.getElementById("m_date").innerText = date;
 
-/* INFO */
+    document.getElementById("m_address").innerText = "Loading...";
 
-document.getElementById("m_order").innerText = id;
-document.getElementById("m_customer").innerText = name;
-document.getElementById("m_email").innerText = email;
-document.getElementById("m_date").innerText = date;
+    /* STATUS */
 
-/* STATUS */
+    const badge = document.getElementById("m_status_badge");
 
-let badge =
-document.getElementById("m_status_badge");
+    badge.innerText = status;
+    badge.style.background = "#e2e8f0";
+    badge.style.color = "#0f172a";
 
-badge.innerText = status;
+    if(status === "Pending"){
+        badge.style.background = "#fef3c7";
+        badge.style.color = "#92400e";
+    }
 
-badge.style.background = "#e2e8f0";
-badge.style.color = "#0f172a";
+    if(status === "Shipped"){
+        badge.style.background = "#dbeafe";
+        badge.style.color = "#1d4ed8";
+    }
 
-if(status=="Pending"){
-    badge.style.background="#fef3c7";
-    badge.style.color="#92400e";
-}
+    if(status === "Delivered"){
+        badge.style.background = "#ddd6fe";
+        badge.style.color = "#6d28d9";
+    }
 
-if(status=="Shipped"){
-    badge.style.background="#dbeafe";
-    badge.style.color="#1d4ed8";
-}
+    if(status === "Completed"){
+        badge.style.background = "#dcfce7";
+        badge.style.color = "#166534";
+    }
 
-if(status=="Delivered"){
-    badge.style.background="#ddd6fe";
-    badge.style.color="#6d28d9";
-}
+    /* ADDRESS */
 
-if(status=="Completed"){
-    badge.style.background="#dcfce7";
-    badge.style.color="#166534";
-}
+    fetch("get_order_address.php?id=" + id)
+    .then(response => response.text())
+    .then(address => {
 
-/* LOAD PRODUCTS */
+        document.getElementById("m_address").innerText =
+            address || "No address available";
 
-fetch("get_order_products.php?id="+id)
+    })
+    .catch(() => {
 
-.then(res => res.json())
+        document.getElementById("m_address").innerText =
+            "No address available";
 
-.then(data => {
+    });
 
-let html = "";
+    /* PRODUCTS */
 
-let subtotal = 0;
+    fetch("get_order_products.php?id=" + id)
+    .then(response => response.json())
+    .then(data => {
 
-if(data.length === 0){
+    let html = "";
+    let subtotal = 0;
 
-html = `
-<div style="
-padding:30px;
-text-align:center;
-color:#64748b;
-font-size:16px;
-">
-No purchased product found
-</div>
-`;
+    document.getElementById("product_list").innerHTML = "";
 
-}
+    data.forEach(item => {
 
-data.forEach(item => {
+        const itemTotal =
+            parseFloat(item.price) * parseInt(item.quantity);
 
-subtotal += parseFloat(
-item.total.replace(/,/g,'')
-);
+        subtotal += itemTotal;
 
-html += `
+        let imagePath = item.image || "";
 
-<div class="product-card">
+        if(
+            imagePath &&
+            !imagePath.startsWith("http") &&
+            !imagePath.startsWith("../")
+        ){
+            imagePath = "../" + imagePath;
+        }
 
-    <div class="product-left">
+        if(!imagePath){
+            imagePath = "../uploads/no-image.png";
+        }
 
-        <img src="../uploads/${item.image}"
-             class="product-img">
+        html += `
+        <div class="product-card">
 
-        <div>
+            <div class="product-left">
 
-            <div class="product-name">
-                ${item.product_name}
+                <img
+                    src="${imagePath}"
+                    class="product-img"
+                    onerror="this.src='../uploads/no-image.png'">
+
+                <div>
+
+                    <div class="product-name">
+                        ${item.product_name}
+                    </div>
+
+                    <div class="product-category">
+                        ${item.category}
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="product-category">
-                ${item.category}
+            <div class="product-right">
+
+                <div class="product-qty">
+                    Qty: ${item.quantity}
+                </div>
+
+                <div class="product-price">
+                    RM ${itemTotal.toLocaleString('en-MY',{
+                        minimumFractionDigits:2,
+                        maximumFractionDigits:2
+                    })}
+                </div>
+
             </div>
 
         </div>
+        `;
+    });
 
-    </div>
+    document.getElementById("product_list").innerHTML = html;
 
-    <div class="product-right">
+    const sst = subtotal * 0.06;
+    const shipping = 5;
+    const grand = subtotal + sst + shipping;
 
-        <div class="product-qty">
-            Qty: ${item.quantity}
-        </div>
+    document.getElementById("subtotal").innerText =
+        "RM " + subtotal.toLocaleString('en-MY',{
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+        });
 
-        <div class="product-price">
-            RM ${item.total}
-        </div>
+    document.getElementById("sst").innerText =
+        "RM " + sst.toLocaleString('en-MY',{
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+        });
 
-    </div>
+    document.getElementById("grand_total").innerText =
+        "RM " + grand.toLocaleString('en-MY',{
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+        });
 
-</div>
+})
+    .catch(error => {
 
-`;
+        console.log(error);
 
-});
-
-/* INSERT */
-
-document.getElementById("product_list")
-.innerHTML = html;
-
-/* TOTAL */
-
-let sst = subtotal * 0.06;
-let grand = subtotal + sst + 5;
-
-document.getElementById("subtotal")
-.innerText =
-"RM " + subtotal.toFixed(2);
-
-document.getElementById("sst")
-.innerText =
-"RM " + sst.toFixed(2);
-
-document.getElementById("grand_total")
-.innerText =
-"RM " + grand.toFixed(2);
-
-});
+        document.getElementById("product_list").innerHTML = `
+            <div style="
+                padding:30px;
+                text-align:center;
+                color:red;
+            ">
+                Failed to load order products
+            </div>
+        `;
+    });
 
 }
+
+
 
 /* =========================
    CLOSE

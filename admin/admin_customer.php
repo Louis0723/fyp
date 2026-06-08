@@ -407,10 +407,9 @@ if(isset($_SESSION['role']) && $_SESSION['role']=="super_admin"){
 
         <i data-lucide="search"></i>
 
-        <input type="text"
-               id="searchInput"
-               placeholder="Search customers...">
-
+      <input type="text"
+       id="searchInput"
+       placeholder="Search name or email...">
     </div>
 
 </div>
@@ -732,6 +731,36 @@ if(e.target === this){
 </script>
 
 
+<script>
+document.getElementById("searchInput")
+.addEventListener("keyup", function(){
 
+    const value = this.value.toLowerCase();
+
+    document.querySelectorAll(".customer-item")
+    .forEach(row => {
+
+        const name =
+            row.querySelector(".customer-name")
+            ?.innerText.toLowerCase() || "";
+
+        const email =
+            row.querySelector(".customer-email")
+            ?.innerText.toLowerCase() || "";
+
+        if(
+            name.includes(value) ||
+            email.includes(value)
+        ){
+            row.style.display = "";
+        }
+        else{
+            row.style.display = "none";
+        }
+
+    });
+
+});
+</script>
 </body>
 </html>
