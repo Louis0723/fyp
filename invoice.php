@@ -17,11 +17,29 @@ $total = 0;
 <!DOCTYPE html>
 <html>
 <head>
-<title>Invoice</title>
+<title>Receipt</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+
+@media print {
+    .actions,
+    .back-btn {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .box {
+        box-shadow: none !important;
+        background: white !important;
+    }
+}
+
 body{
     background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
     color:white;
@@ -185,7 +203,7 @@ button:hover{
 
 <div class="box">
 
-<h2>🧾 INVOICE</h2>
+<h2>🧾 RECEIPT</h2>
 
 <div class="top-bar">
     <div>Order ID: #<?= $order_id ?></div>

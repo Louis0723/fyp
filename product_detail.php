@@ -11,7 +11,6 @@ if (!$res || mysqli_num_rows($res) == 0) {
 }
 
 $row = mysqli_fetch_assoc($res);
-
 $reviews = mysqli_query($conn, "
     SELECT r.*, u.name
     FROM reviews r
@@ -267,9 +266,36 @@ button:disabled{
 
     <div class="card">
 
-        <div class="image">
-            <img src="<?= !empty($row['image']) ? htmlspecialchars($row['image']) : 'https://via.placeholder.com/400' ?>" alt="Product Image">
-        </div>
+       <div class="image">
+
+<?php
+$image = '';
+
+if (!empty($row['image'])) {
+
+    if (filter_var($row['image'], FILTER_VALIDATE_URL)) {
+
+        $image = $row['image'];
+
+    } else {
+
+        $image = "uploads/products/" . $row['image'];
+
+    }
+
+} else {
+
+    $image = "https://via.placeholder.com/400";
+}
+?>
+
+<img
+    src="<?= htmlspecialchars($image) ?>"
+    alt="Product Image"
+    onerror="this.src='https://via.placeholder.com/400';"
+>
+
+</div>
 
         <div class="details">
             <h2><?= htmlspecialchars($row['product_name']) ?></h2>
@@ -415,31 +441,60 @@ button:disabled{
                     <?= date('Y-m-d H:i', strtotime($r['created_at'])) ?>
                 </div>
 
-                <?php if (!empty($r['admin_reply'])): ?>
-                <div class="admin-reply-header">
-    <div class="admin-avatar">A</div>
-    <div>
-        <div class="admin-date">
-            <?php if (!empty($r['admin_reply_date'])): ?>
-                <?= date('M d, Y H:i', strtotime($r['admin_reply_date'])) ?>
-            <?php else: ?>
-                Admin reply
-            <?php endif; ?>
+                <?php
+
+
+$replyResult = mysqli_query($conn, "
+    SELECT *
+    FROM review_replies
+    WHERE review_id = ".$r['review_id']."
+    ORDER BY created_at ASC
+");
+
+while($reply = mysqli_fetch_assoc($replyResult)):
+
+?>
+
+<div class="admin-reply">
+
+    <div class="admin-reply-header">
+
+        <div class="admin-avatar">
+            A
         </div>
-    </div>
-</div>
 
-                        <div class="admin-reply-text">
-                            <?= nl2br(htmlspecialchars($r['admin_reply'])) ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
+        <div>
 
+            <div class="admin-name">
+                Admin Reply
             </div>
-        <?php endwhile; ?>
+
+            <div class="admin-date">
+                <?= date(
+                    'Y-m-d H:i',
+                    strtotime($reply['created_at'])
+                ) ?>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="admin-reply-text">
+        <?= nl2br(htmlspecialchars($reply['reply_text'])) ?>
     </div>
 
 </div>
+
+<?php endwhile; ?>
+
+</div>               <!-- END review-item -->
+
+<?php endwhile; ?>   <!-- END reviews loop -->
+
+</div>               <!-- END reviews-box -->
+
+</div>               <!-- END container -->   
 
 <script>
 particlesJS("particles-js", {
@@ -486,4 +541,4 @@ function buyNow(id){
 </script>
 
 </body>
-</html>
+</html> 

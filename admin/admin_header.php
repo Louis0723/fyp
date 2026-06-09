@@ -78,9 +78,8 @@ $avatarText = strtoupper(substr($adminName,0,2));
 ?>
 
 <header class="admin-header">
-
-    <!-- LEFT -->
-    <div class="header-left">
+<!-- LEFT -->
+<div class="header-left">
 
         <button class="toggle-btn" id="toggleSidebar">
             <i data-lucide="panel-left"></i>
@@ -88,8 +87,8 @@ $avatarText = strtoupper(substr($adminName,0,2));
 
     </div>
 
-    <!-- RIGHT ---->
-    <div class="header-right">
+<!-- RIGHT ---->
+<div class="header-right">
 
         <!-- NOTIFICATION -->
         <div class="notif">

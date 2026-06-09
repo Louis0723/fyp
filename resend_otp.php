@@ -15,7 +15,6 @@ $data = $_SESSION['temp_user'];
 
 $otp = rand(100000, 999999);
 
-// update OTP in session
 $_SESSION['temp_user']['otp'] = password_hash($otp, PASSWORD_DEFAULT);
 $_SESSION['temp_user']['time'] = time();
 

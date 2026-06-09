@@ -20,10 +20,6 @@ $result = mysqli_query($conn, "
 while ($row = mysqli_fetch_assoc($result)) {
     $categories[] = $row;
 }
-
-/* =========================
-   ADD PRODUCT
-========================= */
 if (isset($_POST['save_product'])) {
 
     $name        = trim($_POST['product_name'] ?? '');

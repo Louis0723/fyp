@@ -2,45 +2,31 @@
 include "../db.php";
 session_start();
 
-if(!isset($_SESSION['admin'])){
+if (!isset($_SESSION['admin'])) {
     header("Location: admin_login.php");
     exit();
 }
 
-/* =========================
-   ONLY SUPER ADMIN
-========================= */
-
-if($_SESSION['role'] != "super_admin"){
+if ($_SESSION['role'] != "super_admin") {
     header("Location: admin_dashboard.php");
     exit();
 }
 
-/* =========================
-   ADD PHONE COLUMN IF NOT EXISTS
-========================= */
-
+/* Add phone column if it doesn't exist */
 $checkPhone = $conn->query("
     SHOW COLUMNS FROM admins LIKE 'phone'
 ");
 
-if($checkPhone->num_rows == 0){
-
+if ($checkPhone->num_rows == 0) {
     $conn->query("
         ALTER TABLE admins
-        ADD phone VARCHAR(30)
-        NULL
+        ADD phone VARCHAR(30) NULL
     ");
-
 }
-
-/* =========================
-   ADD ADMIN
-========================= */
 
 $message = "";
 
-if(isset($_POST['add_admin'])){
+if (isset($_POST['add_admin'])) {
 
     $username = trim($_POST['username']);
     $email    = trim($_POST['email']);
@@ -49,60 +35,104 @@ if(isset($_POST['add_admin'])){
     $role     = $_POST['role'];
     $status   = $_POST['status'];
 
-    /* CHECK EMAIL */
-
-    $check = $conn->prepare("
-        SELECT *
+    /* Check username */
+    $checkUsername = $conn->prepare("
+        SELECT admin_id
         FROM admins
-        WHERE email=?
+        WHERE username = ?
     ");
 
-    $check->bind_param("s",$email);
-    $check->execute();
+    $checkUsername->bind_param("s", $username);
+    $checkUsername->execute();
 
-    $result = $check->get_result();
+    $usernameResult = $checkUsername->get_result();
 
-    if($result->num_rows > 0){
+    if ($usernameResult->num_rows > 0) {
 
         $message = "
         <div class='error-msg'>
-            Email already exists.
+            Username already exists. Please choose another username.
         </div>
         ";
 
-    }else{
+    } else {
 
-        $stmt = $conn->prepare("
-            INSERT INTO admins
-            (
-                username,
-                email,
-                phone,
-                password,
-                role,
-                status,
-                created_at
-            )
-            VALUES
-            (
-                ?,?,?,?,?,?,NOW()
-            )
+        /* Check email */
+        $checkEmail = $conn->prepare("
+            SELECT admin_id
+            FROM admins
+            WHERE email = ?
         ");
 
-        $stmt->bind_param(
-            "ssssss",
-            $username,
-            $email,
-            $phone,
-            $password,
-            $role,
-            $status
-        );
+        $checkEmail->bind_param("s", $email);
+        $checkEmail->execute();
 
-        $stmt->execute();
+        $emailResult = $checkEmail->get_result();
 
-        header("Location: admin_management.php");
-        exit();
+        if ($emailResult->num_rows > 0) {
+
+            $message = "
+            <div class='error-msg'>
+                Email already exists. Please use another email.
+            </div>
+            ";
+
+        } else {
+
+            try {
+
+                $stmt = $conn->prepare("
+                    INSERT INTO admins
+                    (
+                        username,
+                        email,
+                        phone,
+                        password,
+                        role,
+                        status,
+                        created_at
+                    )
+                    VALUES
+                    (
+                        ?,?,?,?,?,?,NOW()
+                    )
+                ");
+
+                $stmt->bind_param(
+                    "ssssss",
+                    $username,
+                    $email,
+                    $phone,
+                    $password,
+                    $role,
+                    $status
+                );
+
+                if ($stmt->execute()) {
+
+                    $_SESSION['success_message'] = "Admin added successfully.";
+
+                    header("Location: admin_management.php");
+                    exit();
+
+                } else {
+
+                    $message = "
+                    <div class='error-msg'>
+                        Failed to add admin. Please try again.
+                    </div>
+                    ";
+                }
+
+            } catch (mysqli_sql_exception $e) {
+
+                $message = "
+                <div class='error-msg'>
+                    Failed to add admin: " . htmlspecialchars($e->getMessage()) . "
+                </div>
+                ";
+            }
+        }
     }
 }
 ?>
@@ -125,8 +155,6 @@ body{
     font-family:'Inter',sans-serif;
 }
 
-/* MAIN */
-
 .main-content{
     margin-left:270px;
     margin-top:95px;
@@ -137,8 +165,6 @@ body{
 .sidebar.collapsed ~ .main-content{
     margin-left:95px;
 }
-
-/* PAGE TITLE */
 
 .page-title{
     font-size:52px;
@@ -152,8 +178,6 @@ body{
     color:#64748b;
     font-size:16px;
 }
-
-/* CARD */
 
 .form-card{
     margin-top:28px;
@@ -171,8 +195,6 @@ body{
 
     max-width:950px;
 }
-
-/* FORM */
 
 .form-grid{
     display:grid;
@@ -224,8 +246,6 @@ body{
     outline:none;
 }
 
-/* BUTTON */
-
 .submit-btn{
     margin-top:10px;
 
@@ -259,8 +279,6 @@ body{
     transform:translateY(-2px);
 }
 
-/* ALERT */
-
 .error-msg{
     margin-bottom:22px;
 
@@ -273,8 +291,6 @@ body{
 
     font-weight:700;
 }
-
-/* RESPONSIVE */
 
 @media(max-width:900px){
 
@@ -292,8 +308,6 @@ body{
     }
 
 }
-
-/* FIX HEADER AVATAR */
 
 .admin-header .avatar-btn{
     width:42px !important;
@@ -313,8 +327,6 @@ body{
     border-radius:50% !important;
     display:block !important;
 }
-
-/* DROPDOWN PROFILE AVATAR */
 
 .admin-header .profile-avatar{
     width:52px !important;
@@ -369,7 +381,6 @@ $_SESSION['role']=="super_admin"){
 
             <div class="form-grid">
 
-                <!-- USERNAME -->
                 <div class="form-group">
 
                     <label>Username</label>
@@ -382,7 +393,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- EMAIL -->
                 <div class="form-group">
 
                     <label>Email Address</label>
@@ -395,7 +405,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- PHONE -->
                 <div class="form-group">
 
                     <label>Phone Number</label>
@@ -407,7 +416,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- PASSWORD -->
                 <div class="form-group">
 
                     <label>Password</label>
@@ -420,7 +428,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- ROLE -->
                 <div class="form-group">
 
                     <label>Role</label>
@@ -441,7 +448,6 @@ $_SESSION['role']=="super_admin"){
 
                 </div>
 
-                <!-- STATUS -->
                 <div class="form-group">
 
                     <label>Status</label>

@@ -282,7 +282,28 @@ style="padding:10px;width:250px;border-radius:15px;">
 
 <div class="card" onclick="window.location.href='product_detail.php?id=<?= $row['product_id'] ?>'">
 
-<img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/300x200' ?>">
+<?php
+$image = 'https://via.placeholder.com/300x200';
+
+if (!empty($row['image'])) {
+
+    if (filter_var($row['image'], FILTER_VALIDATE_URL)) {
+
+        $image = $row['image'];
+
+    } else {
+
+        $image = "uploads/products/" . $row['image'];
+
+    }
+}
+?>
+
+<img
+    src="<?= htmlspecialchars($image) ?>"
+    onerror="this.src='https://via.placeholder.com/300x200'"
+    alt="<?= htmlspecialchars($row['product_name']) ?>"
+>
 
 <h3><?= $row['product_name'] ?></h3>
 
