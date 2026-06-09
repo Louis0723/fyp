@@ -30,12 +30,27 @@ if($checkColumn->num_rows == 0){
 if(isset($_POST['reply_review'])){
 
     $review_id = intval($_POST['review_id']);
-    $reply     = mysqli_real_escape_string($conn,$_POST['reply']);
+    $reply = mysqli_real_escape_string($conn,$_POST['reply']);
+    $admin_id = $_SESSION['admin'];
 
     $conn->query("
-        UPDATE reviews
-        SET admin_reply = '$reply'
-        WHERE review_id = '$review_id'
+        INSERT INTO review_replies
+        (review_id, admin_id, reply_text)
+        VALUES
+        ('$review_id','$admin_id','$reply')
+    ");
+
+    header("Location: product_review.php");
+    exit();
+}
+
+if(isset($_GET['delete_reply'])){
+
+    $reply_id = intval($_GET['delete_reply']);
+
+    $conn->query("
+        DELETE FROM review_replies
+        WHERE reply_id='$reply_id'
     ");
 
     header("Location: product_review.php");
@@ -43,29 +58,78 @@ if(isset($_POST['reply_review'])){
 }
 
 /* =========================
+   SEARCH
+========================= */
+
+$search = '';
+
+if(isset($_GET['search'])){
+    $search = trim($_GET['search']);
+}
+
+$category_filter = '';
+
+if(isset($_GET['category'])){
+    $category_filter = trim($_GET['category']);
+}
+
+$categories = $conn->query("
+    SELECT category_name
+    FROM category
+    ORDER BY category_name ASC
+");
+
+/* =========================
    GET REVIEWS
 ========================= */
 
-$reviews = $conn->query("
+$sql = "
     SELECT
         r.*,
-
         COALESCE(u.name,'Deleted User') AS customer_name,
-
         COALESCE(p.product_name,'Deleted Product') AS product_name,
-
-        p.image
-
+        p.image,
+        p.category
     FROM reviews r
-
     LEFT JOIN users u
-    ON r.user_id = u.user_id
-
+        ON r.user_id = u.user_id
     LEFT JOIN products p
-    ON r.product_id = p.product_id
+        ON r.product_id = p.product_id
+";
 
-    ORDER BY r.review_id DESC
-");
+$where = [];
+
+if($search != ''){
+
+    $searchEscaped = mysqli_real_escape_string($conn,$search);
+
+    $where[] = "
+        (
+            r.review_id LIKE '%$searchEscaped%'
+            OR u.name LIKE '%$searchEscaped%'
+            OR p.product_name LIKE '%$searchEscaped%'
+            OR r.review_text LIKE '%$searchEscaped%'
+        )
+    ";
+}
+
+if($category_filter != ''){
+
+    $categoryEscaped = mysqli_real_escape_string($conn,$category_filter);
+
+    $where[] = "
+        p.category = '$categoryEscaped'
+    ";
+}
+
+if(count($where) > 0){
+
+    $sql .= " WHERE " . implode(" AND ", $where);
+}
+
+$sql .= " ORDER BY r.review_id DESC";
+
+$reviews = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -409,9 +473,103 @@ body{
         Product Reviews
     </div>
 
-    <div class="review-sub">
-        Manage customer feedback and reply reviews.
-    </div>
+   <div class="review-sub">
+    Manage customer feedback and reply reviews.
+</div>
+
+<form method="GET" style="
+    margin-bottom:30px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+">
+
+    <input
+        type="text"
+        name="search"
+        placeholder="Search ID, product, customer, review..."
+        value="<?= htmlspecialchars($search) ?>"
+        style="
+            flex:1;
+            min-width:300px;
+            height:55px;
+            padding:0 20px;
+            border:1px solid #cbd5e1;
+            border-radius:16px;
+            font-size:15px;
+            outline:none;
+        "
+    >
+
+    <select
+        name="category"
+        style="
+            height:55px;
+            padding:0 18px;
+            border:1px solid #cbd5e1;
+            border-radius:16px;
+            font-size:15px;
+            outline:none;
+            min-width:180px;
+        "
+    >
+
+        <option value="">All Categories</option>
+
+        <?php while($cat = $categories->fetch_assoc()): ?>
+
+            <option
+                value="<?= htmlspecialchars($cat['category_name']) ?>"
+                <?= ($category_filter == $cat['category_name']) ? 'selected' : '' ?>
+            >
+
+                <?= htmlspecialchars($cat['category_name']) ?>
+
+            </option>
+
+        <?php endwhile; ?>
+
+    </select>
+
+    <button
+        type="submit"
+        style="
+            height:55px;
+            padding:0 28px;
+            border:none;
+            background:#2563eb;
+            color:white;
+            border-radius:16px;
+            cursor:pointer;
+            font-weight:700;
+        "
+    >
+        Search
+    </button>
+
+    <?php if($search != '' || $category_filter != ''): ?>
+
+        <a
+            href="product_review.php"
+            style="
+                height:55px;
+                display:flex;
+                align-items:center;
+                padding:0 28px;
+                background:#e2e8f0;
+                color:#0f172a;
+                text-decoration:none;
+                border-radius:16px;
+                font-weight:700;
+            "
+        >
+            Clear
+        </a>
+
+    <?php endif; ?>
+
+</form>
 
     <div class="review-table">
 
@@ -436,7 +594,68 @@ body{
 <?php if($reviews && $reviews->num_rows > 0): ?>
 
 <?php while($r = $reviews->fetch_assoc()): ?>
+<?php
 
+$replyQuery = $conn->query("
+    SELECT *
+    FROM review_replies
+    WHERE review_id='".$r['review_id']."'
+    ORDER BY created_at ASC
+");
+
+$replyHTML = '';
+
+while($replyRow = $replyQuery->fetch_assoc()){
+
+    $replyHTML .= '
+    <div style="
+        margin-top:15px;
+        padding:15px;
+        background:#eff6ff;
+        border-radius:12px;
+        border:1px solid #bfdbfe;
+    ">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:10px;
+        ">
+
+            <strong style="color:#2563eb;">
+                Admin Reply
+            </strong>
+
+            <a
+                href="?delete_reply='.$replyRow['reply_id'].'"
+                onclick="return confirm(\'Delete this reply?\')"
+                style="
+                    color:red;
+                    text-decoration:none;
+                "
+            >
+                Delete
+            </a>
+
+        </div>
+
+        '.htmlspecialchars($replyRow['reply_text']).'
+
+        <div style="
+            margin-top:10px;
+            color:#94a3b8;
+            font-size:13px;
+        ">
+            '.date(
+                'M d, Y h:i A',
+                strtotime($replyRow['created_at'])
+            ).'
+        </div>
+
+    </div>';
+}
+
+?>
 <tr>
 
 <td>#<?= $r['review_id'] ?></td>
@@ -530,7 +749,7 @@ data-product="<?= htmlspecialchars($r['product_name']) ?>"
 data-review="<?= htmlspecialchars($r['review_text']) ?>"
 data-rating="<?= $r['rating'] ?>"
 data-image="<?= $image ?>"
-data-reply="<?= htmlspecialchars($r['admin_reply'] ?? '') ?>"
+data-reply="<?= htmlspecialchars($replyHTML, ENT_QUOTES) ?>"
 >
 
 View Detail
@@ -674,18 +893,18 @@ starsHTML;
 
 let reply = btn.dataset.reply;
 
-if(reply !== ''){
+if(reply.trim() !== ''){
 
-document.getElementById("adminReplyBox").style.display =
-"block";
+    document.getElementById("adminReplyBox").style.display =
+    "block";
 
-document.getElementById("adminReplyText").innerHTML =
-reply;
+    document.getElementById("adminReplyText").innerHTML =
+    reply;
 
 }else{
 
-document.getElementById("adminReplyBox").style.display =
-"none";
+    document.getElementById("adminReplyBox").style.display =
+    "none";
 
 }
 

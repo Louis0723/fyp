@@ -2,33 +2,31 @@
 include "../db.php";
 session_start();
 
-if(!isset($_SESSION['admin'])){
+if (!isset($_SESSION['admin'])) {
     header("Location: admin_login.php");
     exit();
 }
 
-if($_SESSION['role'] != "super_admin"){
+if ($_SESSION['role'] != "super_admin") {
     header("Location: admin_dashboard.php");
     exit();
 }
 
+/* Add phone column if it doesn't exist */
 $checkPhone = $conn->query("
     SHOW COLUMNS FROM admins LIKE 'phone'
 ");
 
-if($checkPhone->num_rows == 0){
-
+if ($checkPhone->num_rows == 0) {
     $conn->query("
         ALTER TABLE admins
-        ADD phone VARCHAR(30)
-        NULL
+        ADD phone VARCHAR(30) NULL
     ");
-
 }
 
 $message = "";
 
-if(isset($_POST['add_admin'])){
+if (isset($_POST['add_admin'])) {
 
     $username = trim($_POST['username']);
     $email    = trim($_POST['email']);
@@ -37,58 +35,104 @@ if(isset($_POST['add_admin'])){
     $role     = $_POST['role'];
     $status   = $_POST['status'];
 
-    $check = $conn->prepare("
-        SELECT *
+    /* Check username */
+    $checkUsername = $conn->prepare("
+        SELECT admin_id
         FROM admins
-        WHERE email=?
+        WHERE username = ?
     ");
 
-    $check->bind_param("s",$email);
-    $check->execute();
+    $checkUsername->bind_param("s", $username);
+    $checkUsername->execute();
 
-    $result = $check->get_result();
+    $usernameResult = $checkUsername->get_result();
 
-    if($result->num_rows > 0){
+    if ($usernameResult->num_rows > 0) {
 
         $message = "
         <div class='error-msg'>
-            Email already exists.
+            Username already exists. Please choose another username.
         </div>
         ";
 
-    }else{
+    } else {
 
-        $stmt = $conn->prepare("
-            INSERT INTO admins
-            (
-                username,
-                email,
-                phone,
-                password,
-                role,
-                status,
-                created_at
-            )
-            VALUES
-            (
-                ?,?,?,?,?,?,NOW()
-            )
+        /* Check email */
+        $checkEmail = $conn->prepare("
+            SELECT admin_id
+            FROM admins
+            WHERE email = ?
         ");
 
-        $stmt->bind_param(
-            "ssssss",
-            $username,
-            $email,
-            $phone,
-            $password,
-            $role,
-            $status
-        );
+        $checkEmail->bind_param("s", $email);
+        $checkEmail->execute();
 
-        $stmt->execute();
+        $emailResult = $checkEmail->get_result();
 
-        header("Location: admin_management.php");
-        exit();
+        if ($emailResult->num_rows > 0) {
+
+            $message = "
+            <div class='error-msg'>
+                Email already exists. Please use another email.
+            </div>
+            ";
+
+        } else {
+
+            try {
+
+                $stmt = $conn->prepare("
+                    INSERT INTO admins
+                    (
+                        username,
+                        email,
+                        phone,
+                        password,
+                        role,
+                        status,
+                        created_at
+                    )
+                    VALUES
+                    (
+                        ?,?,?,?,?,?,NOW()
+                    )
+                ");
+
+                $stmt->bind_param(
+                    "ssssss",
+                    $username,
+                    $email,
+                    $phone,
+                    $password,
+                    $role,
+                    $status
+                );
+
+                if ($stmt->execute()) {
+
+                    $_SESSION['success_message'] = "Admin added successfully.";
+
+                    header("Location: admin_management.php");
+                    exit();
+
+                } else {
+
+                    $message = "
+                    <div class='error-msg'>
+                        Failed to add admin. Please try again.
+                    </div>
+                    ";
+                }
+
+            } catch (mysqli_sql_exception $e) {
+
+                $message = "
+                <div class='error-msg'>
+                    Failed to add admin: " . htmlspecialchars($e->getMessage()) . "
+                </div>
+                ";
+            }
+        }
     }
 }
 ?>
