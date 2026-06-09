@@ -88,7 +88,7 @@ $avatarText = strtoupper(substr($adminName,0,2));
 
     </div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT ---->
     <div class="header-right">
 
         <!-- NOTIFICATION -->
