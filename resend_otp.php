@@ -18,7 +18,6 @@ $otp = rand(100000, 999999);
 $_SESSION['temp_user']['otp'] = password_hash($otp, PASSWORD_DEFAULT);
 $_SESSION['temp_user']['time'] = time();
 
-// send again
 $mail = new PHPMailer(true);
 
 try {
