@@ -148,27 +148,10 @@ $error_msg="Invalid card details!";
 
 }else{
 
-$card=mysqli_fetch_assoc($check);
-
-if($card['balance']<$total){
-
-$error_msg="Insufficient balance!";
-
-}else{
-
 sleep(2);
 
-mysqli_query($conn,"
-UPDATE dummy_cards
-SET balance=balance-$total
-WHERE id={$card['id']}
-");
-
 $payment_success=true;
-
 $account_used=$card_number;
-
-}
 
 }
 
