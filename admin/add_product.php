@@ -8,7 +8,7 @@ if (!isset($_SESSION['admin'])) {
 }
 
 /* =========================
-   LOAD CATEGORIES
+   LOAD the CATEGORIES
 ========================= */
 $categories = [];
 $result = mysqli_query($conn, "
