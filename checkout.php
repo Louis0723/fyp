@@ -425,6 +425,22 @@ $total,
 )
 ");
 
+/* ADD THIS */
+mysqli_query($conn,"
+INSERT INTO admin_notifications
+(
+order_id,
+is_read,
+created_at
+)
+VALUES
+(
+'$order_id',
+0,
+NOW()
+)
+");
+
 
 foreach($items as $row){
 

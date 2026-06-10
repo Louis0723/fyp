@@ -13,36 +13,60 @@ if(!isset($_SESSION['admin'])){
 
 if(isset($_POST['update_category'])){
 
-    $old_category = $_POST['old_category'];
+    $old_category = trim($_POST['old_category']);
     $new_category = trim($_POST['new_category']);
 
-    $stmt = $conn->prepare("
-        UPDATE products
-        SET category=?
-        WHERE category=?
-    ");
+    if($old_category != $new_category){
 
-    $stmt->bind_param("ss",$new_category,$old_category);
-    $stmt->execute();
+        $conn->begin_transaction();
 
-    echo "
-    <script>
-        alert('Category updated successfully');
-        window.location='view_category.php';
-    </script>
-    ";
+        try{
+
+            /* Update categories table */
+           $stmt1 = $conn->prepare("
+            UPDATE category
+            SET category_name = ?
+            WHERE category_name = ?
+             ");
+
+            $stmt1->bind_param("ss", $new_category, $old_category);
+            $stmt1->execute();
+
+            /* Update products table */
+            $stmt2 = $conn->prepare("
+                UPDATE products
+                SET category = ?
+                WHERE category = ?
+            ");
+
+            $stmt2->bind_param("ss", $new_category, $old_category);
+            $stmt2->execute();
+
+            $conn->commit();
+
+            $_SESSION['success'] = "Category updated successfully";
+
+        }catch(Exception $e){
+
+            $conn->rollback();
+
+            $_SESSION['error'] = "Failed to update category";
+        }
+    }
+
+    header("Location: view_category.php");
+    exit();
 }
+
+
 
 /* =========================
    GET CATEGORY
 ========================= */
-
 $sql = "
-    SELECT DISTINCT category
-    FROM products
-    WHERE category IS NOT NULL
-    AND category != ''
-    ORDER BY category ASC
+    SELECT category_id, category_name
+    FROM category
+    ORDER BY category_id ASC
 ";
 
 $result = $conn->query($sql);
@@ -369,6 +393,31 @@ $_SESSION['role']=="super_admin"){
 ?>
 <?php include "admin_header.php"; ?>
 
+<?php
+
+if(isset($_SESSION['success'])){
+
+    echo "
+    <script>
+        alert('".$_SESSION['success']."');
+    </script>
+    ";
+
+    unset($_SESSION['success']);
+}
+
+if(isset($_SESSION['error'])){
+
+    echo "
+    <script>
+        alert('".$_SESSION['error']."');
+    </script>
+    ";
+
+    unset($_SESSION['error']);
+}
+
+?>
 <div class="main-content">
 
     <div class="page-top">
@@ -404,48 +453,43 @@ $_SESSION['role']=="super_admin"){
 
             <tbody>
 
-            <?php
-            $id = 1;
+            <?php while($row = $result->fetch_assoc()): ?>
 
-            while($row = $result->fetch_assoc()):
-            ?>
+<tr>
 
-            <tr>
+    <td>
+        <strong style="color:#2563eb;">
+            #<?= $row['category_id'] ?>
+        </strong>
+    </td>
 
-                <td>
-                    <strong style="color:#2563eb;">
-                        #<?= $id++ ?>
-                    </strong>
-                </td>
+    <td>
 
-                <td>
+        <span class="category-badge">
+            <?= htmlspecialchars($row['category_name']) ?>
+        </span>
 
-                    <span class="category-badge">
-                        <?= htmlspecialchars($row['category']) ?>
-                    </span>
+    </td>
 
-                </td>
+    <td>
 
-                <td>
+        <div class="action-group">
 
-                    <div class="action-group">
+            <button
+                class="edit-btn"
+                onclick="openEditModal('<?= htmlspecialchars($row['category_name'], ENT_QUOTES) ?>')">
 
-                        <button
-                            class="edit-btn"
-                            onclick="openEditModal('<?= htmlspecialchars($row['category']) ?>')">
+                <i class="fa-solid fa-pen"></i>
 
-                            <i class="fa-solid fa-pen"></i>
+            </button>
 
-                        </button>
+        </div>
 
-                    </div>
+    </td>
 
-                </td>
+</tr>
 
-            </tr>
-
-            <?php endwhile; ?>
-
+<?php endwhile; ?>
             </tbody>
 
         </table>
