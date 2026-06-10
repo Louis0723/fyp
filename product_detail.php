@@ -527,11 +527,15 @@ function changeQty(amount){
 }
 
 function add(id){
-    let qty = document.getElementById("qty").value;
+
+    let qty = parseInt(document.getElementById("qty").value);
+
     fetch("add_to_cart.php?id=" + id + "&qty=" + qty)
-    .then(() => {
-        alert("✅ Added to cart!");
+    .then(res => res.text())
+    .then(msg => {
+        alert(msg);
     });
+
 }
 
 function buyNow(id){

@@ -18,7 +18,6 @@ $user = mysqli_fetch_assoc($res);
 if (isset($_POST['update'])) {
 
     $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
     $address = trim($_POST['address']);
     $phone = trim($_POST['phone']);
 
@@ -89,7 +88,6 @@ try {
     }
 
 $name = mysqli_real_escape_string($conn, $name);
-$email = mysqli_real_escape_string($conn, $email);
 $address = mysqli_real_escape_string($conn, $address);
 $phone = mysqli_real_escape_string($conn, $phone);
 
@@ -97,7 +95,6 @@ mysqli_query($conn, "
     UPDATE users
     SET
         name='$name',
-        email='$email',
         address='$address',
         phone='$phone'
     WHERE user_id=$user_id
@@ -183,7 +180,12 @@ button:hover{
 
 <input name="name" placeholder="Name" value="<?= $user['name'] ?>" required>
 
-<input name="email" placeholder="Email" value="<?= $user['email'] ?>" required>
+<input
+    type="email"
+    value="<?= htmlspecialchars($user['email']) ?>"
+    disabled
+    style="background:#ddd; cursor:not-allowed;"
+>
 
 <input type="password" name="password" placeholder="New Password">
 
