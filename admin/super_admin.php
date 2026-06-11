@@ -135,9 +135,13 @@ RECENT ORDERS
 ========================================= */
 
 $recentOrders = $conn->query("
-    SELECT *
+    SELECT
+        order_id,
+        total_price,
+        created_at,
+        order_status
     FROM orders
-    ORDER BY order_id DESC
+    ORDER BY created_at DESC
     LIMIT 5
 ");
 ?>
@@ -905,9 +909,19 @@ ORD-<?= $row['order_id'] ?>
 
 <td>
 
-<span class="status <?= strtolower($row['status']) ?>">
+<?php
+$status = $row['order_status'];
 
-<?= $row['status'] ?>
+$class = strtolower($status);
+
+if ($class == 'delivered') {
+    $class = 'completed';
+}
+?>
+
+<span class="status <?= $class ?>">
+
+    <?= htmlspecialchars($status) ?>
 
 </span>
 
