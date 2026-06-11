@@ -5,13 +5,25 @@ include "db.php";
 $order_id = intval($_GET['id']);
 
 $res = mysqli_query($conn,"
-SELECT oi.*, p.product_name 
+SELECT
+    oi.*,
+    p.product_name,
+    o.created_at,
+    o.status,
+    u.name,
+    u.email
 FROM order_items oi
 JOIN products p ON oi.product_id = p.product_id
+JOIN orders o ON oi.order_id = o.order_id
+JOIN users u ON o.user_id = u.user_id
 WHERE oi.order_id = $order_id
 ");
 
 $total = 0;
+
+$receipt = mysqli_fetch_assoc($res);
+
+mysqli_data_seek($res, 0);
 ?>
 
 <!DOCTYPE html>
@@ -23,22 +35,7 @@ $total = 0;
 
 <style>
 
-@media print {
-    .actions,
-    .back-btn {
-        display: none !important;
-    }
 
-    body {
-        background: white !important;
-        color: black !important;
-    }
-
-    .box {
-        box-shadow: none !important;
-        background: white !important;
-    }
-}
 
 body{
     background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
@@ -58,6 +55,14 @@ body{
     backdrop-filter:blur(15px);
     box-shadow:0 0 25px rgba(0,255,255,0.2);
     text-align:left;
+}
+
+.receipt-info{
+    background:rgba(255,255,255,0.05);
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:20px;
+    line-height:1.8;
 }
 
 h2{
@@ -168,19 +173,7 @@ button:hover{
     border:2px solid transparent;
 }
 
-/* PRINT BUTTON */
-.btn.print{
-    background:rgba(0,240,255,0.1);
-    color:#00f0ff;
-    border:2px solid #00f0ff;
-}
 
-.btn.print:hover{
-    background:#00f0ff;
-    color:#000;
-    box-shadow:0 0 20px #00f0ff;
-    transform:translateY(-2px);
-}
 
 /* PDF BUTTON */
 .btn.pdf{
@@ -205,6 +198,32 @@ button:hover{
 
 <h2>🧾 RECEIPT</h2>
 
+<div class="receipt-info">
+
+<p><strong>Receipt No:</strong> RCPT-<?= $order_id ?></p>
+
+<p><strong>Order ID:</strong> #<?= $order_id ?></p>
+
+<p><strong>Date:</strong>
+<?= date('d M Y H:i', strtotime($receipt['created_at'])) ?>
+</p>
+
+<hr>
+
+<p><strong>Customer:</strong>
+<?= htmlspecialchars($receipt['name']) ?>
+</p>
+
+<p><strong>Email:</strong>
+<?= htmlspecialchars($receipt['email']) ?>
+</p>
+
+<p><strong>Status:</strong>
+<?= strtoupper($receipt['status']) ?>
+</p>
+
+</div>
+
 <div class="top-bar">
     <div>Order ID: #<?= $order_id ?></div>
     <a href="history.php" class="back-btn">⬅ Back</a>
@@ -224,7 +243,23 @@ $total += $row['price'] * $row['quantity'];
 <?php endwhile; ?>
 
 <div class="total">
-Total: RM <?= $total ?>
+Total Paid: RM <?= number_format($total,2) ?>
+</div>
+
+<div style="
+text-align:center;
+margin-top:25px;
+color:#ccc;
+font-size:14px;
+">
+
+Thank you for shopping with LOZ PC STORE ❤️
+
+<br><br>
+
+For support:
+support@lozpcstore.com
+
 </div>
 
 <div class="actions">
@@ -232,10 +267,6 @@ Total: RM <?= $total ?>
     <a href="invoice_pdf.php?id=<?= $order_id ?>" class="btn pdf">
         ⬇ Download PDF
     </a>
-
-    <button onclick="window.print()" class="btn print">
-        🖨 Print Receipt
-    </button>
 
 </div>
 

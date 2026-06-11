@@ -68,126 +68,133 @@ $currentPhotoUrl = getProfilePhotoUrl($user_id);
 $errorMessage = '';
 
 if (isset($_POST['update'])) {
-    $name = trim($_POST['name'] ?? '');
-    $address = trim($_POST['address'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
-    $new_password = (string)($_POST['password'] ?? '');
-    $confirm_password = (string)($_POST['confirm_password'] ?? '');
-    $remove_photo = isset($_POST['remove_photo']) && $_POST['remove_photo'] === '1';
 
-    if ($name === '') {
-        $errorMessage = 'Name is required';
-    } elseif ($address === '') {
-        $errorMessage = 'Address is required';
-    } elseif ($phone === '') {
-        $errorMessage = 'Phone number is required';
-    }
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $address = trim($_POST['address']);
+    $phone = trim($_POST['phone']);
 
-    if ($errorMessage === '') {
-        $uploadDir = profileUploadDir();
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
+    $new_password = trim($_POST['password']);
+    $confirm_password = trim($_POST['confirm_password']);
 
-        if ($remove_photo) {
-            deleteProfilePhotos($user_id);
-        }
+    if (!empty($new_password)) {
 
-        if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
-            $tmpName = $_FILES['profile_photo']['tmp_name'];
-            $originalName = $_FILES['profile_photo']['name'] ?? '';
-            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        if (strlen($new_password) < 8) {
+            $errorMessage = 'Password must be at least 8 characters';
 
-            if (!isValidImageExtension($ext)) {
-                $errorMessage = 'Only JPG, PNG, GIF, and WEBP images are allowed';
-            } else {
-                $imageInfo = @getimagesize($tmpName);
-                if ($imageInfo === false) {
-                    $errorMessage = 'Please upload a valid image file';
-                } else {
-                    deleteProfilePhotos($user_id);
-                    $filename = 'profile_' . $user_id . '.' . $ext;
-                    $targetPath = $uploadDir . $filename;
+        } elseif ($new_password !== $confirm_password) {
+            $errorMessage = 'Passwords do not match';
 
-                    if (!move_uploaded_file($tmpName, $targetPath)) {
-                        $errorMessage = 'Photo upload failed';
-                    }
-                }
-            }
-        }
-    }
+        } elseif (!empty($user['last_password_change'])) {
 
-    if ($errorMessage === '') {
-        $stmt = $conn->prepare("UPDATE users SET name = ?, address = ?, phone = ? WHERE user_id = ?");
-        $stmt->bind_param('sssi', $name, $address, $phone, $user_id);
-        $stmt->execute();
-        $stmt->close();
+            $last = strtotime($user['last_password_change']);
+            $six_months = strtotime('+6 months', $last);
 
-        $_SESSION['user']['name'] = $name;
-        $_SESSION['user']['address'] = $address;
-        $_SESSION['user']['phone'] = $phone;
-
-        if ($new_password !== '') {
-            if (strlen($new_password) < 8) {
-                $errorMessage = 'Password must be at least 8 characters';
-            } elseif ($new_password !== $confirm_password) {
-                $errorMessage = 'Passwords do not match';
-            } elseif (!empty($user['last_password_change'])) {
-                $last = strtotime($user['last_password_change']);
-                $six_months = strtotime('+6 months', $last);
-                if (time() < $six_months) {
-                    $errorMessage = 'You can only change password once every 6 months';
-                }
-            }
-
-            if ($errorMessage === '') {
-                $otp = random_int(100000, 999999);
-                $expiry = date('Y-m-d H:i:s', strtotime('+10 minutes'));
-
-                $stmt = $conn->prepare("UPDATE users SET otp_code = ?, otp_expiry = ? WHERE user_id = ?");
-                $stmt->bind_param('ssi', $otp, $expiry, $user_id);
-                $stmt->execute();
-                $stmt->close();
-
-                $mail = new PHPMailer(true);
-                try {
-                    $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'ziyiyap2006@gmail.com';
-                    $mail->Password = 'dnuaffkldwjxlqhh';
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port = 587;
-
-                    $mail->setFrom('ziyiyap2006@gmail.com', 'LOZ PC STORE');
-                    $mail->addAddress($user['email']);
-                    $mail->isHTML(true);
-                    $mail->Subject = 'Your OTP Code';
-                    $mail->Body = "<h2>Your OTP is</h2><h1>{$otp}</h1>";
-                    $mail->send();
-                } catch (Exception $e) {
-                    $errorMessage = 'Email failed: ' . $mail->ErrorInfo;
-                }
-
-                if ($errorMessage === '') {
-                    $_SESSION['otp_type'] = 'password_change';
-                    $_SESSION['temp_user_id'] = $user_id;
-                    $_SESSION['temp_new_password'] = $new_password;
-                    header('Location: verify.php');
-                    exit;
-                }
+            if (time() < $six_months) {
+                $errorMessage = 'You can only change password once every 6 months';
             }
         }
 
         if ($errorMessage === '') {
-            header('Location: profile.php?updated=1');
-            exit;
+
+            $otp = random_int(100000, 999999);
+            $expiry = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+            $stmt = $conn->prepare("
+                UPDATE users
+                SET otp_code = ?, otp_expiry = ?
+                WHERE user_id = ?
+            ");
+
+            $stmt->bind_param("ssi", $otp, $expiry, $user_id);
+            $stmt->execute();
+            $stmt->close();
+
+            try {
+
+                $mail = new PHPMailer(true);
+
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ziyiyap2006@gmail.com';
+                $mail->Password = 'dnuaffkldwjxlqhh';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 587;
+
+                $mail->setFrom(
+                    'ziyiyap2006@gmail.com',
+                    'LOZ PC STORE'
+                );
+
+                $mail->addAddress($user['email']);
+
+                $mail->isHTML(true);
+                $mail->Subject = 'Your OTP Code';
+                $mail->Body = "<h2>Your OTP is</h2><h1>{$otp}</h1>";
+
+                $mail->send();
+
+                $_SESSION['otp_type'] = 'password_change';
+                $_SESSION['temp_user_id'] = $user_id;
+                $_SESSION['temp_new_password'] = $new_password;
+
+                header("Location: verify.php");
+                exit;
+
+            } catch (Exception $e) {
+                $errorMessage = 'Email failed: ' . $mail->ErrorInfo;
+            }
         }
+    }
+
+    if ($errorMessage === '') {
+
+        $stmt = $conn->prepare("
+            UPDATE users
+            SET
+                name = ?,
+                email = ?,
+                address = ?,
+                phone = ?
+            WHERE user_id = ?
+        ");
+
+        $stmt->bind_param(
+            "ssssi",
+            $name,
+            $email,
+            $address,
+            $phone,
+            $user_id
+        );
+
+        $stmt->execute();
+        $stmt->close();
+
+        header("Location: profile.php?updated=1");
+        exit;
     }
 }
 
-$user = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE user_id = $user_id LIMIT 1")) ?: $user;
-$currentPhotoUrl = getProfilePhotoUrl($user_id);
+$name = mysqli_real_escape_string($conn, $name);
+$email = mysqli_real_escape_string($conn, $email);
+$address = mysqli_real_escape_string($conn, $address);
+$phone = mysqli_real_escape_string($conn, $phone);
+
+mysqli_query($conn, "
+    UPDATE users
+    SET
+        name='$name',
+        email='$email',
+        address='$address',
+        phone='$phone'
+    WHERE user_id=$user_id
+");
+
+    header("Location: profile.php?updated=1");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -440,91 +447,28 @@ $currentPhotoUrl = getProfilePhotoUrl($user_id);
     </style>
 </head>
 <body>
-    <div class="page">
-        <div class="card">
-            <div class="title">My <span>Profile</span></div>
 
-            <form method="post" enctype="multipart/form-data" id="profileForm">
-                <div class="avatar-wrap">
-                    <div class="avatar-circle" id="avatarCircle">
-                        <?php if ($currentPhotoUrl !== ''): ?>
-                            <img src="<?= h($currentPhotoUrl) ?>" alt="Profile photo" id="avatarPreview">
-                        <?php else: ?>
-                            <i data-lucide="user" class="avatar-icon" id="avatarIcon"></i>
-                            <img src="" alt="" id="avatarPreview" style="display:none;">
-                        <?php endif; ?>
-                    </div>
+<div class="container">
 
-                    <div class="upload-row">
-                        <input type="file" name="profile_photo" id="profile_photo" class="file-input" accept="image/*">
-                        <button type="button" class="upload-btn" id="choosePhotoBtn">Upload photo</button>
-                        <button type="button" class="remove-btn" id="removePhotoBtn">Remove photo</button>
-                        <input type="hidden" name="remove_photo" id="remove_photo" value="0">
-                    </div>
+<h2>👤 My Profile</h2>
 
-                    <div class="hint">JPG, PNG, GIF or WEBP · max 5 MB</div>
-                </div>
+<form method="post">
 
-                <?php if (isset($_GET['updated'])): ?>
-                    <div class="message success">Profile updated successfully.</div>
-                <?php endif; ?>
+<input name="name" placeholder="Name" value="<?= $user['name'] ?>" required>
 
-                <?php if ($errorMessage !== ''): ?>
-                    <div class="message error"><?= h($errorMessage) ?></div>
-                <?php endif; ?>
+<input name="email" placeholder="Email" value="<?= $user['email'] ?>" required>
 
-                <div class="field">
-                    <label class="label">Username</label>
-                    <div class="input-wrap">
-                        <i data-lucide="user" class="icon"></i>
-                        <input name="name" value="<?= h($user['name'] ?? '') ?>" required>
-                    </div>
-                </div>
+<input type="password" name="password" placeholder="New Password">
 
-                <div class="field">
-                    <label class="label">Email Address</label>
-                    <div class="input-wrap">
-                        <i data-lucide="mail" class="icon"></i>
-                        <input value="<?= h($user['email'] ?? '') ?>" readonly>
-                        <span class="locked-pill">LOCKED</span>
-                    </div>
-                    <div class="hint" style="margin-top:6px;">Email address cannot be changed.</div>
-                </div>
+<input type="password" name="confirm_password" placeholder="Confirm New Password">
 
-                <div class="field">
-                    <label class="label">New Password</label>
-                    <div class="input-wrap">
-                        <i data-lucide="lock" class="icon"></i>
-                        <input type="password" name="password" placeholder="Leave blank to keep current">
-                    </div>
-                </div>
+<textarea name="address" placeholder="Address" required><?= $user['address'] ?></textarea>
 
-                <div class="field">
-                    <label class="label">Confirm New Password</label>
-                    <div class="input-wrap">
-                        <i data-lucide="check-circle" class="icon"></i>
-                        <input type="password" name="confirm_password" placeholder="Re-enter new password">
-                    </div>
-                </div>
+<input name="phone" placeholder="Phone Number" value="<?= $user['phone'] ?>" required>
 
-                <div class="field">
-                    <label class="label">Address</label>
-                    <div class="input-wrap">
-                        <i data-lucide="map-pin" class="icon"></i>
-                        <textarea name="address" required><?= h($user['address'] ?? '') ?></textarea>
-                    </div>
-                </div>
+<button name="update">Update Profile</button>
 
-                <div class="field">
-                    <label class="label">Phone Number</label>
-                    <div class="input-wrap">
-                        <i data-lucide="phone" class="icon"></i>
-                        <input name="phone" value="<?= h($user['phone'] ?? '') ?>" required>
-                    </div>
-                </div>
-
-                <button type="submit" name="update" class="save-btn">Save Changes</button>
-            </form>
+</form>
 
             <a href="product.php" class="back-link">← Back to Products</a>
         </div>
