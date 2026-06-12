@@ -2,276 +2,238 @@
 session_start();
 include "db.php";
 
-$order_id = intval($_GET['id']);
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    die("Invalid order ID.");
+}
 
-$res = mysqli_query($conn,"
-SELECT
-    oi.*,
-    p.product_name,
-    o.created_at,
-    o.status,
-    u.name,
-    u.email
-FROM order_items oi
-JOIN products p ON oi.product_id = p.product_id
-JOIN orders o ON oi.order_id = o.order_id
-JOIN users u ON o.user_id = u.user_id
-WHERE oi.order_id = $order_id
+$order_id = (int)$_GET['id'];
+
+$stmt = $conn->prepare("
+    SELECT
+        oi.quantity,
+        oi.price,
+        p.product_name,
+        o.created_at,
+        o.status,
+        u.name,
+        u.email
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.product_id
+    JOIN orders o ON oi.order_id = o.order_id
+    JOIN users u ON o.user_id = u.user_id
+    WHERE oi.order_id = ?
 ");
 
+$stmt->bind_param("i", $order_id);
+$stmt->execute();
+$res = $stmt->get_result();
+
+if (!$res || $res->num_rows === 0) {
+    die("Receipt not found.");
+}
+
+$receipt = $res->fetch_assoc();
+$res->data_seek(0);
+
 $total = 0;
-
-$receipt = mysqli_fetch_assoc($res);
-
-mysqli_data_seek($res, 0);
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-<title>Receipt</title>
+    <title>Receipt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body{
+            background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+            color:white;
+            font-family:'Poppins',sans-serif;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+            margin:0;
+        }
 
-<style>
+        .box{
+            width:650px;
+            padding:30px;
+            background:rgba(255,255,255,0.05);
+            border-radius:20px;
+            backdrop-filter:blur(15px);
+            box-shadow:0 0 25px rgba(0,255,255,0.2);
+            text-align:left;
+        }
 
+        .receipt-info{
+            background:rgba(255,255,255,0.05);
+            padding:15px;
+            border-radius:12px;
+            margin-bottom:20px;
+            line-height:1.8;
+        }
 
+        h2{
+            text-align:center;
+            color:#00f0ff;
+            margin-bottom:10px;
+            text-shadow:0 0 10px #00f0ff;
+        }
 
-body{
-    background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
-    color:white;
-    font-family:'Poppins',sans-serif;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-}
+        .top-bar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+            font-size:14px;
+            color:#ccc;
+        }
 
-.box{
-    width:650px;
-    padding:30px;
-    background:rgba(255,255,255,0.05);
-    border-radius:20px;
-    backdrop-filter:blur(15px);
-    box-shadow:0 0 25px rgba(0,255,255,0.2);
-    text-align:left;
-}
+        .back-btn{
+            display:inline-block;
+            padding:8px 12px;
+            background:#ff00ff;
+            color:white;
+            border-radius:8px;
+            text-decoration:none;
+            font-weight:600;
+            transition:0.3s;
+        }
 
-.receipt-info{
-    background:rgba(255,255,255,0.05);
-    padding:15px;
-    border-radius:12px;
-    margin-bottom:20px;
-    line-height:1.8;
-}
+        .back-btn:hover{
+            transform:scale(1.05);
+        }
 
-h2{
-    text-align:center;
-    color:#00f0ff;
-    margin-bottom:10px;
-    text-shadow:0 0 10px #00f0ff;
-}
+        hr{
+            border:1px solid rgba(0,255,255,0.2);
+            margin:15px 0;
+        }
 
-.top-bar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px;
-    font-size:14px;
-    color:#ccc;
-}
+        .item{
+            display:flex;
+            justify-content:space-between;
+            padding:10px 0;
+            border-bottom:1px dashed rgba(0,255,255,0.3);
+            font-size:15px;
+            gap:20px;
+        }
 
-.back-btn{
-    display:inline-block;
-    padding:8px 12px;
-    background:#ff00ff;
-    color:white;
-    border-radius:8px;
-    text-decoration:none;
-    font-weight:600;
-    transition:0.3s;
-}
+        .item span:first-child{
+            color:#fff;
+            flex:1;
+            word-break:break-word;
+        }
 
-.back-btn:hover{
-    transform:scale(1.05);
-}
+        .item span:last-child{
+            color:#00f0ff;
+            font-weight:600;
+            white-space:nowrap;
+        }
 
-hr{
-    border:1px solid rgba(0,255,255,0.2);
-    margin:15px 0;
-}
+        .total{
+            margin-top:20px;
+            font-size:24px;
+            color:#ff00ff;
+            font-weight:bold;
+            text-align:right;
+        }
 
-.item{
-    display:flex;
-    justify-content:space-between;
-    padding:10px 0;
-    border-bottom:1px dashed rgba(0,255,255,0.3);
-    font-size:15px;
-}
+        .actions{
+            margin-top:30px;
+            display:flex;
+            justify-content:center;
+            gap:20px;
+            padding:15px;
+            background:rgba(255,255,255,0.05);
+            border-radius:15px;
+            backdrop-filter:blur(10px);
+        }
 
-.item span:first-child{
-    color:#fff;
-}
+        .btn{
+            padding:12px 18px;
+            border-radius:12px;
+            text-decoration:none;
+            font-weight:600;
+            font-size:14px;
+            letter-spacing:0.5px;
+            transition:0.3s ease;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            border:2px solid transparent;
+        }
 
-.item span:last-child{
-    color:#00f0ff;
-    font-weight:600;
-}
+        .btn.pdf{
+            background:rgba(255,0,255,0.1);
+            color:#ff00ff;
+            border:2px solid #ff00ff;
+        }
 
-.total{
-    margin-top:20px;
-    font-size:24px;
-    color:#ff00ff;
-    font-weight:bold;
-    text-align:right;
-}
-
-.actions{
-    margin-top:25px;
-    display:flex;
-    justify-content:center;
-}
-
-button{
-    padding:10px 20px;
-    background:#00f0ff;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
-    transition:0.3s;
-}
-
-button:hover{
-    transform:scale(1.05);
-    box-shadow:0 0 15px #00f0ff;
-}
-
-.actions{
-    margin-top:30px;
-    display:flex;
-    justify-content:center;
-    gap:20px;
-    padding:15px;
-    background:rgba(255,255,255,0.05);
-    border-radius:15px;
-    backdrop-filter:blur(10px);
-}
-
-/* Base button style */
-.btn{
-    padding:12px 18px;
-    border-radius:12px;
-    text-decoration:none;
-    font-weight:600;
-    font-size:14px;
-    letter-spacing:0.5px;
-    transition:0.3s ease;
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    border:2px solid transparent;
-}
-
-
-
-/* PDF BUTTON */
-.btn.pdf{
-    background:rgba(255,0,255,0.1);
-    color:#ff00ff;
-    border:2px solid #ff00ff;
-}
-
-.btn.pdf:hover{
-    background:#ff00ff;
-    color:#fff;
-    box-shadow:0 0 20px #ff00ff;
-    transform:translateY(-2px);
-}
-</style>
-
+        .btn.pdf:hover{
+            background:#ff00ff;
+            color:#fff;
+            box-shadow:0 0 20px #ff00ff;
+            transform:translateY(-2px);
+        }
+    </style>
 </head>
 
 <body>
-
 <div class="box">
 
-<h2>🧾 RECEIPT</h2>
+    <h2>RECEIPT</h2>
 
-<div class="receipt-info">
+    <div class="receipt-info">
+        <p><strong>Receipt No:</strong> RCPT-<?= $order_id ?></p>
+        <p><strong>Order ID:</strong> #<?= $order_id ?></p>
+        <p><strong>Date:</strong> <?= date('d M Y H:i', strtotime($receipt['created_at'])) ?></p>
 
-<p><strong>Receipt No:</strong> RCPT-<?= $order_id ?></p>
+        <hr>
 
-<p><strong>Order ID:</strong> #<?= $order_id ?></p>
+        <p><strong>Customer:</strong> <?= htmlspecialchars($receipt['name']) ?></p>
+        <p><strong>Email:</strong> <?= htmlspecialchars($receipt['email']) ?></p>
+        <p><strong>Status:</strong> <?= strtoupper($receipt['status']) ?></p>
+    </div>
 
-<p><strong>Date:</strong>
-<?= date('d M Y H:i', strtotime($receipt['created_at'])) ?>
-</p>
+    <div class="top-bar">
+        <div>Order ID: #<?= $order_id ?></div>
+        <a href="history.php" class="back-btn">⬅ Back</a>
+    </div>
 
-<hr>
+    <hr>
 
-<p><strong>Customer:</strong>
-<?= htmlspecialchars($receipt['name']) ?>
-</p>
+    <?php while($row = mysqli_fetch_assoc($res)): 
+        $itemTotal = $row['price'] * $row['quantity'];
+        $total += $itemTotal;
+    ?>
+        <div class="item">
+            <span><?= htmlspecialchars($row['product_name']) ?> x <?= $row['quantity'] ?></span>
+            <span>RM <?= number_format($itemTotal, 2) ?></span>
+        </div>
+    <?php endwhile; ?>
 
-<p><strong>Email:</strong>
-<?= htmlspecialchars($receipt['email']) ?>
-</p>
+    <div class="total">
+        Total Paid: RM <?= number_format($total, 2) ?>
+    </div>
 
-<p><strong>Status:</strong>
-<?= strtoupper($receipt['status']) ?>
-</p>
+    <div style="
+        text-align:center;
+        margin-top:25px;
+        color:#ccc;
+        font-size:14px;
+    ">
+      Thank you for shopping with LOZ PC STORE 
+        <br><br>
+        For support:   
+        support@lozpcstore.com
+    </div>
 
-</div>
-
-<div class="top-bar">
-    <div>Order ID: #<?= $order_id ?></div>
-    <a href="history.php" class="back-btn">⬅ Back</a>
-</div>
-
-<hr>
-
-<?php while($row = mysqli_fetch_assoc($res)): 
-$total += $row['price'] * $row['quantity'];
-?>
-
-<div class="item">
-    <span><?= $row['product_name'] ?> x <?= $row['quantity'] ?></span>
-    <span>RM <?= $row['price'] * $row['quantity'] ?></span>
-</div>
-
-<?php endwhile; ?>
-
-<div class="total">
-Total Paid: RM <?= number_format($total,2) ?>
-</div>
-
-<div style="
-text-align:center;
-margin-top:25px;
-color:#ccc;
-font-size:14px;
-">
-
-Thank you for shopping with LOZ PC STORE 
-
-<br><br>
-
-For support:
-support@lozpcstore.com
+    <div class="actions">
+        <a href="invoice_pdf.php?id=<?= $order_id ?>" class="btn pdf">
+            ⬇ Download PDF
+        </a>
+    </div>
 
 </div>
-
-<div class="actions">
-
-    <a href="invoice_pdf.php?id=<?= $order_id ?>" class="btn pdf">
-        ⬇ Download PDF
-    </a>
-
-</div>
-
-
-</div>
-
 </body>
 </html>
