@@ -467,28 +467,52 @@ $currentPhotoUrl = getProfilePhotoUrl($user_id);
             <div class="message error"><?= h($errorMessage) ?></div>
         <?php endif; ?>
 
-        <div class="avatar-wrap">
-            <div class="avatar-circle" id="avatarCircle">
-                <?php if ($currentPhotoUrl !== ''): ?>
-                    <img src="<?= h($currentPhotoUrl) ?>" alt="Profile photo" id="avatarPreview">
-                    <i data-lucide="user" class="avatar-icon" id="avatarIcon" style="display:none;"></i>
-                <?php else: ?>
-                    <i data-lucide="user" class="avatar-icon" id="avatarIcon"></i>
-                    <img src="" alt="Profile photo" id="avatarPreview" style="display:none;">
-                <?php endif; ?>
-            </div>
+        <form method="post" enctype="multipart/form-data" id="profileForm">
 
-            <div class="upload-row">
-                <input type="file" name="profile_photo" id="profile_photo" class="file-input" accept="image/*">
-                <button type="button" class="upload-btn" id="choosePhotoBtn">Upload photo</button>
-                <button type="button" class="remove-btn" id="removePhotoBtn">Remove photo</button>
-                <input type="hidden" name="remove_photo" id="remove_photo" value="0">
-            </div>
-
-            <div class="hint">JPG, PNG or GIF · max 5 MB</div>
+    <div class="avatar-wrap">
+        <div class="avatar-circle" id="avatarCircle">
+            <?php if ($currentPhotoUrl !== ''): ?>
+                <img src="<?= h($currentPhotoUrl) ?>" alt="Profile photo" id="avatarPreview">
+                <i data-lucide="user" class="avatar-icon" id="avatarIcon" style="display:none;"></i>
+            <?php else: ?>
+                <i data-lucide="user" class="avatar-icon" id="avatarIcon"></i>
+                <img src="" alt="Profile photo" id="avatarPreview" style="display:none;">
+            <?php endif; ?>
         </div>
 
-        <form method="post" enctype="multipart/form-data" id="profileForm">
+        <div class="upload-row">
+
+            <input
+                type="file"
+                name="profile_photo"
+                id="profile_photo"
+                class="file-input"
+                accept="image/*">
+
+            <button type="button"
+                    class="upload-btn"
+                    id="choosePhotoBtn">
+                Upload photo
+            </button>
+
+            <button type="button"
+                    class="remove-btn"
+                    id="removePhotoBtn">
+                Remove photo
+            </button>
+
+            <input type="hidden"
+                   name="remove_photo"
+                   id="remove_photo"
+                   value="0">
+
+        </div>
+
+        <div class="hint">
+            JPG, PNG or GIF · max 5 MB
+        </div>
+    </div>
+    
             <div class="field">
                 <label class="label">Username</label>
                 <div class="input-wrap">

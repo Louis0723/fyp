@@ -253,7 +253,7 @@ color:#ccc;
 font-size:14px;
 ">
 
-Thank you for shopping with LOZ PC STORE ❤️
+Thank you for shopping with LOZ PC STORE 
 
 <br><br>
 

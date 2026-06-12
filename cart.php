@@ -243,8 +243,44 @@ data-price="<?= $row['price'] ?>"
 data-qty="<?= $row['quantity'] ?>"
 checked>
 
-<img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/150x100' ?>">
+<?php
+$image = 'https://via.placeholder.com/150x100?text=No+Image';
 
+if (!empty($row['image'])) {
+
+    /* External URL */
+    if (filter_var($row['image'], FILTER_VALIDATE_URL)) {
+
+        $image = $row['image'];
+
+    }
+
+    /* uploads/products/ */
+    elseif (file_exists(__DIR__ . '/uploads/products/' . $row['image'])) {
+
+        $image = 'uploads/products/' . $row['image'];
+
+    }
+
+    /* uploads/ */
+    elseif (file_exists(__DIR__ . '/uploads/' . $row['image'])) {
+
+        $image = 'uploads/' . $row['image'];
+
+    }
+
+    /* image already contains folder */
+    else {
+
+        $image = $row['image'];
+
+    }
+}
+?>
+
+<img src="<?= htmlspecialchars($image) ?>"
+     alt="<?= htmlspecialchars($row['product_name']) ?>"
+     onerror="this.onerror=null;this.src='https://via.placeholder.com/150x100?text=No+Image';">
 <div class="details">
 
 <h3><?= $row['product_name'] ?></h3>
