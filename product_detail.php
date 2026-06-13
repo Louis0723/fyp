@@ -380,7 +380,13 @@ if (!empty($row['image'])) {
             <div class="qty-box">
                 <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
 
-                <input type="number" id="qty" value="1" min="1" max="<?= (int)$row['stock'] ?>">
+                <input
+                    type="number"
+                    id="qty"
+                    value="1"
+                    min="1"
+                    max="<?= (int)$row['stock'] ?>"
+                >
 
                 <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
             </div>
@@ -525,6 +531,24 @@ function changeQty(amount){
 
     qty.value = current;
 }
+
+// ADD THIS PART HERE
+document.getElementById("qty").addEventListener("input", function () {
+
+    let stock = <?= (int)$row['stock'] ?>;
+    let qty = parseInt(this.value);
+
+    if (qty < 1) {
+        alert("Minimum quantity is 1.");
+        this.value = 1;
+    }
+
+    if (qty > stock) {
+        alert("Only " + stock + " item(s) available in stock.");
+        this.value = stock;
+    }
+
+});
 
 function add(id){
 

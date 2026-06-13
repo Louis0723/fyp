@@ -367,7 +367,13 @@ input {
 
             <div class="input-group">
                 <label>Email <span style="color:red">*</span></label>
-                <input type="email" name="email" placeholder="abc@gmail.com" required>
+                <input
+                    type="email"
+                name="email"
+                placeholder="abc@gmail.com"
+                oninvalid="this.setCustomValidity('Wrong email format!')"
+                oninput="this.setCustomValidity('')"
+                required>
             </div>
         </div>
 
