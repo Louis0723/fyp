@@ -7,63 +7,125 @@ use Dompdf\Dompdf;
 $order_id = intval($_GET['id']);
 
 $res = mysqli_query($conn,"
-SELECT oi.*, p.product_name 
+SELECT
+    oi.*,
+    p.product_name,
+    o.created_at,
+    o.status,
+    u.name,
+    u.email
 FROM order_items oi
 JOIN products p ON oi.product_id = p.product_id
+JOIN orders o ON oi.order_id = o.order_id
+JOIN users u ON o.user_id = u.user_id
 WHERE oi.order_id = $order_id
 ");
 
 $total = 0;
 
+$first = mysqli_fetch_assoc($res);
+
+$customer_name = $first['name'];
+$customer_email = $first['email'];
+$order_date = $first['created_at'];
+$order_status = $first['status'];
+
+mysqli_data_seek($res, 0);
+
 $html = '
+
 <style>
-body { font-family: Arial, sans-serif; }
-.header {
+body{
+    font-family:Arial,sans-serif;
+}
+
+.header{
     text-align:center;
     border-bottom:2px solid #00bcd4;
-    padding-bottom:10px;
+    padding-bottom:15px;
 }
-h1 { color:#00bcd4; margin:0; }
-table {
+
+.header h1{
+    margin:0;
+    color:#00bcd4;
+}
+
+.header h2{
+    margin:5px 0;
+}
+
+.info{
+    margin-top:20px;
+}
+
+.info p{
+    margin:5px 0;
+}
+
+table{
     width:100%;
     border-collapse:collapse;
     margin-top:20px;
 }
-th, td {
-    border-bottom:1px solid #ddd;
+
+th,td{
+    border:1px solid #ddd;
     padding:10px;
-    text-align:left;
 }
-th {
+
+th{
     background:#f2f2f2;
 }
-.total {
-    text-align:right;
+
+.total{
     margin-top:20px;
-    font-size:18px;
+    text-align:right;
+    font-size:20px;
     font-weight:bold;
-    color:#ff4081;
 }
-.footer {
-    margin-top:30px;
+
+.footer{
+    margin-top:40px;
     text-align:center;
-    font-size:12px;
-    color:#777;
+    color:#666;
 }
 </style>
 
 <div class="header">
-    <h1>RECEIPT</h1>
-    <p>Order ID: #' . $order_id . '</p>
+
+<h1>LOZ PC STORE</h1>
+
+<h2>RECEIPT</h2>
+
+<p>Receipt No: RCPT-'.$order_id.'</p>
+
+<p>Order ID: #'.$order_id.'</p>
+
+<p>Date: '.date('d M Y H:i', strtotime($order_date)).'</p>
+
+</div>
+
+<div class="info">
+
+<h3>Customer Information</h3>
+
+<p><strong>Name:</strong> '.$customer_name.'</p>
+
+<p><strong>Email:</strong> '.$customer_email.'</p>
+
+<p><strong>Status:</strong> '.strtoupper($order_status).'</p>
+
 </div>
 
 <table>
+
 <tr>
-    <th>Product</th>
-    <th>Qty</th>
-    <th>Price</th>
-    <th>Subtotal</th>
+<th>Product</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Subtotal</th>
 </tr>
+
 ';
 
 while($row = mysqli_fetch_assoc($res)){
@@ -80,15 +142,24 @@ while($row = mysqli_fetch_assoc($res)){
 }
 
 $html .= '
+
 </table>
 
 <div class="total">
-Total: RM '.number_format($total,2).'
+Total Paid: RM '.number_format($total,2).'
 </div>
 
 <div class="footer">
-Thank you for your purchase!
+
+<h3>Thank You For Shopping With LOZ PC STORE </h3>
+
+<p>
+This receipt serves as proof of purchase.
+Please keep it for warranty and support purposes.
+</p>
+
 </div>
+
 ';
 
 // Generate PDF

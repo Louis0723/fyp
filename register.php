@@ -13,6 +13,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = htmlspecialchars(trim($_POST["name"]));
     $email = filter_var(trim($_POST["email"]), FILTER_VALIDATE_EMAIL);
     $phone = trim($_POST["phone"] ?? "");
+    if (!empty($phone) && !preg_match("/^\+?[0-9]{9,15}$/", $phone)) {
+    $message = "Invalid phone number format!";
+}
     $password = $_POST["password"];
     $confirm_password = $_POST["confirm_password"];
 
@@ -370,7 +373,7 @@ input {
 
         <div class="input-group full">
             <label>Phone Number </label>
-            <input type="text" name="phone">
+            <input type="text" name="phone" placeholder="+60123456789" pattern="^\+?[0-9]{9,15}$">
         </div>
 
         <div class="row">

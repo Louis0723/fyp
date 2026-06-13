@@ -243,8 +243,44 @@ data-price="<?= $row['price'] ?>"
 data-qty="<?= $row['quantity'] ?>"
 checked>
 
-<img src="<?= !empty($row['image']) ? $row['image'] : 'https://via.placeholder.com/150x100' ?>">
+<?php
+$image = 'https://via.placeholder.com/150x100?text=No+Image';
 
+if (!empty($row['image'])) {
+
+    /* External URL */
+    if (filter_var($row['image'], FILTER_VALIDATE_URL)) {
+
+        $image = $row['image'];
+
+    }
+
+    /* uploads/products/ */
+    elseif (file_exists(__DIR__ . '/uploads/products/' . $row['image'])) {
+
+        $image = 'uploads/products/' . $row['image'];
+
+    }
+
+    /* uploads/ */
+    elseif (file_exists(__DIR__ . '/uploads/' . $row['image'])) {
+
+        $image = 'uploads/' . $row['image'];
+
+    }
+
+    /* image already contains folder */
+    else {
+
+        $image = $row['image'];
+
+    }
+}
+?>
+
+<img src="<?= htmlspecialchars($image) ?>"
+     alt="<?= htmlspecialchars($row['product_name']) ?>"
+     onerror="this.onerror=null;this.src='https://via.placeholder.com/150x100?text=No+Image';">
 <div class="details">
 
 <h3><?= $row['product_name'] ?></h3>
@@ -253,7 +289,11 @@ checked>
 <div class="qty">
 <button onclick="update(<?= $row['product_id'] ?>,'dec')">-</button>
 <span><?= $row['quantity'] ?></span>
-<button onclick="update(<?= $row['product_id'] ?>,'inc')">+</button>
+<button onclick="update(
+<?= $row['product_id'] ?>,
+'inc',
+<?= $row['stock'] ?>
+)">+</button>
 </div>
 
 <p>Subtotal: RM <?= number_format($sub,2) ?></p>
@@ -321,9 +361,21 @@ particlesJS("particles-js",{
 }
 });
 
-function update(id,action){
-fetch(`update_cart.php?id=${id}&action=${action}`)
-.then(()=>location.reload());
+function update(id, action, stock){
+
+    if(action === "inc"){
+
+        let qtySpan = event.target.parentElement.querySelector("span");
+        let currentQty = parseInt(qtySpan.innerText);
+
+        if(currentQty >= stock){
+            alert("⚠️ Sorry! Only " + stock + " item(s) left in stock.");
+            return;
+        }
+    }
+
+    fetch(`update_cart.php?id=${id}&action=${action}`)
+    .then(()=>location.reload());
 }
 
 function removeItem(id){
