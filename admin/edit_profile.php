@@ -58,15 +58,14 @@ $error = "";
 if(isset($_POST['save_profile'])){
 
     $newUsername = trim($_POST['username']);
-    $newEmail    = trim($_POST['email']);
+    $newEmail = $adminEmail;
     $newPhone    = trim($_POST['phone']);
     $newPassword = trim($_POST['password']);
 
-    if(empty($newUsername) || empty($newEmail)){
-
-        $error = "Username and email are required.";
-
-    }else{
+   if(empty($newUsername)){
+    $error = "Username is required.";
+}
+else{
 
         if(!empty($newPassword)){
 
@@ -74,23 +73,21 @@ if(isset($_POST['save_profile'])){
 
             $update = $conn->query("
                 UPDATE admins
-                SET 
-                    username='$newUsername',
-                    email='$newEmail',
-                    phone='$newPhone',
-                    password='$hashedPassword'
-                WHERE admin_id='$adminID'
+            SET
+              username='$newUsername',
+              phone='$newPhone',
+            password='$hashedPassword'
+            WHERE admin_id='$adminID'
             ");
 
         }else{
 
             $update = $conn->query("
-                UPDATE admins
-                SET 
-                    username='$newUsername',
-                    email='$newEmail',
-                    phone='$newPhone'
-                WHERE admin_id='$adminID'
+              UPDATE admins
+            SET
+              username='$newUsername',
+              phone='$newPhone'
+              WHERE admin_id='$adminID'
             ");
 
         }
@@ -100,7 +97,6 @@ if(isset($_POST['save_profile'])){
             $_SESSION['admin'] = $newUsername;
 
             $adminName  = $newUsername;
-            $adminEmail = $newEmail;
             $adminPhone = $newPhone;
 
             $success = "Profile updated successfully.";
@@ -555,15 +551,16 @@ body{
 
                 </div>
 
-                <div class="form-group">
+              <div class="form-group">
 
-                    <label>Email Address</label>
+    <label>Email Address</label>
 
-                    <input type="email"
-                           name="email"
-                           value="<?= htmlspecialchars($adminEmail) ?>">
+    <input type="email"
+           value="<?= htmlspecialchars($adminEmail) ?>"
+           class="readonly"
+           readonly>
 
-                </div>
+</div>
 
                 <div class="form-group">
 
