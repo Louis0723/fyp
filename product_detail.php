@@ -314,7 +314,7 @@ if (!empty($row['image'])) {
                     <div class="spec"><strong>CPU:</strong> <?= htmlspecialchars($row['cpu']) ?></div>
                 <?php endif; ?>
 
-                <?php if (!empty($row['gpu'])): ?>
+                <?php if (!empty($row['gpu'])): ?> 
                     <div class="spec"><strong>GPU:</strong> <?= htmlspecialchars($row['gpu']) ?></div>
                 <?php endif; ?>
 
@@ -515,6 +515,7 @@ particlesJS("particles-js", {
   }
 });
 
+//add quantity function
 function changeQty(amount){
     let qty = document.getElementById("qty");
     let current = parseInt(qty.value) || 1;
@@ -532,7 +533,7 @@ function changeQty(amount){
     qty.value = current;
 }
 
-// ADD THIS PART HERE
+// manual type
 document.getElementById("qty").addEventListener("input", function () {
 
     let stock = <?= (int)$row['stock'] ?>;
