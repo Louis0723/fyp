@@ -213,14 +213,13 @@ text-align:center;
 </div>
 
 <?php else: ?>
-
-<!-- SELECT ALL -->
-
-
+ 
 <a href="product.php" class="back">← Back to Products</a>
 
 <div style="text-align:left;margin-bottom:15px;">
 <label>
+
+    <!-- SELECT ALL -->
 <input type="checkbox" id="selectAll" checked style="transform:scale(1.3);margin-right:8px;">
 Select All
 </label>
@@ -235,7 +234,7 @@ $total += $sub;
 
 <div class="cart-item">
 
-<!-- CHECKBOX ADDED -->
+<!--  PRODUCT CHECKBOX  -->
 <input type="checkbox"
 class="select-item"
 data-id="<?= $row['product_id'] ?>"
