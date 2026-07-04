@@ -18,7 +18,7 @@ $user = mysqli_fetch_assoc($res_user);
 
 $items = [];
 $total = 0;
-
+//this is buy single product 
 if(isset($_GET['id']) && isset($_GET['qty'])){
 
     $product_id = intval($_GET['id']);
@@ -483,22 +483,90 @@ exit;
 
 <style>
 
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:white;}
-#particles-js{position:fixed;width:100%;height:100%;z-index:-1;}
-.container{max-width:750px;margin:60px auto;padding:35px;border-radius:25px;background:rgba(255,255,255,0.05);backdrop-filter:blur(15px);box-shadow:0 10px 30px rgba(0,0,0,0.5);}
-h1{text-align:center;margin-bottom:25px;color:#00f0ff;text-shadow:0 0 15px #00f0ff;}
-.back{display:inline-block;margin-bottom:25px;color:white;text-decoration:none;background:#ff00ff;padding:10px 18px;border-radius:10px;font-weight:600;}
-.summary{margin-bottom:25px;padding:20px;border-radius:15px;background:rgba(255,255,255,0.05);}
-.summary table{width:100%;border-collapse:collapse;}
-.summary th,.summary td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.2);}
+*{margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+min-height:100vh;
+color:white;
+}
+
+#particles-js{
+position:fixed;
+width:100%;height:100%;
+z-index:-1;
+}
+.container{max-width:750px;
+margin:60px auto;padding:35px;
+border-radius:25px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(15px);
+box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
+h1{text-align:center;
+margin-bottom:25px;
+color:#00f0ff;text-shadow:0 0 15px #00f0ff;
+}
+
+.back{display:inline-block;
+margin-bottom:25px;color:white;
+text-decoration:none;
+background:#ff00ff;
+padding:10px 18px;
+border-radius:10px;
+font-weight:600;
+}
+
+.summary{
+margin-bottom:25px;
+padding:20px;
+border-radius:15px;
+background:rgba(255,255,255,0.05);
+}
+
+.summary table{
+width:100%;
+border-collapse:collapse;
+}
+.summary th,.summary td{
+padding:12px;
+text-align:left;
+border-bottom:1px solid rgba(255,255,255,0.2);
+}
+
 .summary th{color:#00f0ff;font-weight:600;}
-.total{font-size:30px;color:#00f0ff;margin-bottom:25px;text-align:center;font-weight:700;}
-.payment-methods{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:25px;}
+.total{font-size:30px;
+color:#00f0ff;margin-bottom:25px;
+text-align:center;
+font-weight:700;
+}
+
+.payment-methods{display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:18px;
+margin-bottom:25px;
+}
 .payment-methods label{cursor:pointer;}
+
 .payment-methods input{display:none;}
-.payment-card{padding:20px;border-radius:20px;background:rgba(255,255,255,0.06);border:2px solid transparent;text-align:center;transition:0.3s;font-weight:600;}
-.payment-methods input:checked + .payment-card{border-color:#00f0ff;box-shadow:0 0 20px #00f0ff;}
+
+.payment-card{padding:20px;
+border-radius:20px;
+background:rgba(255,255,255,0.06);
+border:2px solid transparent;
+text-align:center;
+transition:0.3s;font-weight:600;
+}
+
+.payment-methods input:checked + .payment-card{border-color:#00f0ff;
+box-shadow:0 0 20px #00f0ff;
+}
+
 .input-box{margin-bottom:15px;}
 
 .input-box input,
@@ -541,10 +609,13 @@ cursor:pointer;
 
 <div class="container">
 
+<!-- after checkout-->
 <h1>Secure Checkout</h1>
 <?php if(isset($_GET['success'])): ?>
 <a href="product.php" class="back">← Back to Products</a>
 <?php else: ?>
+    
+<!-- before checkout-->
 <a href="javascript:history.back()" class="back">← Go Back</a>
 <?php endif; ?>
 
