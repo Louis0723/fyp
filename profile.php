@@ -3,7 +3,9 @@ session_start();
 include "db.php";
 require "vendor/autoload.php";
 
+/*send email*/
 use PHPMailer\PHPMailer\PHPMailer;
+/*handle error*/
 use PHPMailer\PHPMailer\Exception;
 
 if (!isset($_SESSION['user'])) {
@@ -27,6 +29,7 @@ function profileUploadDir(): string
     return __DIR__ . '/uploads/profile/';
 }
 
+/*return public directory for profile photos*/
 function profilePublicDir(): string
 {
     return 'uploads/profile/';
@@ -80,7 +83,7 @@ if (isset($_GET['updated']) && $_GET['updated'] == '1') {
 }
 
 if (isset($_POST['update'])) {
-
+/*trim is remove front and back space*/
     $name = trim($_POST['name'] ?? '');
     $address = trim($_POST['address'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
@@ -96,10 +99,11 @@ if (isset($_POST['update'])) {
     } elseif ($phone === '') {
         $errorMessage = 'Phone number is required.';
     }
-
+/*check the photo upload*/
     if ($errorMessage === '') {
         ensureProfileDir();
 
+/*upload image before old image has been delete*/
         if ($remove_photo) {
             deleteProfilePhotos($user_id);
         }
@@ -112,6 +116,7 @@ if (isset($_POST['update'])) {
             if (!isValidImageExtension($ext)) {
                 $errorMessage = 'Only JPG, PNG, GIF, and WEBP images are allowed.';
             } else {
+                /*prevent user just rename the file name and use the wrong format*/
                 $imageInfo = @getimagesize($tmpName);
                 if ($imageInfo === false) {
                     $errorMessage = 'Please upload a valid image file.';
@@ -127,7 +132,7 @@ if (isset($_POST['update'])) {
             }
         }
     }
-
+/*prepared statement protect sql injection attack */
     if ($errorMessage === '') {
         $stmt = $conn->prepare("
             UPDATE users
@@ -141,6 +146,7 @@ if (isset($_POST['update'])) {
         if ($new_password !== '') {
             if (strlen($new_password) < 8) {
                 $errorMessage = 'Password must be at least 8 characters.';
+                /*compare the password it is correct*/
             } elseif ($new_password !== $confirm_password) {
                 $errorMessage = 'Passwords do not match.';
             } elseif (!empty($user['last_password_change'])) {
@@ -150,7 +156,7 @@ if (isset($_POST['update'])) {
                     $errorMessage = 'You can only change password once every 6 months.';
                 }
             }
-
+            /*otp*/
             if ($errorMessage === '') {
                 $otp = random_int(100000, 999999);
                 $expiry = date('Y-m-d H:i:s', strtotime('+10 minutes'));
@@ -180,7 +186,7 @@ if (isset($_POST['update'])) {
                     $mail->Subject = 'Your OTP Code';
                     $mail->Body = "<h2>Your OTP is</h2><h1>{$otp}</h1>";
                     $mail->send();
-
+                /*session is store temporaraily*/
                     $_SESSION['otp_type'] = 'password_change';
                     $_SESSION['temp_user_id'] = $user_id;
                     $_SESSION['temp_new_password'] = $new_password;
@@ -468,7 +474,7 @@ $currentPhotoUrl = getProfilePhotoUrl($user_id);
         <?php endif; ?>
 
         <form method="post" enctype="multipart/form-data" id="profileForm">
-
+<!-- Avatar Upload Section -->
     <div class="avatar-wrap">
         <div class="avatar-circle" id="avatarCircle">
             <?php if ($currentPhotoUrl !== ''): ?>
@@ -482,6 +488,7 @@ $currentPhotoUrl = getProfilePhotoUrl($user_id);
 
         <div class="upload-row">
 
+<!-- choose image frm computer -->
             <input
                 type="file"
                 name="profile_photo"
