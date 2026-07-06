@@ -79,7 +79,7 @@ $users = $conn->query("
         u.user_id,
         u.name,
         u.email,
-        u.profile_image,
+        
         u.created_at,
         u.status,
 
@@ -503,7 +503,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == "super_admin") {
                         <div class="customer-profile">
                             <div class="avatar">
                                 <?php if ($profilePhoto !== ''): ?>
-                                    <img src="<?= h($profilePhoto) ?>" alt="Customer photo">
+                                    <img src="<?= h($profilePhoto) ?>?v=<?= time() ?>" alt="Customer photo">
                                 <?php else: ?>
                                     <?= h($initials) ?>
                                 <?php endif; ?>
