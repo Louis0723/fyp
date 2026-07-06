@@ -36,24 +36,28 @@ $search = $_GET['search'] ?? '';
 $filter = $_GET['filter'] ?? '';
 
 $sql = "
-SELECT 
+SELECT
     o.order_id,
     u.name AS user_name,
     u.email,
-    DATE(o.created_at) as order_date,
+    DATE(o.created_at) AS order_date,
 
     SUM(oi.quantity) AS total_qty,
 
-    SUM(oi.price * oi.quantity) AS total_price,
+    (
+        SUM(oi.price * oi.quantity)
+        + (SUM(oi.price * oi.quantity) * 0.06)
+        + 5
+    ) AS total_price,
 
     o.status
 
 FROM orders o
 
-JOIN users u 
+JOIN users u
 ON o.user_id = u.user_id
 
-LEFT JOIN order_items oi 
+LEFT JOIN order_items oi
 ON o.order_id = oi.order_id
 
 WHERE 1

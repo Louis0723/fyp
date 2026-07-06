@@ -54,11 +54,58 @@ if(isset($_POST['update_admin'])){
 }
 
 /* =========================
+   ADMIN PHOTO
+========================= */
+
+function getAdminPhotoUrl(array $admin): string
+{
+    $baseDir = "../uploads/admins/";
+
+    if (!empty($admin['avatar'])) {
+
+        $img = trim($admin['avatar']);
+
+        if (filter_var($img, FILTER_VALIDATE_URL)) {
+            return $img;
+        }
+
+        $direct = $baseDir . $img;
+
+        if (file_exists($direct)) {
+            return $direct;
+        }
+
+        return $direct;
+    }
+
+    $exts = ['jpg','jpeg','png','gif','webp'];
+
+    foreach ($exts as $ext) {
+
+        $path = $baseDir . "admin_" . $admin['admin_id'] . "." . $ext;
+
+        if (file_exists($path)) {
+            return $path;
+        }
+    }
+
+    return "";
+}
+
+/* =========================
    GET ADMINS
 ========================= */
 
 $admins = $conn->query("
-    SELECT *
+    SELECT
+        admin_id,
+        username,
+        email,
+        phone,
+        role,
+        status,
+        avatar,
+        created_at
     FROM admins
     ORDER BY admin_id ASC
 ");
@@ -552,7 +599,52 @@ tr:hover{
 <tr class="admin-row">
 
 <td>
+
+<div style="display:flex;align-items:center;gap:12px;">
+
+<?php
+
+$avatar = "../uploads/admins/" . $a['avatar'];
+
+if(!empty($a['avatar']) && file_exists($avatar)){
+?>
+
+<img
+src="<?= $avatar ?>"
+style="
+width:46px;
+height:46px;
+border-radius:50%;
+object-fit:cover;
+border:2px solid #dbeafe;
+">
+
+<?php
+}else{
+?>
+
+<img
+src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+style="
+width:46px;
+height:46px;
+border-radius:50%;
+border:2px solid #dbeafe;
+">
+
+<?php
+}
+?>
+
+<div>
+<b><?= htmlspecialchars($a['username']) ?></b><br>
+<small>
 A-<?= str_pad($a['admin_id'],3,'0',STR_PAD_LEFT) ?>
+</small>
+</div>
+
+</div>
+
 </td>
 
 <td>
@@ -612,7 +704,7 @@ onclick="openEditModal(
 '<?= htmlspecialchars(addslashes($a['phone'] ?? '')) ?>',
 '<?= $a['role'] ?>',
 '<?= $a['status'] ?>',
-'<?= trim($a['avatar'] ?? '') ?>'
+'<?= getAdminPhotoUrl($a) ?>'
 )"
 
 ></i>
@@ -863,82 +955,28 @@ avatar
     .getElementById("edit_status")
     .value = status;
 
-    /* =========================
-       AVATAR SYSTEM
-    ========================= */
+ /* =========================
+   ADMIN AVATAR
+========================= */
 
-    let avatarImg =
-    document.getElementById("edit_avatar");
+const avatarImg = document.getElementById("edit_avatar");
 
-    /* DEFAULT IMAGE */
+const defaultAvatar =
+"https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-    let defaultAvatar =
-    "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+if (avatar && avatar.trim() !== "") {
 
-    /* RESET */
+    avatarImg.src = avatar + "?v=" + new Date().getTime();
 
-    avatarImg.onerror = null;
+    avatarImg.onerror = function () {
+        this.src = defaultAvatar;
+    };
 
-    /* IF DATABASE HAS AVATAR */
+} else {
 
-    if(
-        avatar &&
-        avatar !== "NULL" &&
-        avatar !== "null" &&
-        avatar.trim() !== ""
-    ){
+    avatarImg.src = defaultAvatar;
 
-        /* TRY uploads FOLDER */
-
-        let uploadPath =
-        "../uploads/" + avatar;
-
-        /* TRY uploaded_img FOLDER */
-
-        let uploadedImgPath =
-        "../uploaded_img/" + avatar;
-
-        /* FIRST TRY */
-
-        avatarImg.src =
-        uploadPath +
-        "?v=" +
-        new Date().getTime();
-
-        /* IF FAIL */
-
-        avatarImg.onerror = function(){
-
-            this.onerror = null;
-
-            /* SECOND TRY */
-
-            this.src =
-            uploadedImgPath +
-            "?v=" +
-            new Date().getTime();
-
-            /* IF FAIL AGAIN */
-
-            this.onerror = function(){
-
-                this.onerror = null;
-
-                /* DEFAULT IMAGE */
-
-                this.src = defaultAvatar;
-
-            };
-
-        };
-
-    }else{
-
-        /* NO DATABASE AVATAR */
-
-        avatarImg.src = defaultAvatar;
-
-    }
+}
 
 }
 
