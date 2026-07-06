@@ -49,7 +49,7 @@ function getProfilePhotoUrl(int $userId): string
     $dir = profileUploadDir();
     $files = glob($dir . 'profile_' . $userId . '.*');
     if (!empty($files)) {
-        return profilePublicDir() . basename($files[0]);
+        return profilePublicDir() . basename($files[0]) . '?t=' . time();
     }
     return '';
 }
