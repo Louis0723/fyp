@@ -25,12 +25,28 @@ if (!$order) {
 }
 
 /* Get Order Items */
-$items = mysqli_query($conn, "
+$items_query = mysqli_query($conn, "
     SELECT oi.*, p.product_name, p.image
     FROM order_items oi
     JOIN products p ON oi.product_id = p.product_id
     WHERE oi.order_id = $order_id
 ");
+
+$rows = [];
+$subtotal = 0;
+
+while($row = mysqli_fetch_assoc($items_query)) {
+    $itemTotal = $row['price'] * $row['quantity'];
+    $row['item_total'] = $itemTotal;
+    $subtotal += $itemTotal;
+    $rows[] = $row;
+}
+
+$tax_rate = 0.06;
+$delivery_fee = 5;
+
+$tax = $subtotal * $tax_rate;
+$grand_total = $subtotal + $tax + $delivery_fee;
 ?>
 
 <!DOCTYPE html>
@@ -122,17 +138,34 @@ $items = mysqli_query($conn, "
 
     <p><b>Date:</b> <?= $order['created_at'] ?></p>
 
-    <p><b>Total:</b> RM <?= number_format($order['total_price'],2) ?></p>
-
     <p><b>Address:</b> <?= htmlspecialchars($order['address']) ?></p>
 
     <p><b>Phone:</b> <?= htmlspecialchars($order['phone']) ?></p>
+
+    <div style="
+    background: rgba(255,255,255,0.06);
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+">
+    <h3 style="color:#00f0ff;">Order Summary</h3>
+
+    <p>Subtotal: RM <?= number_format($subtotal, 2) ?></p>
+    <p>Tax (6%): RM <?= number_format($tax, 2) ?></p>
+    <p>Delivery Fee: RM <?= number_format($delivery_fee, 2) ?></p>
+
+    <hr style="border:1px solid rgba(255,255,255,0.2);">
+
+    <p><b style="font-size:18px;color:#00f0ff;">
+        Grand Total: RM <?= number_format($grand_total, 2) ?>
+    </b></p>
+</div>
 
     <hr>
 
     <h2>Items</h2>
 
-    <?php while($row = mysqli_fetch_assoc($items)): ?>
+    <?php foreach($rows as $row): ?>
 
         <?php
         $image = trim($row['image']);
@@ -190,7 +223,7 @@ $items = mysqli_query($conn, "
 
         </div>
 
-    <?php endwhile; ?>
+    <?php endforeach; ?>
 
     <a href="history.php" class="back">
         ← Back to History

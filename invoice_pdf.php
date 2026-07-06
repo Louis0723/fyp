@@ -21,7 +21,9 @@ JOIN users u ON o.user_id = u.user_id
 WHERE oi.order_id = $order_id
 ");
 
-$total = 0;
+$subtotal = 0;
+$tax_rate = 0.06;
+$delivery_fee = 5;
 
 $first = mysqli_fetch_assoc($res);
 
@@ -129,35 +131,39 @@ th{
 ';
 
 while($row = mysqli_fetch_assoc($res)){
-    $subtotal = $row['price'] * $row['quantity'];
-    $total += $subtotal;
+    $total = 0;
+    $item_total = $row['price'] * $row['quantity'];
+    $subtotal += $item_total;
 
     $html .= '
     <tr>
         <td>'.$row['product_name'].'</td>
         <td>'.$row['quantity'].'</td>
         <td>RM '.number_format($row['price'],2).'</td>
-        <td>RM '.number_format($subtotal,2).'</td>
+        <td>RM '.number_format($item_total,2).'</td>
     </tr>';
 }
+$tax = $subtotal * $tax_rate;
+$grand_total = $subtotal + $tax + $delivery_fee;
 
 $html .= '
 
 </table>
 
 <div class="total">
-Total Paid: RM '.number_format($total,2).'
+    Subtotal: RM '.number_format($subtotal,2).'<br>
+    Tax (6%): RM '.number_format($tax,2).'<br>
+    Delivery Fee: RM '.number_format($delivery_fee,2).'<br><br>
+
+    Grand Total: RM '.number_format($grand_total,2).'
 </div>
 
 <div class="footer">
-
-<h3>Thank You For Shopping With LOZ PC STORE </h3>
-
-<p>
-This receipt serves as proof of purchase.
-Please keep it for warranty and support purposes.
-</p>
-
+    <h3>Thank You For Shopping With LOZ PC STORE</h3>
+    <p>
+        This receipt serves as proof of purchase.
+        Please keep it for warranty and support purposes.
+    </p>
 </div>
 
 ';
