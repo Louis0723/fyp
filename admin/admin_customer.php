@@ -79,7 +79,7 @@ $users = $conn->query("
         u.user_id,
         u.name,
         u.email,
-        u.profile_image,
+        
         u.created_at,
         u.status,
 

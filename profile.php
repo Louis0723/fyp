@@ -39,6 +39,7 @@ function ensureProfileDir(): void
 {
     $dir = profileUploadDir();
     if (!is_dir($dir)) {
+        /*create folder,read permissions,create parent folder*/ */
         mkdir($dir, 0777, true);
     }
 }
@@ -139,6 +140,7 @@ if (isset($_POST['update'])) {
             SET name = ?, address = ?, phone = ?
             WHERE user_id = ?
         ");
+        /*prepared statement*/
         $stmt->bind_param("sssi", $name, $address, $phone, $user_id);
         $stmt->execute();
         $stmt->close();
