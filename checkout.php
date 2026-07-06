@@ -721,7 +721,7 @@ cursor:pointer;
 
 </div>
 
-<!-- BOOST -->
+<!-- payment BOOST -->
 <div id="boost-box" class="payment-box hidden-box">
 
 <div class="input-box">
