@@ -303,7 +303,7 @@ if (!empty($row['image'])) {
     src="<?= htmlspecialchars($image) ?>"
     onerror="this.src='https://via.placeholder.com/300x200'"
     alt="<?= htmlspecialchars($row['product_name']) ?>"
->
+>       
 
 <h3><?= $row['product_name'] ?></h3>
 
@@ -357,6 +357,7 @@ particlesJS("particles-js",{
 }
 });
 
+// Add to cart function
 function buyNow(id){
 fetch("add_to_cart.php?id="+id)
 .then(()=>{ alert("Added to cart!"); location.reload(); });

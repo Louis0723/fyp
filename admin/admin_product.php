@@ -7,6 +7,11 @@ if (!isset($_SESSION['admin'])) {
     exit();
 }
 
+function h($value): string
+{
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
 function isPcCategory(string $category): bool
 {
     $c = strtolower(trim($category));
@@ -31,10 +36,34 @@ function isMonitorCategory(string $category): bool
     return stripos(strtolower(trim($category)), 'monitor') !== false;
 }
 
+function normalizeProductStatus(string $status): string
+{
+    $status = ucfirst(strtolower(trim($status)));
+    return in_array($status, ['Active', 'Inactive'], true) ? $status : 'Active';
+}
+
+function productStatusClass(string $status): string
+{
+    $status = strtolower(trim($status));
+    return $status === 'inactive' ? 'inactive' : 'active';
+}
+
 function jsAlertReload(string $message): void
 {
     echo "<script>alert(" . json_encode($message) . "); window.location.href = " . json_encode($_SERVER['PHP_SELF']) . ";</script>";
     exit();
+}
+
+/* =========================
+   ENSURE STATUS COLUMN EXISTS
+========================= */
+$checkStatusColumn = $conn->query("SHOW COLUMNS FROM products LIKE 'status'");
+if ($checkStatusColumn && $checkStatusColumn->num_rows == 0) {
+    $conn->query("
+        ALTER TABLE products
+        ADD status VARCHAR(20) NOT NULL DEFAULT 'Active'
+        AFTER battery
+    ");
 }
 
 /* =========================
@@ -62,6 +91,7 @@ if (isset($_POST['add_product'])) {
     $stock       = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
     $description = trim($_POST['description'] ?? '');
     $specs       = trim($_POST['specs'] ?? '');
+    $status      = normalizeProductStatus($_POST['status'] ?? 'Active');
 
     $cpu         = '';
     $gpu         = '';
@@ -85,6 +115,10 @@ if (isset($_POST['add_product'])) {
 
     if (!in_array($category, $categories, true)) {
         jsAlertReload("Invalid category selected");
+    }
+
+    if (!in_array($status, ['Active', 'Inactive'], true)) {
+        jsAlertReload("Invalid status selected");
     }
 
     if ($price <= 0) {
@@ -168,14 +202,15 @@ if (isset($_POST['add_product'])) {
             mouse_type,
             specs,
             screen_size,
-            battery
+            battery,
+            status
         )
         VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     $stmt->bind_param(
-        "ssdissssssssssssss",
+        "ssdisssssssssssssss",
         $name,
         $description,
         $price,
@@ -193,7 +228,8 @@ if (isset($_POST['add_product'])) {
         $mouse_type,
         $specs,
         $screen_size,
-        $battery
+        $battery,
+        $status
     );
 
     $stmt->execute();
@@ -213,6 +249,7 @@ if (isset($_POST['update_product'])) {
     $description = trim($_POST['description'] ?? '');
     $specs       = trim($_POST['specs'] ?? '');
     $current_img = trim($_POST['current_image'] ?? '');
+    $status      = normalizeProductStatus($_POST['status'] ?? 'Active');
 
     if ($product_id <= 0) {
         jsAlertReload("Invalid product selected");
@@ -228,6 +265,10 @@ if (isset($_POST['update_product'])) {
 
     if (!in_array($category, $categories, true)) {
         jsAlertReload("Invalid category selected");
+    }
+
+    if (!in_array($status, ['Active', 'Inactive'], true)) {
+        jsAlertReload("Invalid status selected");
     }
 
     if ($price <= 0) {
@@ -323,12 +364,13 @@ if (isset($_POST['update_product'])) {
             mouse_type = ?,
             specs = ?,
             screen_size = ?,
-            battery = ?
+            battery = ?,
+            status = ?
         WHERE product_id = ?
     ");
 
     $stmt->bind_param(
-        "ssdissssssssssssssi",
+        "ssdisssssssssssssssi",
         $name,
         $description,
         $price,
@@ -347,6 +389,7 @@ if (isset($_POST['update_product'])) {
         $specs,
         $screen_size,
         $battery,
+        $status,
         $product_id
     );
 
@@ -429,12 +472,12 @@ $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
             overflow-x:auto;
         }
 
-      table{
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0;
-    table-layout:auto;
-}
+        table{
+            width:100%;
+            border-collapse:separate;
+            border-spacing:0;
+            table-layout:auto;
+        }
 
         th,td{
             padding:14px;
@@ -446,9 +489,9 @@ $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
         th:nth-child(2){width:470px;}
         th:nth-child(3){width:140px;}
         th:nth-child(4){width:130px;}
-        th:nth-child(5){width:100px;}   /* Stock */
-        th:nth-child(6){width:200px;}   /* Status */
-        th:nth-child(7){width:120px;}   /* Actions */
+        th:nth-child(5){width:100px;}
+        th:nth-child(6){width:200px;}
+        th:nth-child(7){width:120px;}
 
         tr:hover{
             background:#f9fbff;
@@ -479,61 +522,33 @@ $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
             text-overflow:ellipsis;
         }
 
-        .badge{
-            display:inline-flex !important;
-            align-items:center !important;
-            justify-content:center !important;
+        .status-wrapper{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            width:100%;
+        }
+
+        .status-badge{
             min-width:130px;
-            height:32px;
-            padding:0 18px;
+            height:34px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
             border-radius:999px;
             font-size:12px;
             font-weight:700;
-            white-space:nowrap;
-            line-height:1;
             color:#fff;
-            box-shadow:none;
+            white-space:nowrap;
         }
 
-        /* STATUS COLUMN */
-.status-wrapper{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    width:100%;
-}
+        .status-active{
+            background:#22c55e;
+        }
 
-.status-badge{
-    min-width:130px;
-    height:34px;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    border-radius:999px;
-
-    font-size:12px;
-    font-weight:700;
-    color:#fff;
-
-    white-space:nowrap;
-}
-
-/* ACTIVE */
-.stock-active{
-    background:#22c55e;
-}
-
-/* LOW STOCK */
-.low{
-    background:#f59e0b;
-}
-
-/* OUT OF STOCK */
-.out{
-    background:#f5223d;
-}
+        .status-inactive{
+            background:#94a3b8;
+        }
 
         .actions{
             white-space:nowrap;
@@ -723,16 +738,6 @@ $result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
             grid-column:1 / -1;
         }
 
-        .preview{
-            width:110px;
-            height:110px;
-            border-radius:18px;
-            object-fit:cover;
-            border:2px solid #dbeafe;
-            margin-bottom:18px;
-            display:none;
-        }
-
         .conditional-group{
             display:none;
             grid-column:1 / -1;
@@ -830,8 +835,19 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
         </a>
     </div>
 
-    <div class="product-search-box">
-        <input id="searchInput" placeholder="Search products...">
+    <div class="product-search-box" style="display:flex; gap:12px; align-items:center;">
+        <input
+            id="searchInput"
+            placeholder="Search products..."
+            style="flex:1; border:none; outline:none; background:transparent;"
+        >
+
+        <select id="categoryFilter" style="width:180px; padding:12px 15px; border:1px solid #dbe2ea; border-radius:12px; outline:none; background:white;">
+            <option value="">All Categories</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?= h($cat) ?>"><?= h($cat) ?></option>
+            <?php endforeach; ?>
+        </select>
     </div>
 
     <div class="table-card">
@@ -850,17 +866,6 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
             <tbody>
             <?php while ($row = $result->fetch_assoc()): ?>
                 <?php
-                    $stockClass = 'stock-active';
-                    $stockText = 'Active';
-
-                    if ((int)$row['stock'] <= 0) {
-                        $stockClass = 'out';
-                        $stockText = 'Out of Stock';
-                    } elseif ((int)$row['stock'] < 10) {
-                        $stockClass = 'low';
-                        $stockText = 'Low Stock';
-                    }
-
                     $image = trim((string)($row['image'] ?? ''));
                     if ($image !== '' && filter_var($image, FILTER_VALIDATE_URL)) {
                         $imageSrc = $image;
@@ -869,6 +874,9 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
                     } else {
                         $imageSrc = "https://via.placeholder.com/55";
                     }
+
+                    $statusText = normalizeProductStatus($row['status'] ?? 'Active');
+                    $statusClass = productStatusClass($statusText);
 
                     $data = [
                         'product_id'    => $row['product_id'],
@@ -890,34 +898,35 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
                         'mouse_type'    => $row['mouse_type'] ?? '',
                         'screen_size'   => $row['screen_size'] ?? '',
                         'battery'       => $row['battery'] ?? '',
+                        'status'        => $statusText,
                     ];
                 ?>
-                <tr class="product-row">
+                <tr class="product-row" data-category="<?= strtolower($row['category'] ?? '') ?>">
                     <td>Product #<?= (int)$row['product_id'] ?></td>
 
                     <td>
                         <div class="product-info">
                             <img
-                                src="<?= htmlspecialchars($imageSrc) ?>"
+                                src="<?= h($imageSrc) ?>"
                                 class="product-img"
                                 onerror="this.src='https://via.placeholder.com/55';"
                                 alt="Product image"
                             >
-                            <span><?= htmlspecialchars($row['product_name'] ?? '') ?></span>
+                            <span><?= h($row['product_name'] ?? '') ?></span>
                         </div>
                     </td>
 
-                    <td><?= htmlspecialchars($row['category'] ?? '') ?></td>
+                    <td><?= h($row['category'] ?? '') ?></td>
                     <td>RM <?= number_format((float)$row['price'], 2) ?></td>
                     <td><?= (int)$row['stock'] ?></td>
 
                     <td>
-    <div class="status-wrapper">
-        <span class="status-badge <?= $stockClass ?>">
-            <?= htmlspecialchars($stockText) ?>
-        </span>
-    </div>
-</td>
+                        <div class="status-wrapper">
+                            <span class="status-badge status-<?= h($statusClass) ?>">
+                                <?= h($statusText) ?>
+                            </span>
+                        </div>
+                    </td>
 
                     <td class="actions">
                         <i
@@ -1008,9 +1017,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
                     <select name="category" id="add_category" required onchange="toggleAddFields()">
                         <option value="">Select Category</option>
                         <?php foreach ($categories as $catName): ?>
-                            <option value="<?= htmlspecialchars($catName) ?>">
-                                <?= htmlspecialchars($catName) ?>
-                            </option>
+                            <option value="<?= h($catName) ?>"><?= h($catName) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -1023,6 +1030,14 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
                 <div>
                     <label class="detail-label">Stock <span style="color:red">*</span></label>
                     <input type="number" min="0" name="stock" id="add_stock" required>
+                </div>
+
+                <div>
+                    <label class="detail-label">Status <span style="color:red">*</span></label>
+                    <select name="status" id="add_status" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
                 </div>
 
                 <div class="form-full">
@@ -1150,9 +1165,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
                     <select name="category" id="edit_category" required onchange="toggleEditFields()">
                         <option value="">Select Category</option>
                         <?php foreach ($categories as $catName): ?>
-                            <option value="<?= htmlspecialchars($catName) ?>">
-                                <?= htmlspecialchars($catName) ?>
-                            </option>
+                            <option value="<?= h($catName) ?>"><?= h($catName) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -1165,6 +1178,14 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === "super_admin") {
                 <div>
                     <label class="detail-label">Stock <span style="color:red">*</span></label>
                     <input type="number" min="0" name="stock" id="edit_stock" required>
+                </div>
+
+                <div>
+                    <label class="detail-label">Status <span style="color:red">*</span></label>
+                    <select name="status" id="edit_status" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
                 </div>
 
                 <div class="form-full">
@@ -1402,6 +1423,8 @@ function viewProduct(data){
         }
     };
 
+    addTech('Status', data.status);
+
     if (isPcCategoryJs(data.category)) {
         addTech('CPU', data.cpu);
         addTech('GPU', data.gpu);
@@ -1436,6 +1459,7 @@ function editProduct(data){
     document.getElementById('edit_category').value = String(data.category || '').trim();
     document.getElementById('edit_price').value = data.price || '';
     document.getElementById('edit_stock').value = data.stock || '';
+    document.getElementById('edit_status').value = data.status || 'Active';
     document.getElementById('edit_description').value = data.description || '';
     document.getElementById('edit_specs').value = data.specs || '';
     document.getElementById('edit_cpu').value = data.cpu || '';
@@ -1456,12 +1480,29 @@ function editProduct(data){
     }, 0);
 }
 
-document.getElementById('searchInput').addEventListener('keyup', function(){
-    const val = this.value.toLowerCase();
+function filterProducts(){
+    const search =
+        document.getElementById('searchInput')
+        .value
+        .toLowerCase();
+
+    const category =
+        document.getElementById('categoryFilter')
+        .value
+        .toLowerCase();
+
     document.querySelectorAll('.product-row').forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+        const text = row.innerText.toLowerCase();
+        const rowCategory = row.dataset.category;
+        const matchSearch = text.includes(search);
+        const matchCategory = category === '' || rowCategory === category;
+
+        row.style.display = (matchSearch && matchCategory) ? '' : 'none';
     });
-});
+}
+
+document.getElementById('searchInput').addEventListener('keyup', filterProducts);
+document.getElementById('categoryFilter').addEventListener('change', filterProducts);
 
 document.getElementById('addForm').addEventListener('submit', function(e){
     const price = parseFloat(this.querySelector('[name="price"]').value);
@@ -1490,7 +1531,6 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleEditFields();
 });
 </script>
-
 
 </body>
 </html>

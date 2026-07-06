@@ -35,7 +35,7 @@ $data = [];
 
 while($row = mysqli_fetch_assoc($result)) {
 
-    if(empty($row['image'])) {
+ if(empty($row['image'])) {
     $row['image'] = "../assets/images/no-image.png";
 }
 elseif(

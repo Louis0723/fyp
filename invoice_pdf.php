@@ -151,7 +151,7 @@ Total Paid: RM '.number_format($total,2).'
 
 <div class="footer">
 
-<h3>Thank You For Shopping With LOZ PC STORE ❤️</h3>
+<h3>Thank You For Shopping With LOZ PC STORE </h3>
 
 <p>
 This receipt serves as proof of purchase.

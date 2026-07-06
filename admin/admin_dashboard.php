@@ -111,9 +111,13 @@ $lowStock = $conn->query("
 
 
 $recentOrders = $conn->query("
-    SELECT *
+    SELECT
+        order_id,
+        total_price,
+        status,
+        created_at
     FROM orders
-    ORDER BY order_id DESC
+    ORDER BY created_at DESC, order_id DESC
     LIMIT 5
 ");
 ?>
@@ -610,60 +614,80 @@ Low stock product
 
 <div class="table-card">
 
-<div class="table-title">
-Recent orders
-</div>
+    <div class="table-title">
+        Recent orders
+    </div>
 
-<table>
+    <table>
 
-<thead>
+        <thead>
 
-<tr>
+            <tr>
+                <th>Order</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Total</th>
+            </tr>
 
-<th>Order</th>
-<th>Date</th>
-<th>Status</th>
-<th>Total</th>
+        </thead>
 
-</tr>
+        <tbody>
 
-</thead>
+        <?php while($row = $recentOrders->fetch_assoc()): ?>
 
-<tbody>
+            <?php
 
-<?php while($row = $recentOrders->fetch_assoc()): ?>
+            $status = strtolower(trim($row['status']));
 
-<tr>
+            if($status == 'pending'){
+                $class = 'pending';
+            }
+            elseif($status == 'processing'){
+                $class = 'processing';
+            }
+            elseif($status == 'shipped'){
+                $class = 'shipped';
+            }
+            elseif($status == 'completed' || $status == 'delivered'){
+                $class = 'completed';
+            }
+            else{
+                $class = 'pending';
+            }
 
-<td>
-ORD-<?= $row['order_id'] ?>
-</td>
+            ?>
 
-<td>
-<?= date("Y-m-d", strtotime($row['created_at'])) ?>
-</td>
+            <tr>
 
-<td>
+                <td>
+                    ORD-<?= htmlspecialchars($row['order_id']) ?>
+                </td>
 
-<span class="status <?= strtolower($row['status']) ?>">
+                <td>
+                    <?= date("Y-m-d", strtotime($row['created_at'])) ?>
+                </td>
 
-<?= $row['status'] ?>
+                <td>
 
-</span>
+                    <span class="status <?= $class ?>">
 
-</td>
+                        <?= htmlspecialchars($row['status']) ?>
 
-<td>
-RM <?= number_format($row['total_price'],2) ?>
-</td>
+                    </span>
 
-</tr>
+                </td>
 
-<?php endwhile; ?>
+                <td>
+                    RM <?= number_format($row['total_price'],2) ?>
+                </td>
 
-</tbody>
+            </tr>
 
-</table>
+        <?php endwhile; ?>
+
+        </tbody>
+
+    </table>
 
 </div>
 

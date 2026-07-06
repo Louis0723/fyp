@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['otp_type'] = "forgot_password";
         $_SESSION['reset_user_id'] = $user['user_id'];
 
-        // SEND EMAIL
+        // SEND EMAIL WITH OTP
         $mail = new PHPMailer(true);
 
         try {
