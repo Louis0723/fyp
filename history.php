@@ -129,7 +129,7 @@ ORDER BY created_at DESC
 .shipped{background:#00f0ff;color:black;}
 .delivered{background:#00ff99;color:black;}
 .completed{
-    background:#22c55e; /* green */
+    background:#22c55e; 
     color:white;
 }
     </style>
@@ -209,6 +209,7 @@ WHERE order_id='{$order['order_id']}'
 AND review_status='not_reviewed'
 ");
 
+/*review*/
 if($status == "Completed" && mysqli_num_rows($checkReview) > 0){
 
 echo "<a href='reviews.php?order_id={$order['order_id']}'
