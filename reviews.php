@@ -51,6 +51,7 @@ if(isset($_POST['submit'])){
         $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
 
 $original = pathinfo($_FILES['image']['name'], PATHINFO_FILENAME);
+/*Clean the file name*/
 $original = preg_replace("/[^a-zA-Z0-9]/", "_", $original);
 
 $imageName = time() . "_" . $original . "." . $ext;
@@ -60,14 +61,14 @@ $imageName = time() . "_" . $original . "." . $ext;
             $folder . $imageName
         );
     }
-
+/*save the review*/
    mysqli_query($conn,"
 INSERT INTO reviews
 (order_id, product_id, user_id, rating, review_text, image)
 VALUES
 ('$order_id', {$product_id}, $user_id, $rating, '$review', '$imageName')
 ");
-
+ 
 mysqli_query($conn,"
 UPDATE order_items
 SET review_status='reviewed'
@@ -294,6 +295,7 @@ name="review"
 placeholder="Write your review..." 
 required></textarea>
 
+<!--choose file-->
 <div class="file-box">
 <input type="file" 
 name="image" 
