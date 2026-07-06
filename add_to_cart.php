@@ -14,7 +14,7 @@ if ($qty < 1) {
     $qty = 1;
 }
 
-/* Get stock */
+/* Get stocks */
 $product = mysqli_query($conn,
     "SELECT stock FROM products WHERE product_id = $product_id"
 );
