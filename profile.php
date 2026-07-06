@@ -39,7 +39,7 @@ function ensureProfileDir(): void
 {
     $dir = profileUploadDir();
     if (!is_dir($dir)) {
-        /*create folder,read permissions,create parent folder*/ */
+        /*create folder,read permissions,create parent folder*/ 
         mkdir($dir, 0777, true);
     }
 }
