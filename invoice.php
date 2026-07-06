@@ -15,6 +15,7 @@ $stmt = $conn->prepare("
         p.product_name,
         o.created_at,
         o.status,
+        o.total_price,
         u.name,
         u.email
     FROM order_items oi
@@ -32,10 +33,12 @@ if (!$res || $res->num_rows === 0) {
     die("Receipt not found.");
 }
 
-$receipt = $res->fetch_assoc();
+$order_info = mysqli_fetch_assoc($res);
 $res->data_seek(0);
 
-$total = 0;
+$subtotal = 0;
+$tax_rate = 0.06;
+$delivery_fee = 5;
 ?>
 <!DOCTYPE html>
 <html>
@@ -186,13 +189,13 @@ $total = 0;
     <div class="receipt-info">
         <p><strong>Receipt No:</strong> RCPT-<?= $order_id ?></p>
         <p><strong>Order ID:</strong> #<?= $order_id ?></p>
-        <p><strong>Date:</strong> <?= date('d M Y H:i', strtotime($receipt['created_at'])) ?></p>
+        <p><strong>Date:</strong> <?= date('d M Y H:i', strtotime($order_info['created_at'])) ?></p>
 
         <hr>
 
-        <p><strong>Customer:</strong> <?= htmlspecialchars($receipt['name']) ?></p>
-        <p><strong>Email:</strong> <?= htmlspecialchars($receipt['email']) ?></p>
-        <p><strong>Status:</strong> <?= strtoupper($receipt['status']) ?></p>
+        <p><strong>Customer:</strong> <?= htmlspecialchars($order_info['name']) ?></p>
+        <p><strong>Email:</strong> <?= htmlspecialchars($order_info['email']) ?></p>
+        <p><strong>Status:</strong> <?= strtoupper($order_info['status']) ?></p>
     </div>
 
     <div class="top-bar">
@@ -204,16 +207,29 @@ $total = 0;
 
     <?php while($row = mysqli_fetch_assoc($res)): 
         $itemTotal = $row['price'] * $row['quantity'];
-        $total += $itemTotal;
+        $subtotal += $itemTotal;
     ?>
+    
         <div class="item">
             <span><?= htmlspecialchars($row['product_name']) ?> x <?= $row['quantity'] ?></span>
             <span>RM <?= number_format($itemTotal, 2) ?></span>
         </div>
-    <?php endwhile; ?>
+        <?php endwhile; ?>
 
-    <div class="total">
-        Total Paid: RM <?= number_format($total, 2) ?>
+    <?php
+        $tax = $subtotal * $tax_rate;
+        $grand_total = $subtotal + $tax + $delivery_fee;
+    ?>
+    
+
+    <div style="text-align:right; font-size:18px;">
+    <p>Subtotal: RM <?= number_format($subtotal, 2) ?></p>
+    <p>Tax (6%): RM <?= number_format($tax, 2) ?></p>
+    <p>Delivery Fee: RM <?= number_format($delivery_fee, 2) ?></p>
+
+    <h2 style="color:#ff00ff;">
+        Grand Total: RM <?= number_format($grand_total, 2) ?>
+    </h2>
     </div>
 
     <div style="

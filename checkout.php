@@ -17,7 +17,11 @@ $res_user = mysqli_query($conn, "SELECT * FROM users WHERE user_id = $user_id");
 $user = mysqli_fetch_assoc($res_user);
 
 $items = [];
-$total = 0;
+$subtotal = 0;
+$grand_total = 0;
+
+$tax_rate = 0.06;
+$delivery_fee = 5;
 //this is buy single product 
 if(isset($_GET['id']) && isset($_GET['qty'])){
 
@@ -48,7 +52,12 @@ if($quantity < 1){
 
     $items[] = $row;
 
-    $total = $row['price'] * $quantity;
+    $subtotal = $row['price'] * $quantity;
+
+    $tax = $subtotal * $tax_rate;
+    $delivery_fee = 5;
+
+    $grand_total = $subtotal + $tax + $delivery_fee;
 
     $buy_now = true;
 
@@ -75,9 +84,13 @@ if($quantity < 1){
         if($row['quantity'] > $row['stock']){
     die("Product stock is insufficient: " . $row['product_name']);
 }
-        $total += $row['price'] * $row['quantity'];
+        $subtotal += $row['price'] * $row['quantity'];
         $items[] = $row;
     }
+    $tax = $subtotal * $tax_rate;
+    $delivery_fee = 5;
+
+    $grand_total = $subtotal + $tax + $delivery_fee;
 
     $buy_now = false;
 }
@@ -185,7 +198,7 @@ $error_msg="Invalid TNG account!";
 
 $tng=mysqli_fetch_assoc($check);
 
-if($tng['balance']<$total){
+if($tng['balance']<$grand_total){
 
 $error_msg="Insufficient TNG balance!";
 
@@ -195,7 +208,7 @@ sleep(2);
 
 mysqli_query($conn,"
 UPDATE dummy_tng
-SET balance=balance-$total
+SET balance=balance-$grand_total
 WHERE id={$tng['id']}
 ");
 
@@ -243,7 +256,7 @@ $error_msg="Invalid FPX login!";
 
 $fpx=mysqli_fetch_assoc($check);
 
-if($fpx['balance']<$total){
+if($fpx['balance']<$grand_total){
 
 $error_msg="Insufficient FPX balance!";
 
@@ -253,7 +266,7 @@ sleep(2);
 
 mysqli_query($conn,"
 UPDATE dummy_fpx
-SET balance=balance-$total
+SET balance=balance-$grand_total
 WHERE id={$fpx['id']}
 ");
 
@@ -295,7 +308,7 @@ $error_msg="Invalid Boost account!";
 
 $boost=mysqli_fetch_assoc($check);
 
-if($boost['balance']<$total){
+if($boost['balance']<$grand_total){
 
 $error_msg="Insufficient Boost balance!";
 
@@ -305,7 +318,7 @@ sleep(2);
 
 mysqli_query($conn,"
 UPDATE dummy_boost
-SET balance=balance-$total
+SET balance=balance-$grand_total
 WHERE id={$boost['id']}
 ");
 
@@ -381,7 +394,7 @@ VALUES
 '$transaction_id',
 '$method',
 '$account_used',
-$total,
+$grand_total,
 'Success'
 )
 ");
@@ -401,7 +414,7 @@ VALUES
 (
 '$order_id',
 $user_id,
-$total,
+$grand_total,
 '$address',
 '$phone',
 '$method'
@@ -635,20 +648,52 @@ cursor:pointer;
 <?php else: ?>
 
 <div class="summary">
-<table>
-<tr><th>Product</th><th>Unit Price</th><th>Qty</th><th>Total</th></tr>
-<?php foreach($items as $row): ?>
-<tr>
-<td><?= $row['product_name'] ?></td>
-<td>RM <?= $row['price'] ?></td>
-<td><?= $row['quantity'] ?></td>
-<td>RM <?= $row['price'] * $row['quantity'] ?></td>
-</tr>
-<?php endforeach; ?>
-</table>
+    <table>
+        <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Qty</th>
+            <th>Total</th>
+        </tr>
+
+        <?php foreach($items as $row): ?>
+        <tr>
+            <td><?= $row['product_name'] ?></td>
+            <td>RM <?= number_format($row['price'], 2) ?></td>
+            <td><?= $row['quantity'] ?></td>
+            <td>RM <?= number_format($row['price'] * $row['quantity'], 2) ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </table>
 </div>
 
-<div class="total">Total: RM <?= $total ?></div>
+<div class="summary">
+    <table>
+        <tr>
+            <td>Subtotal</td>
+            <td>RM <?= number_format($subtotal, 2) ?></td>
+        </tr>
+
+        <tr>
+            <td>Tax (6%)</td>
+            <td>RM <?= number_format($tax, 2) ?></td>
+        </tr>
+
+        <tr>
+            <td>Delivery Fee</td>
+            <td>RM <?= number_format($delivery_fee, 2) ?></td>
+        </tr>
+
+        <tr>
+            <td><b>Grand Total</b></td>
+            <td><b>RM <?= number_format($grand_total, 2) ?></b></td>
+        </tr>
+    </table>
+</div>
+
+<div class="total">
+    Total: RM <?= number_format($grand_total, 2) ?>
+</div>
 
 <form method="post">
 
